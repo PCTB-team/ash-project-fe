@@ -17,7 +17,7 @@ export default function OtpVerification({ email, isLoading, onVerify, onResend, 
   const handleChange = (e) => {
     const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
     setOtp(value);
-    
+
     if (value.length === 6) {
       onVerify(value);
     }
@@ -27,13 +27,13 @@ export default function OtpVerification({ email, isLoading, onVerify, onResend, 
     setOtp('');
     setCountdown(60);
     inputRef.current?.focus();
-    onResend();
+    if (onResend) onResend();
   };
 
   return (
     <motion.div variants={ANIM.stagger} initial="initial" animate="animate">
       <motion.div variants={ANIM.child} className="relative flex justify-center gap-2 sm:gap-3 mb-8 cursor-text" onClick={() => inputRef.current?.focus()}>
-        
+
         <input
           ref={inputRef}
           type="text"
@@ -51,9 +51,8 @@ export default function OtpVerification({ email, isLoading, onVerify, onResend, 
           return (
             <div
               key={index}
-              className={`w-10 h-12 sm:w-11 sm:h-14 bg-[#f5f5f7] border-2 flex items-center justify-center rounded-[12px] text-[20px] font-semibold text-[#1d1d1f] transition-all shadow-sm ${
-                isActive ? 'bg-white border-[#0071e3]/40 ring-[3px] ring-[#0071e3]/[0.08]' : 'border-transparent'
-              }`}
+              className={`w-10 h-12 sm:w-11 sm:h-14 bg-[#f5f5f7] border-2 flex items-center justify-center rounded-[12px] text-[20px] font-semibold text-[#1d1d1f] transition-all shadow-sm ${isActive ? 'bg-white border-[#0071e3]/40 ring-[3px] ring-[#0071e3]/[0.08]' : 'border-transparent'
+                }`}
             >
               {otp[index] || ''}
             </div>
@@ -78,7 +77,7 @@ export default function OtpVerification({ email, isLoading, onVerify, onResend, 
             </>
           )}
         </motion.button>
-        
+
         <div className="flex items-center gap-1.5 text-[13px] font-medium">
           <span className="text-black/40">Chưa nhận được mã?</span>
           {countdown > 0 ? (
@@ -89,7 +88,7 @@ export default function OtpVerification({ email, isLoading, onVerify, onResend, 
             </button>
           )}
         </div>
-        
+
         <button onClick={onBack} className="text-[12px] font-medium text-black/30 hover:text-black/60 transition-colors mt-2">
           Đổi địa chỉ email
         </button>
