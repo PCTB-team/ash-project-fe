@@ -10,6 +10,8 @@ export const LOGIN_API_URL = "http://localhost:8080/api/v1/auth/login";
 export const REGISTER_API_URL = "http://localhost:8080/api/v1/auth/register";
 export const VERIFY_REGISTER_OTP_API_URL = "http://localhost:8080/api/v1/auth/otp-verification";
 export const RESEND_OTP_API_URL = "http://localhost:8080/api/v1/auth/otp-requests";
+export const REFRESH_TOKEN_API_URL = "http://localhost:8080/api/v1/auth/refresh-token";
+export const LOGOUT_API_URL = "http://localhost:8080/api/v1/auth/logout";
 
 export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -20,19 +22,62 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
   const handleLogin = async (values) => {
     setErrorMsg('');
     setIsLoading(true);
-    await new Promise(r => setTimeout(r, 800));
-    setIsLoading(false);
 
-    if (!values.usernameOrEmail) { setErrorMsg('Vui lòng điền email hoặc tên đăng nhập.'); return; }
-    if (!values.password || values.password.length < 6) { setErrorMsg('Mật khẩu phải chứa ít nhất 6 ký tự.'); return; }
+    if (!values.usernameOrEmail) { setErrorMsg('Vui lòng điền email hoặc tên đăng nhập.'); setIsLoading(false); return; }
+    if (!values.password || values.password.length < 6) { setErrorMsg('Mật khẩu phải chứa ít nhất 6 ký tự.'); setIsLoading(false); return; }
 
     if (values.usernameOrEmail === ADMIN_CREDENTIALS.username && values.password === ADMIN_CREDENTIALS.password) {
       message.success('Xác thực quản trị viên thành công!');
       onAdminLoginSuccess();
+      setIsLoading(false);
       return;
     }
-    message.success('Đăng nhập thành công!');
-    onLoginSuccess(values.usernameOrEmail);
+
+    try {
+      // Giả sử API nhận vào username và password (nếu API cần 'email' thì bạn sửa lại key nhé)
+      const response = await fetch(LOGIN_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          identifier: values.usernameOrEmail, 
+          password: values.password 
+        })
+      });
+
+      let data = {};
+      const text = await response.text();
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          console.warn("Response is not JSON:", text);
+        }
+      }
+
+      if (response.ok || data.code === 1000) {
+        // Hứng Token từ Backend. Cấu trúc có thể nằm ở data.token, data.result.token...
+        const token = data.result?.token || data.token || data.accessToken || data.result?.accessToken;
+        const refreshToken = data.result?.refreshToken || data.refreshToken;
+        
+        // Lưu vào LocalStorage
+        if (token) localStorage.setItem('accessToken', token);
+        if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+
+        message.success('Đăng nhập thành công!');
+        onLoginSuccess(values.usernameOrEmail);
+      } else {
+        if (response.status === 401 || response.status === 403) {
+          setErrorMsg('Tài khoản hoặc mật khẩu không chính xác!');
+        } else {
+          setErrorMsg(data.message || 'Đăng nhập thất bại!');
+        }
+      }
+    } catch (error) {
+      console.error("Login Error:", error);
+      setErrorMsg('Không thể kết nối đến máy chủ.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleRegister = async (values) => {
