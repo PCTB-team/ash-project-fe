@@ -8,7 +8,8 @@ import { ADMIN_CREDENTIALS } from '../utils/constants';
 // ============================================================================
 export const LOGIN_API_URL = "http://localhost:8080/api/v1/auth/login";
 export const REGISTER_API_URL = "http://localhost:8080/api/v1/auth/register";
-export const VERIFY_REGISTER_OTP_API_URL = "http://localhost:8080/api/v1/auth/verify-register-otp";
+export const VERIFY_REGISTER_OTP_API_URL = "http://localhost:8080/api/v1/auth/otp-verification";
+export const RESEND_OTP_API_URL = "http://localhost:8080/api/v1/auth/otp-requests";
 
 export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -37,32 +38,141 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
   const handleRegister = async (values) => {
     setErrorMsg('');
     setIsLoading(true);
-    // TODO: Giả lập call API -> fetch(REGISTER_API_URL, ...)
-    await new Promise(r => setTimeout(r, 800));
-    setIsLoading(false);
 
-    if (!values.displayName || values.displayName.trim().length < 2) { setErrorMsg('Tên đăng nhập phải có ít nhất 2 ký tự.'); return false; }
-    if (values.password !== values.confirmPassword) { setErrorMsg('Mật khẩu nhập lại không trùng khớp.'); return false; }
-    
-    message.success('Đã gửi mã xác minh đến email của bạn!');
-    return true; // Return true để mở form OTP
+    if (!values.displayName || values.displayName.trim().length < 2) {
+      setErrorMsg('Tên đăng nhập phải có ít nhất 2 ký tự.');
+      setIsLoading(false);
+      return false;
+    }
+    if (values.password !== values.confirmPassword) {
+      setErrorMsg('Mật khẩu nhập lại không trùng khớp.');
+      setIsLoading(false);
+      return false;
+    }
+
+    try {
+      const response = await fetch(REGISTER_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: values.displayName.replace(/\s+/g, ''), // Đảm bảo username không có khoảng trắng
+          email: values.usernameOrEmail,
+          fullname: values.displayName,
+          password: values.password,
+          confirmPassword: values.confirmPassword
+        })
+      });
+
+      let data = {};
+      const text = await response.text();
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          console.warn("Response is not JSON:", text);
+        }
+      }
+
+      if (response.ok || data.code === 1000) {
+        message.success('Đã gửi mã xác minh đến email của bạn!');
+        return true;
+      } else {
+        if (response.status === 409) {
+          setErrorMsg('Email hoặc tên đăng nhập đã tồn tại!');
+        } else if (response.status === 401) {
+          setErrorMsg('Không có quyền thực hiện thao tác này!');
+        } else {
+          setErrorMsg(data.message || 'Đăng ký thất bại!');
+        }
+        return false;
+      }
+    } catch (error) {
+      console.error("Register Error:", error);
+      setErrorMsg('Không thể kết nối đến máy chủ.');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleVerifyRegisterOtp = async (email, otp) => {
     setErrorMsg('');
     setIsLoading(true);
-    // TODO: Giả lập call API -> fetch(VERIFY_REGISTER_OTP_API_URL, ...)
-    await new Promise(r => setTimeout(r, 800));
-    setIsLoading(false);
 
-    // Dữ liệu mock: chỉ nhận mã '123456'
-    if (otp !== '123456') {
-      setErrorMsg('Mã OTP không hợp lệ (Mock: vui lòng nhập 123456)');
+    try {
+      const response = await fetch(VERIFY_REGISTER_OTP_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, otp })
+      });
+
+      let data = {};
+      const text = await response.text();
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          console.warn("Response is not JSON:", text);
+        }
+      }
+
+      if (response.ok || data.code === 1000) {
+        message.success('Xác minh thành công! Vui lòng đăng nhập.');
+        return true;
+      } else {
+        setErrorMsg(data.message || 'Mã OTP không hợp lệ!');
+        return false;
+      }
+    } catch (error) {
+      console.error("OTP Verification Error:", error);
+      setErrorMsg('Không thể kết nối đến máy chủ.');
       return false;
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    message.success('Xác minh thành công! Vui lòng đăng nhập.');
-    return true;
+  const handleResendRegisterOtp = async (email) => {
+    setErrorMsg('');
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(RESEND_OTP_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email })
+      });
+
+      let data = {};
+      const text = await response.text();
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          console.warn("Response is not JSON:", text);
+        }
+      }
+
+      if (response.ok || data.code === 1000) {
+        message.success('Mã xác minh mới đã được gửi đến email của bạn!');
+        return true;
+      } else {
+        setErrorMsg(data.message || 'Không thể gửi lại mã OTP!');
+        return false;
+      }
+    } catch (error) {
+      console.error("Resend OTP Error:", error);
+      setErrorMsg('Không thể kết nối đến máy chủ.');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleLogin = async () => {
@@ -73,5 +183,5 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
     onLoginSuccess('vuongbaovipvip@gmail.com');
   };
 
-  return { isLoading, isGoogleLoading, errorMsg, setErrorMsg, showPassword, setShowPassword, handleLogin, handleRegister, handleVerifyRegisterOtp, handleGoogleLogin };
+  return { isLoading, isGoogleLoading, errorMsg, setErrorMsg, showPassword, setShowPassword, handleLogin, handleRegister, handleVerifyRegisterOtp, handleResendRegisterOtp, handleGoogleLogin };
 }

@@ -29,7 +29,7 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, onNav
   const {
     isLoading, isGoogleLoading, errorMsg, setErrorMsg,
     showPassword, setShowPassword,
-    handleLogin, handleRegister, handleVerifyRegisterOtp, handleGoogleLogin,
+    handleLogin, handleRegister, handleVerifyRegisterOtp, handleResendRegisterOtp, handleGoogleLogin,
   } = useAuth({ onLoginSuccess, onAdminLoginSuccess });
 
   useEffect(() => {
@@ -106,7 +106,7 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, onNav
                 email={registerEmail} 
                 isLoading={isLoading} 
                 onVerify={handleOtpVerify} 
-                onResend={() => handleRegister(registerValues)}
+                onResend={() => handleResendRegisterOtp(registerEmail)}
                 onBack={() => setRegisterStep('form')} 
               />
             </motion.div>

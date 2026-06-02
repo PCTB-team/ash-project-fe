@@ -12,8 +12,10 @@ import { ANIM } from '../utils/constants';
 // 🔗 API PLACEHOLDER (FORGOT PASSWORD)
 // Khi backend deploy, hãy điền link API thực tế vào biến dưới đây để gửi/xác thực OTP.
 // ============================================================================
-export const FORGOT_PASSWORD_API_URL = "";
+export const FORGOT_PASSWORD_API_URL = "http://localhost:8080/api/v1/auth/forgot-password/send-otp";
 
+export const FORGOT_PASSWORD_VERIFY_OTP_API_URL = "http://localhost:8080/api/v1/auth/forgot-password/verify-otp";
+export const FORGOT_PASSWORD_RESET_API_URL = "http://localhost:8080/api/v1/auth/forgot-password/reset";
 
 export default function ForgotPasswordScreen({ onNavigate }) {
   const [form] = Form.useForm();
@@ -21,6 +23,7 @@ export default function ForgotPasswordScreen({ onNavigate }) {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [email, setEmail] = useState('');
+  const [resetToken, setResetToken] = useState(''); // Token khôi phục mật khẩu
 
   const handleError = (msg) => {
     setErrorMsg(msg);
@@ -31,20 +34,33 @@ export default function ForgotPasswordScreen({ onNavigate }) {
     setErrorMsg('');
     setIsLoading(true);
     try {
-      const response = await fetch('/api/auth/send-otp', {
+      const response = await fetch(FORGOT_PASSWORD_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: values.email })
+        body: JSON.stringify({ email: values.email || email }) // Hỗ trợ cả form submit và resend
       });
-      const data = await response.json();
-      
-      if (!response.ok) throw new Error(data.error || 'Có lỗi xảy ra khi gửi OTP');
-      
-      setEmail(values.email);
-      message.success('Mã xác minh đã được gửi đến email của bạn!');
-      setStep('otp');
+
+      let data = {};
+      const text = await response.text();
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          console.warn("Response is not JSON:", text);
+        }
+      }
+
+      if (response.ok || data.code === 1000) {
+        setEmail(values.email || email);
+        message.success('Mã xác minh đã được gửi đến email của bạn!');
+        setStep('otp');
+        return true;
+      } else {
+        throw new Error(data.message || 'Có lỗi xảy ra khi gửi OTP');
+      }
     } catch (err) {
       handleError(err.message);
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -54,17 +70,31 @@ export default function ForgotPasswordScreen({ onNavigate }) {
     setErrorMsg('');
     setIsLoading(true);
     try {
-      const response = await fetch('/api/auth/verify-otp', {
+      const response = await fetch(FORGOT_PASSWORD_VERIFY_OTP_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp })
       });
-      const data = await response.json();
-      
-      if (!response.ok) throw new Error(data.error || 'Mã xác minh không hợp lệ');
-      
-      message.success('Xác minh thành công!');
-      setStep('reset');
+
+      let data = {};
+      const text = await response.text();
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          console.warn("Response is not JSON:", text);
+        }
+      }
+
+      if (response.ok || data.code === 1000) {
+        // Lấy token từ Backend hoặc dùng tạm mã OTP nếu API không trả về
+        const token = data.result?.resetToken || data.resetToken || otp;
+        setResetToken(token);
+        message.success('Xác minh thành công!');
+        setStep('reset');
+      } else {
+        throw new Error(data.message || 'Mã xác minh không hợp lệ');
+      }
     } catch (err) {
       handleError(err.message);
     } finally {
@@ -81,16 +111,31 @@ export default function ForgotPasswordScreen({ onNavigate }) {
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/auth/reset-password', {
+      const response = await fetch(FORGOT_PASSWORD_RESET_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, newPassword: values.newPassword })
+        body: JSON.stringify({ 
+          resetToken: resetToken, 
+          newPassword: values.newPassword, 
+          confirmPassword: values.confirmPassword 
+        })
       });
-      const data = await response.json();
-      
-      if (!response.ok) throw new Error(data.error || 'Có lỗi xảy ra khi cập nhật mật khẩu');
-      
-      setStep('success');
+
+      let data = {};
+      const text = await response.text();
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          console.warn("Response is not JSON:", text);
+        }
+      }
+
+      if (response.ok || data.code === 1000) {
+        setStep('success');
+      } else {
+        throw new Error(data.message || 'Có lỗi xảy ra khi cập nhật mật khẩu');
+      }
     } catch (err) {
       handleError(err.message);
     } finally {
@@ -117,33 +162,33 @@ export default function ForgotPasswordScreen({ onNavigate }) {
         <AnimatePresence mode="wait">
           {step === 'email' && (
             <motion.div key="email" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}>
-              <ForgotPasswordEmail 
-                form={form} 
-                isLoading={isLoading} 
-                onSubmit={handleSendOtp} 
-                onBack={() => onNavigate('login')} 
+              <ForgotPasswordEmail
+                form={form}
+                isLoading={isLoading}
+                onSubmit={handleSendOtp}
+                onBack={() => onNavigate('login')}
               />
             </motion.div>
           )}
-          
+
           {step === 'otp' && (
             <motion.div key="otp" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}>
-              <OtpVerification 
-                email={email} 
-                isLoading={isLoading} 
-                onVerify={handleVerifyOtp} 
+              <OtpVerification
+                email={email}
+                isLoading={isLoading}
+                onVerify={handleVerifyOtp}
                 onResend={() => handleSendOtp({ email })}
-                onBack={() => setStep('email')} 
+                onBack={() => setStep('email')}
               />
             </motion.div>
           )}
 
           {step === 'reset' && (
             <motion.div key="reset" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}>
-              <ResetPasswordForm 
-                form={form} 
-                isLoading={isLoading} 
-                onSubmit={handleResetPassword} 
+              <ResetPasswordForm
+                form={form}
+                isLoading={isLoading}
+                onSubmit={handleResetPassword}
               />
             </motion.div>
           )}
@@ -155,7 +200,7 @@ export default function ForgotPasswordScreen({ onNavigate }) {
               </div>
               <h3 className="text-[16px] font-semibold text-[#1d1d1f] mb-2">Mật khẩu đã được đặt lại!</h3>
               <p className="text-[13px] text-black/50 mb-7">Bạn có thể sử dụng mật khẩu mới để đăng nhập vào hệ thống AI Study Hub.</p>
-              
+
               <motion.button
                 whileHover={{ scale: 1.005, opacity: 0.92 }}
                 whileTap={{ scale: 0.997 }}
