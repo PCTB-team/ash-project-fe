@@ -1,6 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { message } from 'antd';
+import { LOGOUT_API_URL } from '../Feature_Authen/hooks/useAuth';
 
 export default function Dashboard({ onLogout }) {
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogoutClick = async () => {
+    setIsLoggingOut(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+      const refreshToken = localStorage.getItem('refreshToken');
+      const response = await fetch(LOGOUT_API_URL, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ refreshToken })
+      });
+      
+      if (response.ok) {
+        message.success('Đã đăng xuất thành công khỏi hệ thống!');
+      } else {
+        message.warning('Phiên đăng nhập đã hết hạn, tự động thoát!');
+      }
+    } catch (error) {
+      console.error("Logout Error:", error);
+    } finally {
+      // Dù API có lỗi hay không, Frontend vẫn phải xóa token và đẩy ra trang Login
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      setIsLoggingOut(false);
+      onLogout(); // Chuyển về màn hình login
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center w-full">
       <div className="bg-white p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] text-center max-w-md w-full border border-gray-100">
@@ -11,12 +45,16 @@ export default function Dashboard({ onLogout }) {
         <p className="text-gray-500 mb-8 leading-relaxed">
           Đăng nhập thành công! Chào mừng bạn đến với hệ thống AI Study Hub.
         </p>
-        <button
-          onClick={onLogout}
-          className="w-full py-3 px-4 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors shadow-sm"
-        >
-          Đăng xuất
-        </button>
+        
+        <div className="flex flex-col gap-3">
+          <button
+            onClick={handleLogoutClick}
+            disabled={isLoggingOut}
+            className="w-full py-3 px-4 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors shadow-sm disabled:opacity-50"
+          >
+            {isLoggingOut ? 'Đang đăng xuất...' : 'Đăng xuất API'}
+          </button>
+        </div>
       </div>
     </div>
   );
