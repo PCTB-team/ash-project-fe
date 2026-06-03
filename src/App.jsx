@@ -33,8 +33,8 @@ function App() {
       ) : currentView === 'forgot-password' ? (
         <ForgotPasswordScreen onNavigate={handleNavigate} />
       ) : (
-        <LoginScreen 
-          currentView={currentView} 
+        <LoginScreen
+          currentView={currentView}
           onNavigate={handleNavigate}
           onLoginSuccess={handleLoginSuccess}
           onAdminLoginSuccess={handleAdminLoginSuccess}
