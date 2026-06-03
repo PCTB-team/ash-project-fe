@@ -9,10 +9,10 @@
 import { useEffect, useState } from 'react';
 import { Form, Divider } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useGoogleLogin, GoogleLogin } from '@react-oauth/google';
 import useAuth from '../hooks/useAuth';
 import AuthLayout from '../components/AuthLayout';
 import AuthCard from '../components/AuthCard';
-import GoogleButton from '../components/GoogleButton';
 import LoginForm from '../components/LoginForm';
 import RegisterForm from '../components/RegisterForm';
 import OtpVerification from '../components/OtpVerification';
@@ -86,7 +86,7 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, onNav
               </div>
               <h3 className="text-[16px] font-semibold text-[#1d1d1f] mb-2">Tạo tài khoản thành công!</h3>
               <p className="text-[13px] text-black/50 mb-7">Bạn đã có thể sử dụng tài khoản mới để đăng nhập vào hệ thống AI Study Hub.</p>
-              
+
               <motion.button
                 whileHover={{ scale: 1.005, opacity: 0.92 }}
                 whileTap={{ scale: 0.997 }}
@@ -95,19 +95,19 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, onNav
                   form.resetFields();
                   onNavigate('login');
                 }}
-                className="w-full h-[42px] text-white bg-gradient-to-b from-[#ff7a00] to-[#ff5c00] font-medium rounded-[12px] text-[13.5px] border-none shadow-[0_1px_3px_rgba(255,92,0,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] flex items-center justify-center gap-2 cursor-pointer transition-all duration-200"
+                className="w-full h-[42px] text-white bg-gradient-to-b from-[#ff7a00] to-[#ff5c00] font-medium rounded-full text-[13.5px] border-none shadow-[0_1px_3px_rgba(255,92,0,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] flex items-center justify-center gap-2 cursor-pointer transition-all duration-200"
               >
                 Về trang đăng nhập
               </motion.button>
             </motion.div>
           ) : isOtpStep ? (
             <motion.div key="otp" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}>
-              <OtpVerification 
-                email={registerEmail} 
-                isLoading={isLoading} 
-                onVerify={handleOtpVerify} 
+              <OtpVerification
+                email={registerEmail}
+                isLoading={isLoading}
+                onVerify={handleOtpVerify}
                 onResend={() => handleResendRegisterOtp(registerEmail)}
-                onBack={() => setRegisterStep('form')} 
+                onBack={() => setRegisterStep('form')}
               />
             </motion.div>
           ) : (
@@ -136,7 +136,7 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, onNav
                         whileTap={{ scale: 0.997 }}
                         type="submit"
                         disabled={isLoading || isGoogleLoading}
-                        className="w-full h-[42px] text-white bg-gradient-to-b from-[#ff7a00] to-[#ff5c00] font-medium rounded-[12px] text-[13.5px] border-none shadow-[0_1px_3px_rgba(255,92,0,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
+                        className="w-full h-[42px] text-white bg-gradient-to-b from-[#ff7a00] to-[#ff5c00] font-medium rounded-full text-[13.5px] border-none shadow-[0_1px_3px_rgba(255,92,0,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
                       >
                         {isLoading ? (
                           <div className="w-[18px] h-[18px] border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -152,17 +152,34 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, onNav
                 </motion.div>
               </Form>
 
-              {/* ── Divider ── */}
-              <Divider className="!text-[10px] !font-medium !text-black/[0.15] !my-5">hoặc</Divider>
+              {/* ── Divider & Google Button (Only on Login) ── */}
+              {!isRegister && (
+                <>
+                  <Divider className="!text-[10px] !font-medium !text-black/[0.15] !my-5">hoặc</Divider>
 
-              {/* ── Google OAuth Button ── */}
-              <motion.div
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.25, ease: [0.25, 1, 0.5, 1] }}
-              >
-                <GoogleButton onClick={handleGoogleLogin} isLoading={isGoogleLoading} isRegister={isRegister} />
-              </motion.div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, delay: 0.25, ease: [0.25, 1, 0.5, 1] }}
+                  >
+                    <div className="flex justify-center w-full [&>div]:w-full [&_iframe]:w-full">
+                      <GoogleLogin
+                        onSuccess={credentialResponse => {
+                          handleGoogleLogin(credentialResponse.credential);
+                        }}
+                        onError={() => {
+                          setErrorMsg('Đăng nhập Google bị lỗi.');
+                        }}
+                        theme="outline"
+                        size="large"
+                        shape="pill"
+                        text="signin_with"
+                        width="100%"
+                      />
+                    </div>
+                  </motion.div>
+                </>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

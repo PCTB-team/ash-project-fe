@@ -12,6 +12,7 @@ export const VERIFY_REGISTER_OTP_API_URL = "http://localhost:8080/api/v1/auth/ot
 export const RESEND_OTP_API_URL = "http://localhost:8080/api/v1/auth/otp-requests";
 export const REFRESH_TOKEN_API_URL = "http://localhost:8080/api/v1/auth/refresh-token";
 export const LOGOUT_API_URL = "http://localhost:8080/api/v1/auth/logout";
+export const GOOGLE_LOGIN_API_URL = "http://localhost:8080/api/v1/auth/google-login";
 
 export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -39,9 +40,9 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
       const response = await fetch(LOGIN_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          identifier: values.usernameOrEmail, 
-          password: values.password 
+        body: JSON.stringify({
+          identifier: values.usernameOrEmail,
+          password: values.password
         })
       });
 
@@ -59,7 +60,7 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
         // Hứng Token từ Backend. Cấu trúc có thể nằm ở data.token, data.result.token...
         const token = data.result?.token || data.token || data.accessToken || data.result?.accessToken;
         const refreshToken = data.result?.refreshToken || data.refreshToken;
-        
+
         // Lưu vào LocalStorage
         if (token) localStorage.setItem('accessToken', token);
         if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
@@ -226,13 +227,49 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = async (googleCredential) => {
     setIsGoogleLoading(true);
-    await new Promise(r => setTimeout(r, 800));
-    setIsGoogleLoading(false);
-    message.success('Đăng nhập bằng Google thành công!');
-    localStorage.setItem('accessToken', 'google_mock_token');
-    onLoginSuccess('vuongbaovipvip@gmail.com');
+    setErrorMsg('');
+
+    try {
+      const response = await fetch(GOOGLE_LOGIN_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token: googleCredential, // Backend expects 'token' or similar
+        })
+      });
+
+      let data = {};
+      const text = await response.text();
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          console.warn("Response is not JSON:", text);
+        }
+      }
+
+      if (response.ok || data.code === 1000) {
+        const token = data.result?.token || data.token || data.accessToken || data.result?.accessToken;
+        const refreshToken = data.result?.refreshToken || data.refreshToken;
+
+        if (token) localStorage.setItem('accessToken', token);
+        if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+
+        message.success('Đăng nhập bằng Google thành công!');
+        onLoginSuccess(data.result?.email || data.email || 'Người dùng Google');
+      } else {
+        setErrorMsg(data.message || 'Đăng nhập Google thất bại tại Backend!');
+      }
+    } catch (error) {
+      console.error("Google Login Error:", error);
+      setErrorMsg('Không thể kết nối đến máy chủ.');
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
 
   return { isLoading, isGoogleLoading, errorMsg, setErrorMsg, showPassword, setShowPassword, handleLogin, handleRegister, handleVerifyRegisterOtp, handleResendRegisterOtp, handleGoogleLogin };
