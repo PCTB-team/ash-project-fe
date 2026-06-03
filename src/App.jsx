@@ -5,7 +5,10 @@ import Dashboard from './pages/Dashboard';
 import './App.css';
 
 function App() {
-  const [currentView, setCurrentView] = useState('login'); // 'login' | 'register' | 'forgot-password' | 'dashboard'
+  const [currentView, setCurrentView] = useState(() => {
+    const token = localStorage.getItem('accessToken');
+    return token ? 'dashboard' : 'login';
+  }); // 'login' | 'register' | 'forgot-password' | 'dashboard'
 
   const handleNavigate = (view) => {
     setCurrentView(view);

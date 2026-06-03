@@ -28,6 +28,7 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
 
     if (values.usernameOrEmail === ADMIN_CREDENTIALS.username && values.password === ADMIN_CREDENTIALS.password) {
       message.success('Xác thực quản trị viên thành công!');
+      localStorage.setItem('accessToken', 'admin_mock_token');
       onAdminLoginSuccess();
       setIsLoading(false);
       return;
@@ -89,6 +90,11 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
       setIsLoading(false);
       return false;
     }
+    if (!values.fullname || values.fullname.trim().length < 2) {
+      setErrorMsg('Họ và tên phải có ít nhất 2 ký tự.');
+      setIsLoading(false);
+      return false;
+    }
     if (values.password !== values.confirmPassword) {
       setErrorMsg('Mật khẩu nhập lại không trùng khớp.');
       setIsLoading(false);
@@ -104,7 +110,7 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
         body: JSON.stringify({
           username: values.displayName.replace(/\s+/g, ''), // Đảm bảo username không có khoảng trắng
           email: values.usernameOrEmail,
-          fullname: values.displayName,
+          fullname: values.fullname,
           password: values.password,
           confirmPassword: values.confirmPassword
         })
@@ -225,6 +231,7 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
     await new Promise(r => setTimeout(r, 800));
     setIsGoogleLoading(false);
     message.success('Đăng nhập bằng Google thành công!');
+    localStorage.setItem('accessToken', 'google_mock_token');
     onLoginSuccess('vuongbaovipvip@gmail.com');
   };
 

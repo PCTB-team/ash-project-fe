@@ -15,12 +15,27 @@ export default function RegisterForm({ form, showPassword, setShowPassword }) {
       <motion.div variants={ANIM.child}>
         <Form.Item name="displayName" rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập!' }]}>
           <div className="group">
-            <label className={LABEL_CLS}>Tên đăng nhập</label>
+            <label className={LABEL_CLS}>Tên đăng nhập (Username)</label>
             <div className="relative">
               <span className={ICON_WRAP}><i className="bi bi-person-badge text-[14px]" /></span>
-              <input type="text" autoComplete="name" placeholder="Nguyễn Văn A"
+              <input type="text" autoComplete="username" placeholder="nguyenvana"
                 className={INPUT_CLS}
                 onChange={(e) => form.setFieldsValue({ displayName: e.target.value })} />
+            </div>
+          </div>
+        </Form.Item>
+      </motion.div>
+
+      {/* Full Name */}
+      <motion.div variants={ANIM.child}>
+        <Form.Item name="fullname" rules={[{ required: true, message: 'Vui lòng nhập họ và tên!' }]}>
+          <div className="group">
+            <label className={LABEL_CLS}>Họ và tên</label>
+            <div className="relative">
+              <span className={ICON_WRAP}><i className="bi bi-person-lines-fill text-[14px]" /></span>
+              <input type="text" autoComplete="name" placeholder="Nguyễn Văn A"
+                className={INPUT_CLS}
+                onChange={(e) => form.setFieldsValue({ fullname: e.target.value })} />
             </div>
           </div>
         </Form.Item>
