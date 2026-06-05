@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
-import logoImg from '../../assets/logo.png';
+import logoImg from '../../../assets/logo.png';
 
 export default function IntroHeader({ onNavigate }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
