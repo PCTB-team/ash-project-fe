@@ -11,6 +11,7 @@ import './App.css';
 import MainLayout from './features/dashboard/layouts/MainLayout.jsx';
 import DashboardScreen from './features/dashboard/pages/DashboardScreen.jsx';
 import ProfileScreen from './features/dashboard/pages/ProfileScreen.jsx';
+import TrashScreen from './features/dashboard/pages/TrashScreen.jsx';
 
 function DashboardFeature({ onLogout }) {
   const [currentView, setCurrentView] = useState('dashboard');
@@ -18,7 +19,67 @@ function DashboardFeature({ onLogout }) {
   const [accentColor, setAccentColor] = useState('#ff5c00');
   const [avatarUrl, setAvatarUrl] = useState(() => localStorage.getItem('cachedAvatar') || 'https://ui-avatars.com/api/?name=User&background=random');
   const [documents, setDocuments] = useState([]);
+  const [trashDocuments, setTrashDocuments] = useState([]);
   const [fullName, setFullName] = useState('User');
+
+  const fetchDocuments = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) return;
+      const response = await fetch('http://localhost:8080/api/v1/documents', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if ((data.code === 0 || data.code === 1000) && data.result) {
+          const mappedDocs = data.result.map(d => ({
+            id: d.documentId,
+            name: d.fileName || 'Untitled',
+            type: d.fileExtension?.replace('.', '') || 'unknown',
+            size: d.fileSize ? `${(d.fileSize / (1024*1024)).toFixed(1)} MB` : '1.0 MB',
+            uploadedAt: new Date().toISOString(), // Fallback if no creation date
+            status: d.status,
+            storageUrl: d.storageUrl
+          }));
+          setDocuments(mappedDocs);
+        }
+      }
+    } catch (e) {
+      console.error("Lỗi lấy danh sách tài liệu:", e);
+    }
+  };
+
+  const fetchTrashDocuments = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) return;
+      const response = await fetch('http://localhost:8080/api/v1/documents/trash', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if ((data.code === 0 || data.code === 1000) && data.result) {
+          const mappedDocs = data.result.map(d => ({
+            id: d.documentId,
+            name: d.fileName || 'Untitled',
+            type: d.fileExtension?.replace('.', '') || 'unknown',
+            size: d.fileSize ? `${(d.fileSize / (1024*1024)).toFixed(1)} MB` : '1.0 MB',
+            uploadedAt: d.deletedAt || new Date().toISOString(),
+            status: d.status,
+            storageUrl: d.storageUrl
+          }));
+          setTrashDocuments(mappedDocs);
+        }
+      }
+    } catch (e) {
+      console.error("Lỗi lấy danh sách thùng rác:", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchDocuments();
+    fetchTrashDocuments();
+  }, []);
 
   useEffect(() => {
     // Ưu tiên lấy fullname lưu từ API lúc đăng nhập
@@ -94,8 +155,7 @@ function DashboardFeature({ onLogout }) {
             documents={documents}
             searchTerm={searchTerm}
             onAddDocument={handleAddDocument}
-            onRemoveDocument={handleRemoveDocument}
-            onRenameDocument={handleRenameDocument}
+            onRefreshDocuments={() => { fetchDocuments(); fetchTrashDocuments(); }}
             onSelectActiveDocument={() => {}}
             currentUser={fullName}
             onLogout={handleLogoutClick}
@@ -114,6 +174,15 @@ function DashboardFeature({ onLogout }) {
             onAccentColorChange={setAccentColor}
           />
         );
+      case 'trash':
+        return (
+          <TrashScreen
+            trashDocuments={trashDocuments}
+            searchTerm={searchTerm}
+            onRefreshDocuments={() => { fetchDocuments(); fetchTrashDocuments(); }}
+            onNavigate={handleNavigate}
+          />
+        );
       default:
         return <div>View not found</div>;
     }
@@ -127,7 +196,7 @@ function DashboardFeature({ onLogout }) {
       currentUser={fullName}
       storagePercentage={15}
       documentsCount={documents.length}
-      deletedDocsCount={0}
+      deletedDocsCount={trashDocuments.length}
       searchTerm={searchTerm}
       onSearchChange={setSearchTerm}
       avatarUrl={avatarUrl}

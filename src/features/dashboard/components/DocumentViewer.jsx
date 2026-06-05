@@ -16,6 +16,61 @@ export default function DocumentViewer({
 }) {
   if (!doc) return null;
 
+  const handleDownload = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`http://localhost:8080/api/v1/documents/${doc.id}/download`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const contentType = response.headers.get('content-type') || '';
+        
+        if (contentType.includes('application/json')) {
+          const data = await response.json();
+          const url = data.result || data.storageUrl || data;
+          if (typeof url === 'string' && url.startsWith('http')) {
+            window.open(url, '_blank');
+          } else if (typeof url === 'string') {
+            window.open(`http://localhost:8080${url.startsWith('/') ? '' : '/'}${url}`, '_blank');
+          }
+        } else if (contentType.includes('text/plain')) {
+          const textUrl = await response.text();
+          if (textUrl.startsWith('http')) {
+            window.open(textUrl, '_blank');
+          } else {
+            window.open(`http://localhost:8080${textUrl.startsWith('/') ? '' : '/'}${textUrl}`, '_blank');
+          }
+        } else {
+          // Binary blob (PDF, image, docx, etc)
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = doc.name;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+        }
+      } else {
+        // Fallback to storageUrl if API fails
+        if (doc.storageUrl) {
+           const fallbackUrl = doc.storageUrl.startsWith('http') ? doc.storageUrl : `http://localhost:8080${doc.storageUrl.startsWith('/') ? '' : '/'}${doc.storageUrl}`;
+           window.open(fallbackUrl, '_blank');
+        } else {
+           console.error("Lỗi download:", response.status);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      // Fallback
+      if (doc.storageUrl) {
+         const fallbackUrl = doc.storageUrl.startsWith('http') ? doc.storageUrl : `http://localhost:8080${doc.storageUrl.startsWith('/') ? '' : '/'}${doc.storageUrl}`;
+         window.open(fallbackUrl, '_blank');
+      }
+    }
+  };
+
   return (
     <Modal
       title={null}
@@ -72,13 +127,20 @@ export default function DocumentViewer({
           </div>
         ) : (
           <div className="bg-white rounded-2xl border border-black/[0.04] p-8 shadow-sm text-center">
-            <i className="bi bi-file-earmark-x text-[36px] text-black/15 block mb-2" />
-            <p className="text-[13px] text-black/35 font-semibold">
-              Tài liệu chưa có nội dung xem trước.
+            <i className="bi bi-file-earmark-pdf text-[42px] text-black/15 block mb-3" />
+            <p className="text-[13px] text-black/70 font-semibold mb-1">
+              Bạn muốn xem hoặc tải bản gốc?
             </p>
-            <p className="text-[11px] text-black/25 font-medium mt-1">
-              Hãy sử dụng Trợ lý AI để phân tích và tóm tắt tài liệu này.
+            <p className="text-[11px] text-black/45 font-medium mb-5 px-4">
+              Nhấn nút bên dưới để tải hoặc mở tệp này trong thẻ mới của trình duyệt.
             </p>
+            <Button
+              type="primary"
+              onClick={handleDownload}
+              className="rounded-xl font-bold text-[12px] h-10 px-6 bg-blue-500 hover:bg-blue-600 border-none shadow-md shadow-blue-500/20"
+            >
+              <i className="bi bi-box-arrow-up-right mr-1.5" /> Mở / Tải xuống bản gốc
+            </Button>
           </div>
         )}
       </div>
