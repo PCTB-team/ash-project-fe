@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { ANIM } from '../utils/constants';
-import logoImg from '../../assets/logo.png';
+import logoImg from "../../../assets/logo.png";
 
 /**
  * AuthCard — Apple-style centered card with brand, error alert, toggle, and footer.

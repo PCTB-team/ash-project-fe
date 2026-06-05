@@ -3,7 +3,7 @@ import {
   footerProducts,
   footerCommunity,
   footerSupport
-} from '../intro.mock';
+} from '../utils/intro.mock';
 
 export default function IntroFooter({ onNavigate }) {
   return (

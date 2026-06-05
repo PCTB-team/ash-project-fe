@@ -11,9 +11,9 @@ import {
   problemsList,
   solutionsList,
   featuresList
-} from './intro.mock';
-import IntroHeader from './components/IntroHeader';
-import IntroFooter from './components/IntroFooter';
+} from '../utils/intro.mock';
+import IntroHeader from '../components/IntroHeader';
+import IntroFooter from '../components/IntroFooter';
 import './intro_styles.css';
 
 export default function IntroScreen({ onNavigate }) {
