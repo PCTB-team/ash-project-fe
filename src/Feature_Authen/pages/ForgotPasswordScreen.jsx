@@ -114,10 +114,10 @@ export default function ForgotPasswordScreen({ onNavigate }) {
       const response = await fetch(FORGOT_PASSWORD_RESET_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          resetToken: resetToken, 
-          newPassword: values.newPassword, 
-          confirmPassword: values.confirmPassword 
+        body: JSON.stringify({
+          resetToken: resetToken,
+          newPassword: values.newPassword,
+          confirmPassword: values.confirmPassword
         })
       });
 
@@ -198,8 +198,8 @@ export default function ForgotPasswordScreen({ onNavigate }) {
               <div className="w-14 h-14 bg-[#34c759]/10 rounded-full flex items-center justify-center mx-auto mb-5 text-[#34c759]">
                 <i className="bi bi-check-lg text-[28px]" />
               </div>
-              <h3 className="text-[16px] font-semibold text-[#1d1d1f] mb-2">Mật khẩu đã được đặt lại!</h3>
-              <p className="text-[13px] text-black/50 mb-7">Bạn có thể sử dụng mật khẩu mới để đăng nhập vào hệ thống AI Study Hub.</p>
+              <h3 className="text-[16px] font-medium text-[#1d1d1f] mb-2">Mật khẩu đã được đặt lại!</h3>
+              <p className="text-[13px] text-black/50 mb-7">Bạn có thể sử dụng mật khẩu mới để đăng nhập vào hệ thống Capy Study.</p>
 
               <motion.button
                 whileHover={{ scale: 1.005, opacity: 0.92 }}

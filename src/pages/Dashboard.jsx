@@ -13,18 +13,18 @@ export default function Dashboard({ onLogout }) {
       setFullName(storedName);
       return;
     }
-    
+
     // Nếu không có, thử giải mã từ JWT token
     const token = localStorage.getItem('accessToken');
     if (token) {
       try {
         const base64Url = token.split('.')[1];
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
         }).join(''));
         const payload = JSON.parse(jsonPayload);
-        
+
         // Lấy trường fullname từ token
         const name = payload.fullname || payload.fullName || payload.name || payload.sub;
         if (name) {
@@ -74,7 +74,7 @@ export default function Dashboard({ onLogout }) {
         </div>
         <h1 className="text-2xl font-bold text-gray-900 mb-3">Dashboard</h1>
         <p className="text-gray-500 mb-8 leading-relaxed">
-          Đăng nhập thành công! Chào mừng <span className="font-semibold text-gray-800">{fullName ? fullName : 'bạn'}</span> đến với hệ thống AI Study Hub.
+          Đăng nhập thành công! Chào mừng <span className="font-semibold text-gray-800">{fullName ? fullName : 'bạn'}</span> đến với nền tảng Capy Study.
         </p>
 
         <div className="flex flex-col gap-3">
