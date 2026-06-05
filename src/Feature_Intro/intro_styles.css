@@ -1,0 +1,22 @@
+/* Apple/Linear Luxury Glassmorphism in Light Mode */
+.premium-glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Cosmic glows and neon auras for light theme */
+.orange-glow {
+  box-shadow: 0 4px 24px rgba(255, 92, 0, 0.12), 0 0 40px rgba(255, 92, 0, 0.04);
+}
+
+/* Custom interactive classes */
+.hover-card-depth {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-card-depth:hover {
+  transform: translateY(-4px) scale(1.005);
+  border-color: rgba(255, 92, 0, 0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06), 0 0 30px rgba(255, 92, 0, 0.04);
+}

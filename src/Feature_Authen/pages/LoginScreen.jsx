@@ -84,8 +84,8 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, onNav
               <div className="w-14 h-14 bg-[#34c759]/10 rounded-full flex items-center justify-center mx-auto mb-5 text-[#34c759]">
                 <i className="bi bi-check-lg text-[28px]" />
               </div>
-              <h3 className="text-[16px] font-semibold text-[#1d1d1f] mb-2">Tạo tài khoản thành công!</h3>
-              <p className="text-[13px] text-black/50 mb-7">Bạn đã có thể sử dụng tài khoản mới để đăng nhập vào hệ thống AI Study Hub.</p>
+              <h3 className="text-[16px] font-medium text-[#1d1d1f] mb-2">Tạo tài khoản thành công!</h3>
+              <p className="text-[13px] text-black/50 mb-7">Bạn đã có thể sử dụng tài khoản mới để đăng nhập vào hệ thống Capy Study.</p>
 
               <motion.button
                 whileHover={{ scale: 1.005, opacity: 0.92 }}
