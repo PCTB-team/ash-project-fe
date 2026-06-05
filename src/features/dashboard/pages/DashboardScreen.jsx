@@ -13,7 +13,8 @@ import { getFileTagColor, getFileTypeLabel, detectFileType } from '../utils/help
 import { UPLOAD_TYPE_OPTIONS } from '../utils/global.mock.js';
 import { formatRelativeTime } from '../utils/dateUtils.js';
 
-const UPLOAD_DOCUMENT_API_URL = 'http://localhost:8080/api/v1/documents/upload';
+const UPLOAD_DOCUMENT_API_URL = 'http://localhost:8080/api/v1/documents/uploads';
+const DOCUMENTS_API_URL = 'http://localhost:8080/api/v1/documents';
 
 const { Dragger } = Upload;
 
@@ -21,12 +22,11 @@ export default function DashboardScreen({
   documents,
   searchTerm,
   onAddDocument,
-  onRemoveDocument,
   onSelectActiveDocument,
   currentUser,
   onLogout,
   onNavigate,
-  onRenameDocument,
+  onRefreshDocuments,
 }) {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [previewDoc, setPreviewDoc] = useState(null);
@@ -126,28 +126,87 @@ export default function DashboardScreen({
       });
 
       if (response.ok) {
-        // Có thể thay bằng data từ response
-        const newDoc = {
-          id: 'doc_' + Date.now(),
-          name: finalName,
-          uploadedAt: new Date().toISOString(),
-          size: values.size || '2.0 MB',
-          type: values.type,
-          content: values.content || `Nội dung mô phỏng chi tiết cho tài liệu học tập của ${finalName}.`,
-          parentId: currentFolderId || undefined,
-        };
+        let data = {};
+        try { data = await response.json(); } catch (e) {}
 
-        onAddDocument(newDoc);
+        if ((data.code === 0 || data.code === 1000) && data.result) {
+          const newDoc = {
+            id: data.result.documentId,
+            name: data.result.fileName || finalName,
+            type: data.result.fileExtension?.replace('.', '') || values.type,
+            size: data.result.fileSize ? `${(data.result.fileSize / (1024 * 1024)).toFixed(1)} MB` : values.size || '2.0 MB',
+            uploadedAt: new Date().toISOString(),
+            status: data.result.status
+          };
+          if (onAddDocument) onAddDocument(newDoc);
+        } else {
+          // Fallback if result parsing failed but response was ok
+          const fallbackDoc = {
+            id: 'doc_' + Date.now(),
+            name: finalName,
+            type: values.type,
+            size: values.size || '2.0 MB',
+            uploadedAt: new Date().toISOString()
+          };
+          if (onAddDocument) onAddDocument(fallbackDoc);
+        }
+
+        if (onRefreshDocuments) onRefreshDocuments();
         form.resetFields();
         setSelectedFile(null);
         setShowUploadModal(false);
         message.success(`Đã tải lên "${finalName}" thành công!`);
       } else {
-        message.error("Tải lên thất bại từ server!");
+        const errorData = await response.json();
+        message.error(errorData.message || "Tải lên thất bại từ server!");
       }
     } catch (error) {
       console.error("Upload error:", error);
       message.error("Lỗi kết nối máy chủ khi tải lên!");
+    }
+  };
+
+  const handleRenameDocument = async (docId, newName) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`${DOCUMENTS_API_URL}/${docId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ fileName: newName })
+      });
+      if (response.ok) {
+        message.success('Đổi tên thành công!');
+        if (onRefreshDocuments) onRefreshDocuments();
+      } else {
+        message.error('Đổi tên thất bại!');
+      }
+    } catch (e) {
+      console.error(e);
+      message.error('Lỗi kết nối server!');
+    }
+  };
+
+  const handleRemoveDocument = async (docId) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`${DOCUMENTS_API_URL}/${docId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        message.success('Đã chuyển tài liệu vào Thùng rác.');
+        if (onRefreshDocuments) onRefreshDocuments();
+      } else {
+        message.error('Xóa thất bại!');
+      }
+    } catch (e) {
+      console.error(e);
+      message.error('Lỗi kết nối server!');
     }
   };
 
@@ -185,15 +244,11 @@ export default function DashboardScreen({
             onFolderChange={setCurrentFolderId}
             onPreviewDoc={(doc) => setPreviewDoc(doc)}
             onAskAI={(doc) => handleAskAIOnDoc(doc)}
-            onRemoveDocument={(docId) => {
-              onRemoveDocument(docId);
-              message.success('Đã chuyển tài liệu vào Thùng rác.');
-            }}
+            onRemoveDocument={handleRemoveDocument}
             onAddDocument={(doc) => {
-              onAddDocument(doc);
-              if (doc.type === 'folder') message.success(`Đã tạo thư mục "${doc.name}"`);
+              if (doc.type === 'folder') message.info(`Tính năng tạo thư mục chưa kết nối API`);
             }}
-            onRenameDocument={onRenameDocument}
+            onRenameDocument={handleRenameDocument}
           />
         </div>
 
@@ -230,10 +285,7 @@ export default function DashboardScreen({
         open={!!previewDoc}
         onClose={() => setPreviewDoc(null)}
         onAskAI={handleAskAIOnDoc}
-        onDelete={(docId) => {
-          onRemoveDocument(docId);
-          message.success('Đã chuyển tài liệu vào Thùng rác.');
-        }}
+        onDelete={handleRemoveDocument}
       />
 
       {/* Upload Modal (Premium Glassmorphism) */}

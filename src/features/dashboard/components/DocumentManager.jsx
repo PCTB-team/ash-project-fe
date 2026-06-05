@@ -421,6 +421,61 @@ function DocumentRow({ doc, isPriority, onClick, onAskAI, onRemove, onRename }) 
     setIsEditing(false);
   };
 
+  const handleDownload = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`http://localhost:8080/api/v1/documents/${doc.id}/download`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const contentType = response.headers.get('content-type') || '';
+        
+        if (contentType.includes('application/json')) {
+          const data = await response.json();
+          const url = data.result || data.storageUrl || data;
+          if (typeof url === 'string' && url.startsWith('http')) {
+            window.open(url, '_blank');
+          } else if (typeof url === 'string') {
+            window.open(`http://localhost:8080${url.startsWith('/') ? '' : '/'}${url}`, '_blank');
+          }
+        } else if (contentType.includes('text/plain')) {
+          const textUrl = await response.text();
+          if (textUrl.startsWith('http')) {
+            window.open(textUrl, '_blank');
+          } else {
+            window.open(`http://localhost:8080${textUrl.startsWith('/') ? '' : '/'}${textUrl}`, '_blank');
+          }
+        } else {
+          // Binary blob (PDF, image, docx, etc)
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = doc.name;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+        }
+      } else {
+        // Fallback to storageUrl if API fails
+        if (doc.storageUrl) {
+           const fallbackUrl = doc.storageUrl.startsWith('http') ? doc.storageUrl : `http://localhost:8080${doc.storageUrl.startsWith('/') ? '' : '/'}${doc.storageUrl}`;
+           window.open(fallbackUrl, '_blank');
+        } else {
+           console.error("Lỗi download:", response.status);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      // Fallback
+      if (doc.storageUrl) {
+         const fallbackUrl = doc.storageUrl.startsWith('http') ? doc.storageUrl : `http://localhost:8080${doc.storageUrl.startsWith('/') ? '' : '/'}${doc.storageUrl}`;
+         window.open(fallbackUrl, '_blank');
+      }
+    }
+  };
+
   return (
     <div
       onClick={!isEditing ? onClick : undefined}
@@ -512,6 +567,18 @@ function DocumentRow({ doc, isPriority, onClick, onAskAI, onRemove, onRename }) 
           </Tooltip>
         )}
         
+        {/* Download - only for non-folder items */}
+        {!isFolder && !isEditing && (
+          <Tooltip title="Tải xuống" mouseEnterDelay={0.4}>
+            <button
+              onClick={(e) => { e.stopPropagation(); handleDownload(); }}
+              className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white flex items-center justify-center transition-all cursor-pointer text-[11px] sm:text-[12px]"
+            >
+              <i className="bi bi-download" />
+            </button>
+          </Tooltip>
+        )}
+
         {/* Ask AI - only for non-folder items */}
         {!isFolder && !isEditing && (
           <Tooltip title="Hỏi AI" mouseEnterDelay={0.4}>
