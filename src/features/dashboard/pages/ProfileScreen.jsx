@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Button, message, Tooltip, Spin } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
+import logoFire from '../../../assets/logo_fire.png';
+import logoFolder from '../../../assets/logo_folder.png';
 
 const USER_PROFILE_API_URL = 'http://localhost:8080/api/v1/user/profile';
 
@@ -8,6 +10,7 @@ export default function ProfileScreen({
   currentUser,
   documentsCount,
   storagePercentage,
+  totalStorageMB = 0,
   avatarUrl,
   onAvatarChange,
   accentColor,
@@ -16,7 +19,7 @@ export default function ProfileScreen({
   const [profileData, setProfileData] = useState(() => {
     const cached = localStorage.getItem('cachedProfile');
     if (cached) {
-      try { return JSON.parse(cached); } catch(e) {}
+      try { return JSON.parse(cached); } catch (e) { }
     }
     return { id: '', username: '', email: '', fullname: '', avatarUrl: avatarUrl || '', school: '' };
   });
@@ -49,7 +52,7 @@ export default function ProfileScreen({
         if (response.ok) {
           const data = await response.json();
           const resultData = data.result || (data.email ? data : null);
-          
+
           if ((data.code === 0 || data.code === 1000 || !data.code) && resultData) {
             const mappedData = {
               ...resultData,
@@ -79,7 +82,7 @@ export default function ProfileScreen({
     }
     try {
       const token = localStorage.getItem('accessToken');
-      
+
       const formData = new FormData();
       formData.append('fullname', profileData.fullname || '');
       formData.append('school', profileData.school || '');
@@ -97,7 +100,7 @@ export default function ProfileScreen({
         },
         body: formData
       });
-      
+
       let data = {};
       try {
         data = await response.json();
@@ -143,7 +146,7 @@ export default function ProfileScreen({
         return;
       }
       setAvatarFile(file); // Lưu file thực tế để gửi qua FormData
-      
+
       // Update UI immediately (Optimistic)
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -172,7 +175,7 @@ export default function ProfileScreen({
         });
 
         let data = {};
-        try { data = await response.json(); } catch (err) {}
+        try { data = await response.json(); } catch (err) { }
 
         if (response.ok || data.code === 0 || data.code === 1000) {
           message.success({ content: 'Đã lưu ảnh đại diện thành công!', key: 'avatar-upload' });
@@ -216,11 +219,7 @@ export default function ProfileScreen({
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
   };
 
-  const achievements = [
-    { icon: 'bi-lightning-charge-fill', label: 'Tốc độ', desc: 'Đăng tải 10 file đầu tiên', color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
-    { icon: 'bi-chat-heart-fill', label: 'Sôi nổi', desc: 'Tạo 5 nhóm thảo luận', color: 'text-pink-500', bg: 'bg-pink-500/10' },
-    { icon: 'bi-shield-check', label: 'Xác thực', desc: 'Liên kết email sinh viên', color: 'text-blue-500', bg: 'bg-blue-500/10' },
-  ];
+
 
 
 
@@ -234,19 +233,19 @@ export default function ProfileScreen({
         </p>
       </motion.div>
 
-      <motion.div 
-        variants={containerVariants} 
-        initial="hidden" 
-        animate="show" 
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
         className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start"
       >
         {/* Left Column: Premium Overview & Theme (xl:col-span-4) */}
         <div className="xl:col-span-4 flex flex-col gap-6">
-          
+
           {/* Glowing Profile Overview Card */}
           <motion.div variants={itemVariants} className="bg-white rounded-[32px] p-6 shadow-sm border border-black/[0.03] flex flex-col items-center text-center relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-full h-32 bg-gradient-to-b from-[var(--color-primary)]/10 to-transparent pointer-events-none" />
-            
+
             <div className="relative mb-6 mt-4">
               <div className="absolute inset-0 bg-[var(--color-primary)] blur-2xl opacity-20 rounded-full scale-110 group-hover:opacity-30 transition-opacity" />
               <div className="relative w-28 h-28 rounded-full overflow-hidden border-[4px] border-white shadow-xl bg-[#f5f5f7]">
@@ -304,10 +303,10 @@ export default function ProfileScreen({
                       `}
                     >
                       {isSelected && (
-                        <motion.i 
-                          initial={{ scale: 0 }} 
-                          animate={{ scale: 1 }} 
-                          className="bi bi-check-lg text-white text-[18px] font-medium" 
+                        <motion.i
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="bi bi-check-lg text-white text-[18px] font-medium"
                         />
                       )}
                     </button>
@@ -320,7 +319,7 @@ export default function ProfileScreen({
 
         {/* Right Column: Dashboard Layout (xl:col-span-8) */}
         <div className="xl:col-span-8 flex flex-col gap-6">
-          
+
           {/* Stats Row */}
           <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-6 rounded-[32px] bg-gradient-to-br from-amber-50 to-orange-50/50 border border-amber-500/20 relative overflow-hidden group shadow-sm">
@@ -330,8 +329,8 @@ export default function ProfileScreen({
                   <span className="text-[11px] font-semibold text-amber-600 uppercase tracking-widest block mb-1">Chuỗi học tập</span>
                   <span className="text-[36px] font-semibold text-[#1d1d1f] tracking-tight leading-none">14 <span className="text-[14px] text-black/55 font-medium ml-1">ngày</span></span>
                 </div>
-                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-amber-500 shadow-sm border border-amber-500/10">
-                  <i className="bi bi-fire text-[20px]" />
+                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-sm border border-amber-500/10 overflow-hidden relative">
+                  <img src={logoFire} alt="Fire" className="w-full h-full object-cover object-[center_2%] scale-[1.6]" />
                 </div>
               </div>
             </div>
@@ -343,8 +342,8 @@ export default function ProfileScreen({
                   <span className="text-[11px] font-semibold text-[var(--color-primary)] uppercase tracking-widest block mb-1">Tài liệu đóng góp</span>
                   <span className="text-[36px] font-semibold text-[#1d1d1f] tracking-tight leading-none">{documentsCount} <span className="text-[14px] text-black/55 font-medium ml-1">file</span></span>
                 </div>
-                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-[var(--color-primary)] shadow-sm border border-[var(--color-primary)]/10">
-                  <i className="bi bi-folder-check text-[20px]" />
+                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-sm border border-[var(--color-primary)]/10 overflow-hidden relative">
+                  <img src={logoFolder} alt="Folder" className="w-full h-full object-cover object-[center_2%] scale-[1.6]" />
                 </div>
               </div>
             </div>
@@ -425,22 +424,98 @@ export default function ProfileScreen({
             </div>
           </motion.div>
 
-          {/* Achievement Badges Area */}
-          <motion.div variants={itemVariants} className="bg-white rounded-[32px] border border-black/[0.03] p-8 shadow-sm">
-            <h4 className="text-[16px] font-semibold text-[#1d1d1f] mb-6 flex items-center gap-2">
-              <i className="bi bi-trophy-fill text-amber-500" /> Huy hiệu đạt được
-            </h4>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {achievements.map((ach, idx) => (
-                <div key={idx} className="bg-[#f9f9fb] border border-black/[0.03] rounded-[20px] p-5 flex flex-col items-center text-center hover:bg-white hover:shadow-md transition-all group">
-                  <div className={`w-14 h-14 rounded-2xl ${ach.bg} ${ach.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
-                    <i className={`bi ${ach.icon} text-[24px]`} />
-                  </div>
-                  <span className="text-[14px] font-semibold text-[#1d1d1f] mb-1">{ach.label}</span>
-                  <span className="text-[11px] font-semibold text-black/55">{ach.desc}</span>
+          {/* Account & Storage Section */}
+          <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Cloud Storage Card */}
+            <div className="bg-white rounded-[32px] border border-black/[0.03] p-7 shadow-sm">
+              <h4 className="text-[14px] font-semibold text-[#1d1d1f] mb-1 flex items-center gap-2">
+                <i className="bi bi-cloud-fill text-[var(--color-primary)]" /> Bộ nhớ đám mây
+              </h4>
+              <p className="text-[12px] font-medium text-black/55 mb-5">Dung lượng lưu trữ tài liệu</p>
+
+              <div className="space-y-4">
+                <div className="flex items-end justify-between">
+                  <span className="text-[32px] font-semibold text-[#1d1d1f] tracking-tight leading-none">
+                    {storagePercentage.toFixed(1)}<span className="text-[14px] text-black/55 font-medium ml-1">%</span>
+                  </span>
+                  <span className="text-[12px] font-medium text-black/55">
+                    {totalStorageMB < 1 ? `${(totalStorageMB * 1024).toFixed(1)} KB` : `${totalStorageMB.toFixed(1)} MB`} / 1.0 GB
+                  </span>
                 </div>
-              ))}
+
+                <div className="w-full h-3 bg-[#f5f5f7] rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${storagePercentage}%` }}
+                    transition={{ duration: 1, ease: 'easeOut' }}
+                    className="h-full rounded-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary)]/70"
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 pt-2">
+                  <div className="text-center p-3 rounded-2xl bg-[#f9f9fb]">
+                    <i className="bi bi-file-earmark-text text-[var(--color-primary)] text-[16px] block mb-1" />
+                    <span className="text-[11px] font-semibold text-black/55">Tài liệu</span>
+                  </div>
+                  <div className="text-center p-3 rounded-2xl bg-[#f9f9fb]">
+                    <i className="bi bi-image text-emerald-500 text-[16px] block mb-1" />
+                    <span className="text-[11px] font-semibold text-black/55">Hình ảnh</span>
+                  </div>
+                  <div className="text-center p-3 rounded-2xl bg-[#f9f9fb]">
+                    <i className="bi bi-play-circle text-blue-500 text-[16px] block mb-1" />
+                    <span className="text-[11px] font-semibold text-black/55">Video</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Account Security Card */}
+            <div className="bg-white rounded-[32px] border border-black/[0.03] p-7 shadow-sm">
+              <h4 className="text-[14px] font-semibold text-[#1d1d1f] mb-1 flex items-center gap-2">
+                <i className="bi bi-shield-lock-fill text-emerald-500" /> Bảo mật tài khoản
+              </h4>
+              <p className="text-[12px] font-medium text-black/55 mb-5">Trạng thái bảo mật hồ sơ</p>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                      <i className="bi bi-envelope-check-fill text-emerald-500 text-[14px]" />
+                    </div>
+                    <div>
+                      <span className="text-[13px] font-semibold text-[#1d1d1f] block">Email đã xác thực</span>
+                      <span className="text-[11px] font-medium text-black/55">{profileData.email || '---'}</span>
+                    </div>
+                  </div>
+                  <i className="bi bi-check-circle-fill text-emerald-500 text-[16px]" />
+                </div>
+
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#f9f9fb] border border-black/[0.03]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                      <i className="bi bi-key-fill text-amber-500 text-[14px]" />
+                    </div>
+                    <div>
+                      <span className="text-[13px] font-semibold text-[#1d1d1f] block">Mật khẩu</span>
+                      <span className="text-[11px] font-medium text-black/55">••••••••</span>
+                    </div>
+                  </div>
+                  <button className="text-[12px] font-semibold text-[var(--color-primary)] hover:underline cursor-pointer">Đổi</button>
+                </div>
+
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#f9f9fb] border border-black/[0.03]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                      <i className="bi bi-clock-history text-blue-500 text-[14px]" />
+                    </div>
+                    <div>
+                      <span className="text-[13px] font-semibold text-[#1d1d1f] block">Đăng nhập gần nhất</span>
+                      <span className="text-[11px] font-medium text-black/55">Hôm nay</span>
+                    </div>
+                  </div>
+                  <i className="bi bi-check-circle-fill text-emerald-500 text-[16px]" />
+                </div>
+              </div>
             </div>
           </motion.div>
 

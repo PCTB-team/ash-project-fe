@@ -315,7 +315,7 @@ export default function DocumentManager({
               <span className="flex-1 min-w-0">Tên tài liệu</span>
               <span className="w-[72px] text-center">Định dạng</span>
               <span className="w-[100px] text-center hidden md:block">Ngày upload</span>
-              <span className="w-[70px] text-right hidden md:block">Dung lượng</span>
+              <span className="w-[85px] text-right hidden md:block whitespace-nowrap">Dung lượng</span>
               <span className="w-[104px]" /> {/* Khớp với width của nhóm Actions */}
             </div>
 
@@ -532,7 +532,7 @@ function DocumentRow({ doc, isPriority, onClick, onAskAI, onRemove, onRename }) 
           <Tag color={getFileTagColor(doc.type)} className="font-medium text-[8px] uppercase rounded-full border-none px-1.5 py-0 m-0 leading-tight">
             {getFileTypeLabel(doc.type)}
           </Tag>
-          <span className="text-[10px] text-black/35 font-medium">{formatRelativeTime(doc.uploadedAt)}</span>
+          <span className="text-[10px] text-black/35 font-medium">{doc.timeSinceUpload || formatRelativeTime(doc.uploadedAt)}</span>
         </div>
       </div>
 
@@ -545,11 +545,11 @@ function DocumentRow({ doc, isPriority, onClick, onAskAI, onRemove, onRename }) 
 
       {/* Date (desktop/tablet) */}
       <span className="w-[100px] text-center text-[11px] text-black/45 font-medium hidden md:block flex-shrink-0">
-        {formatRelativeTime(doc.uploadedAt)}
+        {doc.timeSinceUpload || formatRelativeTime(doc.uploadedAt)}
       </span>
 
       {/* Size (desktop/tablet) */}
-      <span className="w-[70px] text-right text-[11px] text-black/55 font-semibold hidden md:block flex-shrink-0">
+      <span className="w-[85px] text-right text-[11px] text-black/55 font-semibold hidden md:block flex-shrink-0 whitespace-nowrap">
         {doc.size}
       </span>
 

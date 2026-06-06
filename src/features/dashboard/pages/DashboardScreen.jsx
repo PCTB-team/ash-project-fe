@@ -12,6 +12,7 @@ import DocumentManager from '../components/DocumentManager.jsx';
 import { getFileTagColor, getFileTypeLabel, detectFileType } from '../utils/helpers.js';
 import { UPLOAD_TYPE_OPTIONS } from '../utils/global.mock.js';
 import { formatRelativeTime } from '../utils/dateUtils.js';
+import logoAi from '../../../assets/logo_AI.png';
 
 const UPLOAD_DOCUMENT_API_URL = 'http://localhost:8080/api/v1/documents/uploads';
 const DOCUMENTS_API_URL = 'http://localhost:8080/api/v1/documents';
@@ -22,6 +23,8 @@ export default function DashboardScreen({
   documents,
   searchTerm,
   onAddDocument,
+  onRemoveDocument,
+  onRenameDocument,
   onSelectActiveDocument,
   currentUser,
   onLogout,
@@ -127,7 +130,7 @@ export default function DashboardScreen({
 
       if (response.ok) {
         let data = {};
-        try { data = await response.json(); } catch (e) {}
+        try { data = await response.json(); } catch (e) { }
 
         if ((data.code === 0 || data.code === 1000) && data.result) {
           const newDoc = {
@@ -179,13 +182,24 @@ export default function DashboardScreen({
       });
       if (response.ok) {
         message.success('Đổi tên thành công!');
+        if (onRenameDocument) onRenameDocument(docId, newName);
         if (onRefreshDocuments) onRefreshDocuments();
       } else {
-        message.error('Đổi tên thất bại!');
+        if (onRenameDocument) {
+          onRenameDocument(docId, newName);
+          message.success('Đổi tên (cục bộ) thành công!');
+        } else {
+          message.error('Đổi tên thất bại!');
+        }
       }
     } catch (e) {
       console.error(e);
-      message.error('Lỗi kết nối server!');
+      if (onRenameDocument) {
+        onRenameDocument(docId, newName);
+        message.success('Đổi tên (cục bộ) thành công!');
+      } else {
+        message.error('Lỗi kết nối server!');
+      }
     }
   };
 
@@ -200,13 +214,24 @@ export default function DashboardScreen({
       });
       if (response.ok) {
         message.success('Đã chuyển tài liệu vào Thùng rác.');
+        if (onRemoveDocument) onRemoveDocument(docId);
         if (onRefreshDocuments) onRefreshDocuments();
       } else {
-        message.error('Xóa thất bại!');
+        if (onRemoveDocument) {
+          onRemoveDocument(docId);
+          message.success('Đã xóa (cục bộ) tài liệu.');
+        } else {
+          message.error('Xóa thất bại!');
+        }
       }
     } catch (e) {
       console.error(e);
-      message.error('Lỗi kết nối server!');
+      if (onRemoveDocument) {
+        onRemoveDocument(docId);
+        message.success('Đã xóa (cục bộ) tài liệu.');
+      } else {
+        message.error('Lỗi kết nối server!');
+      }
     }
   };
 
@@ -270,10 +295,10 @@ export default function DashboardScreen({
                 const moved = Math.abs(position.x - offsetStart.x) > 8 || Math.abs(position.y - offsetStart.y) > 8;
                 if (!moved) onNavigate('ai');
               }}
-              className={`w-[48px] h-[48px] sm:w-[54px] sm:h-[54px] bg-gradient-to-b from-[#ff7a00] to-[#ff5c00] text-white rounded-full flex items-center justify-center border-none shadow-[0_1px_3px_rgba(255,92,0,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] hover:brightness-110 hover:shadow-[0_8px_24px_rgba(255,92,0,0.4)] transition-all duration-300 cursor-grab active:cursor-grabbing ${isDragging ? 'scale-110 shadow-2xl ring-4 ring-[#ff5c00]/30' : ''
+              className={`w-[48px] h-[48px] sm:w-[54px] sm:h-[54px] bg-white text-white rounded-full flex items-center justify-center border-[1.5px] border-[#ff5c00]/20 shadow-[0_4px_12px_rgba(255,92,0,0.2)] hover:shadow-[0_8px_24px_rgba(255,92,0,0.4)] transition-all duration-300 cursor-grab active:cursor-grabbing overflow-hidden ${isDragging ? 'scale-110 shadow-2xl ring-4 ring-[#ff5c00]/30' : ''
                 }`}
             >
-              <i className={`bi bi-stars text-[22px] ${isDragging ? 'animate-pulse' : 'animate-bounce duration-[3s]'}`} />
+              <img src={logoAi} alt="AI" className={`w-full h-full object-cover object-[center_2%] scale-[1.9] ${isDragging ? 'animate-pulse' : 'animate-bounce duration-[3s]'}`} />
             </button>
           </Tooltip>
         </div>

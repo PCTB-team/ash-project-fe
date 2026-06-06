@@ -18,7 +18,10 @@ function DashboardFeature({ onLogout }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [accentColor, setAccentColor] = useState('#ff5c00');
   const [avatarUrl, setAvatarUrl] = useState(() => localStorage.getItem('cachedAvatar') || 'https://ui-avatars.com/api/?name=User&background=random');
-  const [documents, setDocuments] = useState([]);
+  const [documents, setDocuments] = useState(() => {
+    const localDocsStr = localStorage.getItem('localDocuments');
+    return localDocsStr ? JSON.parse(localDocsStr) : [];
+  });
   const [trashDocuments, setTrashDocuments] = useState([]);
   const [fullName, setFullName] = useState('User');
 
@@ -36,16 +39,34 @@ function DashboardFeature({ onLogout }) {
             id: d.documentId,
             name: d.fileName || 'Untitled',
             type: d.fileExtension?.replace('.', '') || 'unknown',
-            size: d.fileSize ? `${(d.fileSize / (1024*1024)).toFixed(1)} MB` : '1.0 MB',
-            uploadedAt: new Date().toISOString(), // Fallback if no creation date
+            fileSizeBytes: d.fileSize || 0,
+            size: d.fileSize ? `${(d.fileSize / (1024*1024)).toFixed(2)} MB` : '0 MB',
+            uploadedAt: new Date().toISOString(),
+            timeSinceUpload: d.timeSinceUpload,
             status: d.status,
             storageUrl: d.storageUrl
           }));
-          setDocuments(mappedDocs);
+          setDocuments(prev => {
+            const localDocsStr = localStorage.getItem('localDocuments');
+            const localDocs = localDocsStr ? JSON.parse(localDocsStr) : [];
+            
+            const merged = [...mappedDocs];
+            localDocs.forEach(ld => {
+              if (!merged.find(d => d.id === ld.id)) {
+                merged.push(ld);
+              }
+            });
+            localStorage.setItem('localDocuments', JSON.stringify(merged));
+            return merged;
+          });
         }
       }
     } catch (e) {
       console.error("Lỗi lấy danh sách tài liệu:", e);
+      const localDocsStr = localStorage.getItem('localDocuments');
+      if (localDocsStr) {
+        setDocuments(JSON.parse(localDocsStr));
+      }
     }
   };
 
@@ -63,8 +84,10 @@ function DashboardFeature({ onLogout }) {
             id: d.documentId,
             name: d.fileName || 'Untitled',
             type: d.fileExtension?.replace('.', '') || 'unknown',
-            size: d.fileSize ? `${(d.fileSize / (1024*1024)).toFixed(1)} MB` : '1.0 MB',
+            fileSizeBytes: d.fileSize || 0,
+            size: d.fileSize ? `${(d.fileSize / (1024*1024)).toFixed(2)} MB` : '0 MB',
             uploadedAt: d.deletedAt || new Date().toISOString(),
+            timeSinceUpload: d.timeSinceUpload,
             status: d.status,
             storageUrl: d.storageUrl
           }));
@@ -80,6 +103,12 @@ function DashboardFeature({ onLogout }) {
     fetchDocuments();
     fetchTrashDocuments();
   }, []);
+
+  // Tính toán dung lượng thực tế từ tổng fileSize của tất cả documents (max 1GB = 1024 MB)
+  const MAX_STORAGE_MB = 1024; // 1 GB
+  const totalStorageBytes = documents.reduce((sum, doc) => sum + (doc.fileSizeBytes || 0), 0);
+  const totalStorageMB = totalStorageBytes / (1024 * 1024);
+  const storagePercentage = Math.min((totalStorageMB / MAX_STORAGE_MB) * 100, 100);
 
   useEffect(() => {
     // Ưu tiên lấy fullname lưu từ API lúc đăng nhập
@@ -141,10 +170,28 @@ function DashboardFeature({ onLogout }) {
     }
   };
   
-  const handleAddDocument = (doc) => setDocuments([...documents, doc]);
-  const handleRemoveDocument = (docId) => setDocuments(documents.filter(d => d.id !== docId));
+  const handleAddDocument = (doc) => {
+    setDocuments(prev => {
+      const updated = [...prev, doc];
+      localStorage.setItem('localDocuments', JSON.stringify(updated));
+      return updated;
+    });
+  };
+  
+  const handleRemoveDocument = (docId) => {
+    setDocuments(prev => {
+      const updated = prev.filter(d => d.id !== docId);
+      localStorage.setItem('localDocuments', JSON.stringify(updated));
+      return updated;
+    });
+  };
+  
   const handleRenameDocument = (docId, newName) => {
-    setDocuments(documents.map(d => d.id === docId ? { ...d, name: newName } : d));
+    setDocuments(prev => {
+      const updated = prev.map(d => d.id === docId ? { ...d, name: newName } : d);
+      localStorage.setItem('localDocuments', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const renderContent = () => {
@@ -155,6 +202,8 @@ function DashboardFeature({ onLogout }) {
             documents={documents}
             searchTerm={searchTerm}
             onAddDocument={handleAddDocument}
+            onRemoveDocument={handleRemoveDocument}
+            onRenameDocument={handleRenameDocument}
             onRefreshDocuments={() => { fetchDocuments(); fetchTrashDocuments(); }}
             onSelectActiveDocument={() => {}}
             currentUser={fullName}
@@ -167,7 +216,8 @@ function DashboardFeature({ onLogout }) {
           <ProfileScreen
             currentUser={fullName}
             documentsCount={documents.length}
-            storagePercentage={15}
+            storagePercentage={storagePercentage}
+            totalStorageMB={totalStorageMB}
             avatarUrl={avatarUrl}
             onAvatarChange={setAvatarUrl}
             accentColor={accentColor}
@@ -194,7 +244,8 @@ function DashboardFeature({ onLogout }) {
       onNavigate={handleNavigate}
       onLogout={handleLogoutClick}
       currentUser={fullName}
-      storagePercentage={15}
+      storagePercentage={storagePercentage}
+      totalStorageMB={totalStorageMB}
       documentsCount={documents.length}
       deletedDocsCount={trashDocuments.length}
       searchTerm={searchTerm}
