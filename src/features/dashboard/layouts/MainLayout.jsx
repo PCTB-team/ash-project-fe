@@ -13,6 +13,7 @@ export default function MainLayout({
   onLogout,
   currentUser,
   storagePercentage,
+  totalStorageMB,
   documentsCount,
   deletedDocsCount = 0,
   searchTerm,
@@ -48,6 +49,7 @@ export default function MainLayout({
         onLogout={onLogout}
         currentUser={currentUser}
         storagePercentage={storagePercentage}
+        totalStorageMB={totalStorageMB}
         documentsCount={documentsCount}
         deletedDocsCount={deletedDocsCount}
         avatarUrl={avatarUrl}
