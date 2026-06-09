@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from 'antd';
 import {
@@ -18,50 +18,27 @@ import './intro_styles.css';
 
 export default function IntroScreen({ onNavigate }) {
   // Live breathing AI terminal simulation states
-  const [terminalLines, setTerminalLines] = useState([]);
-  const [terminalIndex, setTerminalIndex] = useState(0);
+  const [terminalLines, setTerminalLines] = useState([simulationData[0]]);
+  const terminalIndexRef = useRef(0);
 
   useEffect(() => {
-    // Initial load first message
-    setTerminalLines([simulationData[0]]);
-
     const interval = setInterval(() => {
-      setTerminalIndex((prevIndex) => {
-        const nextIndex = (prevIndex + 1) % (simulationData.length / 2);
-        const userMsg = simulationData[nextIndex * 2];
-        const aiMsg = simulationData[nextIndex * 2 + 1];
+      const nextIndex = (terminalIndexRef.current + 1) % (simulationData.length / 2);
+      terminalIndexRef.current = nextIndex;
+      const userMsg = simulationData[nextIndex * 2];
+      const aiMsg = simulationData[nextIndex * 2 + 1];
 
-        // Append messages with staggered delay
-        setTerminalLines([userMsg]);
-        setTimeout(() => {
-          setTerminalLines([userMsg, aiMsg]);
-        }, 1000);
-
-        return nextIndex;
-      });
+      // Append messages with staggered delay
+      setTerminalLines([userMsg]);
+      setTimeout(() => {
+        setTerminalLines([userMsg, aiMsg]);
+      }, 1000);
     }, 7000);
 
     return () => clearInterval(interval);
   }, []);
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.12
-      }
-    }
-  };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
-    }
-  };
 
   return (
     <div className="bg-[#fafafb] text-[#1d1d1f] min-h-screen flex flex-col font-sans relative overflow-hidden select-none">

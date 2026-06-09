@@ -3,16 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
-import { Button, Tag, Modal, Form, Select, Upload, Tooltip, message } from 'antd';
+import { useState } from 'react';
+import { Button, Modal, Form, Select, Upload, message } from 'antd';
 import { motion } from 'framer-motion';
-import FileIcon from '../ui/FileIcon.jsx';
 import DocumentViewer from '../components/DocumentViewer.jsx';
 import DocumentManager from '../components/DocumentManager.jsx';
-import { getFileTagColor, getFileTypeLabel, detectFileType } from '../utils/helpers.js';
-import { UPLOAD_TYPE_OPTIONS } from '../utils/global.mock.js';
-import { formatRelativeTime } from '../utils/dateUtils.js';
-import logoAi from '../../../assets/logo_AI.png';
+import { detectFileType } from '../utils/helpers.js';
+import { UPLOAD_TYPE_OPTIONS } from '../utils/fileConfig.js';
+import { fetchWithAuth } from '../../../utils/apiClient.js';
+
 
 const UPLOAD_DOCUMENT_API_URL = 'http://localhost:8080/api/v1/documents/uploads';
 const DOCUMENTS_API_URL = 'http://localhost:8080/api/v1/documents';
@@ -20,84 +19,21 @@ const DOCUMENTS_API_URL = 'http://localhost:8080/api/v1/documents';
 const { Dragger } = Upload;
 
 export default function DashboardScreen({
-  documents,
   searchTerm,
-  onAddDocument,
   onRemoveDocument,
   onRenameDocument,
-  onSelectActiveDocument,
-  currentUser,
-  onLogout,
   onNavigate,
   onRefreshDocuments,
+  onUpdateDocumentsCount,
+  refreshTrigger,
 }) {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [previewDoc, setPreviewDoc] = useState(null);
-  const [currentFolderId, setCurrentFolderId] = useState(null);
+  const [folderPath, setFolderPath] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [form] = Form.useForm();
 
-  // Draggable floating assistant state
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [offsetStart, setOffsetStart] = useState({ x: 0, y: 0 });
 
-  const handleMouseDown = (e) => {
-    if (e.button !== 0) return;
-    setIsDragging(true);
-    setDragStart({ x: e.clientX, y: e.clientY });
-    setOffsetStart({ x: position.x, y: position.y });
-    e.preventDefault();
-  };
-
-  const handleTouchStart = (e) => {
-    const touch = e.touches[0];
-    setIsDragging(true);
-    setDragStart({ x: touch.clientX, y: touch.clientY });
-    setOffsetStart({ x: position.x, y: position.y });
-  };
-
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (!isDragging) return;
-      setPosition({
-        x: offsetStart.x + (e.clientX - dragStart.x),
-        y: offsetStart.y + (e.clientY - dragStart.y)
-      });
-    };
-    const handleMouseUp = () => setIsDragging(false);
-
-    if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-    }
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging, dragStart, offsetStart]);
-
-  useEffect(() => {
-    const handleTouchMove = (e) => {
-      if (!isDragging) return;
-      const touch = e.touches[0];
-      setPosition({
-        x: offsetStart.x + (touch.clientX - dragStart.x),
-        y: offsetStart.y + (touch.clientY - dragStart.y)
-      });
-    };
-    const handleTouchEnd = () => setIsDragging(false);
-
-    if (isDragging) {
-      window.addEventListener('touchmove', handleTouchMove, { passive: false });
-      window.addEventListener('touchend', handleTouchEnd);
-    }
-    return () => {
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [isDragging, dragStart, offsetStart]);
 
   const handleUploadSubmit = async (values) => {
     if (!selectedFile) {
@@ -108,75 +44,80 @@ export default function DashboardScreen({
     let finalName = values.name;
     if (!finalName.includes('.')) finalName += `.${values.type}`;
 
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-    formData.append('name', finalName);
-    formData.append('type', values.type);
-    formData.append('content', values.content || '');
-    if (currentFolderId) {
-      formData.append('parentId', currentFolderId);
-    }
+    const executeUpload = async (replaceExisting = false) => {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('name', finalName);
+      formData.append('type', values.type);
+      formData.append('content', values.content || '');
 
-    try {
-      const token = localStorage.getItem('accessToken');
-      // Gọi API tải file lên Backend
-      const response = await fetch(UPLOAD_DOCUMENT_API_URL, {
-        method: 'POST',
-        headers: {
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
-        body: formData
-      });
-
-      if (response.ok) {
-        let data = {};
-        try { data = await response.json(); } catch (e) { }
-
-        if ((data.code === 0 || data.code === 1000) && data.result) {
-          const newDoc = {
-            id: data.result.documentId,
-            name: data.result.fileName || finalName,
-            type: data.result.fileExtension?.replace('.', '') || values.type,
-            size: data.result.fileSize ? `${(data.result.fileSize / (1024 * 1024)).toFixed(1)} MB` : values.size || '2.0 MB',
-            uploadedAt: new Date().toISOString(),
-            status: data.result.status
-          };
-          if (onAddDocument) onAddDocument(newDoc);
-        } else {
-          // Fallback if result parsing failed but response was ok
-          const fallbackDoc = {
-            id: 'doc_' + Date.now(),
-            name: finalName,
-            type: values.type,
-            size: values.size || '2.0 MB',
-            uploadedAt: new Date().toISOString()
-          };
-          if (onAddDocument) onAddDocument(fallbackDoc);
-        }
-
-        if (onRefreshDocuments) onRefreshDocuments();
-        form.resetFields();
-        setSelectedFile(null);
-        setShowUploadModal(false);
-        message.success(`Đã tải lên "${finalName}" thành công!`);
-      } else {
-        const errorData = await response.json();
-        message.error(errorData.message || "Tải lên thất bại từ server!");
+      const params = new URLSearchParams();
+      const currentFolder = folderPath.length > 0 ? folderPath[folderPath.length - 1] : null;
+      if (currentFolder) {
+        params.append('folderId', currentFolder.id);
       }
-    } catch (error) {
-      console.error("Upload error:", error);
-      message.error("Lỗi kết nối máy chủ khi tải lên!");
-    }
+      if (replaceExisting) {
+        params.append('replaceExisting', 'true');
+      }
+
+      try {
+        const uploadUrl = `${UPLOAD_DOCUMENT_API_URL}${params.toString() ? '?' + params.toString() : ''}`;
+        
+        const response = await fetchWithAuth(uploadUrl, {
+          method: 'POST',
+          body: formData
+        });
+
+        if (response.ok) {
+          let data = {};
+          try { data = await response.json(); } catch { /* ignore */ }
+
+          if ((data.code === 0 || data.code === 1000) && data.result) {
+            // Success
+          } else {
+            message.error("Tải lên thành công nhưng lỗi phân tích dữ liệu trả về!");
+          }
+
+          if (onRefreshDocuments) onRefreshDocuments();
+          form.resetFields();
+          setSelectedFile(null);
+          setShowUploadModal(false);
+          const uploadedName = (data.result && data.result.fileName) || finalName;
+          message.success(`Đã tải lên "${uploadedName}" thành công!`);
+        } else {
+          const errorData = await response.json();
+          const errMsg = errorData.message || "";
+          
+          if (errMsg.toLowerCase().includes('tồn tại') || errMsg.toLowerCase().includes('exist')) {
+            Modal.confirm({
+              title: 'Tài liệu đã tồn tại',
+              content: 'Một tài liệu với tên này đã tồn tại trong thư mục. Bạn có muốn ghi đè lên tài liệu cũ không?',
+              okText: 'Ghi đè',
+              cancelText: 'Hủy',
+              centered: true,
+              onOk: () => {
+                executeUpload(true);
+              }
+            });
+          } else {
+            message.error(errMsg || "Tải lên thất bại từ server!");
+          }
+        }
+      } catch (error) {
+        console.error("Upload error:", error);
+        message.error("Lỗi kết nối máy chủ khi tải lên!");
+      }
+    };
+
+    executeUpload(false);
   };
 
   const handleRenameDocument = async (docId, newName) => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${DOCUMENTS_API_URL}/${docId}`, {
+      const response = await fetchWithAuth(`${DOCUMENTS_API_URL}/${docId}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ fileName: newName })
       });
@@ -185,58 +126,36 @@ export default function DashboardScreen({
         if (onRenameDocument) onRenameDocument(docId, newName);
         if (onRefreshDocuments) onRefreshDocuments();
       } else {
-        if (onRenameDocument) {
-          onRenameDocument(docId, newName);
-          message.success('Đổi tên (cục bộ) thành công!');
-        } else {
-          message.error('Đổi tên thất bại!');
-        }
+        // Không được phép đổi tên cục bộ ở đây
+        message.error('Đổi tên thất bại từ server!');
       }
     } catch (e) {
       console.error(e);
-      if (onRenameDocument) {
-        onRenameDocument(docId, newName);
-        message.success('Đổi tên (cục bộ) thành công!');
-      } else {
-        message.error('Lỗi kết nối server!');
-      }
+      message.error('Lỗi kết nối server, không thể đổi tên!');
     }
   };
 
   const handleRemoveDocument = async (docId) => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${DOCUMENTS_API_URL}/${docId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await fetchWithAuth(`${DOCUMENTS_API_URL}/${docId}`, {
+        method: 'DELETE'
       });
       if (response.ok) {
         message.success('Đã chuyển tài liệu vào Thùng rác.');
         if (onRemoveDocument) onRemoveDocument(docId);
         if (onRefreshDocuments) onRefreshDocuments();
       } else {
-        if (onRemoveDocument) {
-          onRemoveDocument(docId);
-          message.success('Đã xóa (cục bộ) tài liệu.');
-        } else {
-          message.error('Xóa thất bại!');
-        }
+        // Không được phép xóa cục bộ ở đây
+        message.error('Xóa thất bại từ server!');
       }
     } catch (e) {
       console.error(e);
-      if (onRemoveDocument) {
-        onRemoveDocument(docId);
-        message.success('Đã xóa (cục bộ) tài liệu.');
-      } else {
-        message.error('Lỗi kết nối server!');
-      }
+      message.error('Lỗi kết nối server, không thể xóa!');
     }
   };
 
-  const handleAskAIOnDoc = (doc) => {
-    onSelectActiveDocument(doc);
+  const handleAskAIOnDoc = () => {
+    // TODO: Khi có trang AI, truyền doc vào context/state trước khi navigate
     onNavigate('ai');
   };
 
@@ -263,45 +182,29 @@ export default function DashboardScreen({
         {/* ═══ Document Manager Container ═══ */}
         <div className="flex-1 bg-white border border-black/[0.04] rounded-2xl shadow-sm overflow-hidden relative flex flex-col" style={{ minHeight: '420px' }}>
           <DocumentManager
-            documents={documents}
             searchTerm={searchTerm}
-            currentFolderId={currentFolderId}
-            onFolderChange={setCurrentFolderId}
+            folderPath={folderPath}
+            onFolderChange={(folder) => {
+              if (folder === null) {
+                setFolderPath([]);
+              } else {
+                setFolderPath(prev => [...prev, folder]);
+              }
+            }}
+            onBreadcrumbClick={(index) => {
+              setFolderPath(prev => prev.slice(0, index + 1));
+            }}
             onPreviewDoc={(doc) => setPreviewDoc(doc)}
             onAskAI={(doc) => handleAskAIOnDoc(doc)}
             onRemoveDocument={handleRemoveDocument}
-            onAddDocument={(doc) => {
-              if (doc.type === 'folder') message.info(`Tính năng tạo thư mục chưa kết nối API`);
-            }}
             onRenameDocument={handleRenameDocument}
+            onRefreshDocuments={onRefreshDocuments}
+            onUpdateDocumentsCount={onUpdateDocumentsCount}
+            refreshTrigger={refreshTrigger}
           />
         </div>
 
-        {/* Floating Draggable AI Assistant with glowing ring */}
-        <div
-          className="fixed z-50 touch-none select-none"
-          style={{
-            bottom: '24px',
-            right: '24px',
-            transform: `translate(${position.x}px, ${position.y}px)`,
-            transition: isDragging ? 'none' : 'transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)',
-          }}
-          onMouseDown={handleMouseDown}
-          onTouchStart={handleTouchStart}
-        >
-          <Tooltip title={isDragging ? "Đang kéo thả..." : "Kéo tôi đến bất kỳ góc nào!"} placement="left">
-            <button
-              onClick={() => {
-                const moved = Math.abs(position.x - offsetStart.x) > 8 || Math.abs(position.y - offsetStart.y) > 8;
-                if (!moved) onNavigate('ai');
-              }}
-              className={`w-[48px] h-[48px] sm:w-[54px] sm:h-[54px] bg-white text-white rounded-full flex items-center justify-center border-[1.5px] border-[#ff5c00]/20 shadow-[0_4px_12px_rgba(255,92,0,0.2)] hover:shadow-[0_8px_24px_rgba(255,92,0,0.4)] transition-all duration-300 cursor-grab active:cursor-grabbing overflow-hidden ${isDragging ? 'scale-110 shadow-2xl ring-4 ring-[#ff5c00]/30' : ''
-                }`}
-            >
-              <img src={logoAi} alt="AI" className={`w-full h-full object-cover object-[center_2%] scale-[1.9] ${isDragging ? 'animate-pulse' : 'animate-bounce duration-[3s]'}`} />
-            </button>
-          </Tooltip>
-        </div>
+
       </div>
 
       {/* Document Viewer Modal */}

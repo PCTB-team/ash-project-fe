@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
 import logoImg from '../../../assets/logo.png';

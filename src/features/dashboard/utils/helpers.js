@@ -1,4 +1,4 @@
-import { FILE_TAG_COLORS, FILE_TYPE_LABELS, TYPE_CLASSIFICATION } from '../utils/global.mock.js';
+import { FILE_TAG_COLORS, FILE_TYPE_LABELS, TYPE_CLASSIFICATION } from './fileConfig.js';
 
 /**
  * Returns Ant Design Tag color string for each document type.
@@ -44,3 +44,13 @@ export function classifyFileType(type) {
   return 'other';
 }
 
+/**
+ * Formats bytes to human-readable string (KB, MB, GB).
+ */
+export function formatBytes(bytes) {
+  if (bytes === 0 || !bytes) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}

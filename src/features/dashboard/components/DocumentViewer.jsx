@@ -1,7 +1,8 @@
 import { Modal, Button, Tag } from 'antd';
 import { motion } from 'framer-motion';
-import FileIcon from '../ui/FileIcon.jsx';
+import FileIcon from './FileIcon.jsx';
 import { getFileTagColor, getFileTypeLabel } from '../utils/helpers.js';
+import { fetchWithAuth } from '../../../utils/apiClient.js';
 
 /**
  * Premium Document Viewer Modal.
@@ -18,10 +19,7 @@ export default function DocumentViewer({
 
   const handleDownload = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:8080/api/v1/documents/${doc.id}/download`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const response = await fetchWithAuth(`http://localhost:8080/api/v1/documents/${doc.id}/download`);
       if (response.ok) {
         const contentType = response.headers.get('content-type') || '';
         
@@ -68,6 +66,41 @@ export default function DocumentViewer({
          const fallbackUrl = doc.storageUrl.startsWith('http') ? doc.storageUrl : `http://localhost:8080${doc.storageUrl.startsWith('/') ? '' : '/'}${doc.storageUrl}`;
          window.open(fallbackUrl, '_blank');
       }
+    }
+  };
+
+  const handleView = async () => {
+    if (doc.viewUrl) {
+      window.open(doc.viewUrl.startsWith('http') ? doc.viewUrl : `http://localhost:8080${doc.viewUrl.startsWith('/') ? '' : '/'}${doc.viewUrl}`, '_blank');
+      return;
+    }
+
+    try {
+      const response = await fetchWithAuth(`http://localhost:8080/api/v1/documents/${doc.id}/view`);
+      if (response.ok) {
+         // The view API might return a URL in JSON, or text URL, or redirect.
+         const contentType = response.headers.get('content-type') || '';
+         if (contentType.includes('application/json')) {
+            const data = await response.json();
+            const url = data.result || data.viewUrl || data;
+            if (typeof url === 'string') {
+               window.open(url.startsWith('http') ? url : `http://localhost:8080${url.startsWith('/') ? '' : '/'}${url}`, '_blank');
+            }
+         } else if (contentType.includes('text/plain')) {
+            const textUrl = await response.text();
+            window.open(textUrl.startsWith('http') ? textUrl : `http://localhost:8080${textUrl.startsWith('/') ? '' : '/'}${textUrl}`, '_blank');
+         } else {
+             // If binary file is returned directly for viewing
+             const blob = await response.blob();
+             const url = window.URL.createObjectURL(blob);
+             window.open(url, '_blank');
+         }
+      } else {
+         message.error("Lỗi khi mở tài liệu!");
+      }
+    } catch (e) {
+      console.error(e);
+      message.error("Lỗi kết nối khi mở tài liệu!");
     }
   };
 
@@ -134,13 +167,22 @@ export default function DocumentViewer({
             <p className="text-[11px] text-black/45 font-medium mb-5 px-4">
               Nhấn nút bên dưới để tải hoặc mở tệp này trong thẻ mới của trình duyệt.
             </p>
-            <Button
-              type="primary"
-              onClick={handleDownload}
-              className="rounded-xl font-bold text-[12px] h-10 px-6 bg-blue-500 hover:bg-blue-600 border-none shadow-md shadow-blue-500/20"
-            >
-              <i className="bi bi-box-arrow-up-right mr-1.5" /> Mở / Tải xuống bản gốc
-            </Button>
+            <div className="flex justify-center gap-3">
+              <Button
+                type="primary"
+                onClick={handleView}
+                className="rounded-xl font-bold text-[12px] h-10 px-6 bg-blue-500 hover:bg-blue-600 border-none shadow-md shadow-blue-500/20"
+              >
+                <i className="bi bi-eye mr-1.5" /> Xem trực tuyến
+              </Button>
+              <Button
+                type="default"
+                onClick={handleDownload}
+                className="rounded-xl font-bold text-[12px] h-10 px-6 border-blue-500 text-blue-500 hover:bg-blue-50"
+              >
+                <i className="bi bi-download mr-1.5" /> Tải xuống
+              </Button>
+            </div>
           </div>
         )}
       </div>

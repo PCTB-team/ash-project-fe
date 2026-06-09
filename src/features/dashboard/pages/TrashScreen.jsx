@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { message, Tooltip, Modal } from 'antd';
-import { motion } from 'framer-motion';
-import FileIcon from '../ui/FileIcon.jsx';
+import FileIcon from '../components/FileIcon.jsx';
 import { formatRelativeTime } from '../utils/dateUtils.js';
+import { fetchWithAuth } from '../../../utils/apiClient.js';
 
 const DOCUMENTS_API_URL = 'http://localhost:8080/api/v1/documents';
 
@@ -10,7 +10,6 @@ export default function TrashScreen({
   trashDocuments,
   searchTerm,
   onRefreshDocuments,
-  onNavigate,
 }) {
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -22,12 +21,8 @@ export default function TrashScreen({
   const handleRestore = async (docId) => {
     try {
       setIsProcessing(true);
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${DOCUMENTS_API_URL}/${docId}/restore`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await fetchWithAuth(`${DOCUMENTS_API_URL}/${docId}/restore`, {
+        method: 'PUT'
       });
       if (response.ok) {
         message.success('Đã khôi phục tài liệu thành công!');
@@ -53,12 +48,8 @@ export default function TrashScreen({
       onOk: async () => {
         try {
           setIsProcessing(true);
-          const token = localStorage.getItem('accessToken');
-          const response = await fetch(`${DOCUMENTS_API_URL}/${doc.id}/permanent`, {
-            method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
+          const response = await fetchWithAuth(`${DOCUMENTS_API_URL}/${doc.id}/permanent`, {
+            method: 'DELETE'
           });
           if (response.ok) {
             message.success('Đã xóa vĩnh viễn!');
