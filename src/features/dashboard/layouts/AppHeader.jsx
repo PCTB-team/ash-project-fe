@@ -6,8 +6,9 @@
 import { useState } from 'react';
 import { Badge, Popover, Tooltip } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MOCK_NOTIFICATIONS, OLDER_NOTIFICATIONS } from '../utils/mockData.js';
+import { MOCK_NOTIFICATIONS, OLDER_NOTIFICATIONS } from '../utils/notificationData.js';
 import { formatRelativeTime } from '../utils/dateUtils.js';
+import logoAvatarDefault from '../../../assets/logo_avatar_default.jpg';
 
 
 /**
@@ -30,7 +31,7 @@ export default function AppHeader({
 
   // Xử lý các loại định dạng đường dẫn ảnh trả về từ Backend
   const getDisplayAvatar = (url) => {
-    if (!url) return 'https://ui-avatars.com/api/?name=User&background=random';
+    if (!url || url === logoAvatarDefault) return logoAvatarDefault;
     if (url.startsWith('http') || url.startsWith('data:image')) return url;
     if (url.startsWith('/')) return `http://localhost:8080${url}`;
     if (/^[A-Za-z0-9+/=]{50,}$/.test(url.trim())) return `data:image/jpeg;base64,${url.trim()}`;
@@ -226,7 +227,7 @@ export default function AppHeader({
               <img 
                 src={getDisplayAvatar(avatarUrl)} 
                 alt="Avatar" 
-                className="w-full h-full object-cover" 
+                className="w-full h-full object-cover object-center" 
               />
             </div>
           </motion.div>

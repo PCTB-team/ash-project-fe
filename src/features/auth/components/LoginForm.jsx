@@ -1,4 +1,4 @@
-import { Form, Checkbox, message } from 'antd';
+import { Form, Checkbox } from 'antd';
 import { motion } from 'framer-motion';
 import { INPUT_CLS, INPUT_CLS_PR, LABEL_CLS, ICON_WRAP, ANIM } from '../utils/constants';
 

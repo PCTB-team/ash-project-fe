@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ANIM } from '../utils/constants';
 
-export default function OtpVerification({ email, isLoading, onVerify, onResend, onBack }) {
+export default function OtpVerification({ isLoading, onVerify, onResend, onBack }) {
   const [otp, setOtp] = useState('');
   const [countdown, setCountdown] = useState(60);
   const inputRef = useRef(null);

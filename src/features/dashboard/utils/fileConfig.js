@@ -88,10 +88,8 @@ export const SORT_EXT_OPTIONS = [
   { label: 'Ưu tiên .zip', value: 'zip' },
 ];
 
-/* ── Legacy exports kept for backward compatibility ── */
 
-
-
+/** Upload form type options */
 export const UPLOAD_TYPE_OPTIONS = [
   { value: 'pdf', label: 'Tài liệu PDF' },
   { value: 'docx', label: 'Văn bản Word' },

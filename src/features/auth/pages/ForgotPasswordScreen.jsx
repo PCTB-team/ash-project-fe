@@ -6,7 +6,7 @@ import AuthCard from '../components/AuthCard';
 import ForgotPasswordEmail from '../components/ForgotPasswordEmail';
 import OtpVerification from '../components/OtpVerification';
 import ResetPasswordForm from '../components/ResetPasswordForm';
-import { ANIM } from '../utils/constants';
+
 
 // ============================================================================
 // 🔗 API PLACEHOLDER (FORGOT PASSWORD)
@@ -45,7 +45,7 @@ export default function ForgotPasswordScreen({ onNavigate }) {
       if (text) {
         try {
           data = JSON.parse(text);
-        } catch (e) {
+        } catch {
           console.warn("Response is not JSON:", text);
         }
       }
@@ -81,7 +81,7 @@ export default function ForgotPasswordScreen({ onNavigate }) {
       if (text) {
         try {
           data = JSON.parse(text);
-        } catch (e) {
+        } catch {
           console.warn("Response is not JSON:", text);
         }
       }
@@ -126,7 +126,7 @@ export default function ForgotPasswordScreen({ onNavigate }) {
       if (text) {
         try {
           data = JSON.parse(text);
-        } catch (e) {
+        } catch {
           console.warn("Response is not JSON:", text);
         }
       }

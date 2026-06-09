@@ -1,5 +1,5 @@
 import { Progress, Tooltip } from 'antd';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import logoImg from "../../../assets/logo.png";
 
 /**
@@ -15,14 +15,12 @@ export default function Sidebar({
   currentUser,
   storagePercentage,
   totalStorageMB = 0,
-  documentsCount,
   deletedDocsCount = 0,
   accentColor,
   isMobileMenuOpen,
   onCloseMobileMenu,
   isCollapsed = false,
   onToggleCollapse,
-  isAdmin,
 }) {
   const menuItems = [
     {
@@ -79,7 +77,7 @@ export default function Sidebar({
         {/* Brand Logo */}
         <motion.div
           whileHover={{ scale: 1.02 }}
-          onClick={() => onNavigate('landing')}
+          onClick={() => onNavigate('dashboard')}
           className={`flex items-center gap-3 ${isCollapsed ? 'px-1.5 py-2.5 justify-center' : 'px-3 py-3'} mb-8 cursor-pointer group rounded-xl bg-black/[0.01] border border-black/5 hover:border-black/10 transition-all`}
         >
           <div className="relative w-10 h-10 shrink-0 group-hover:scale-105 transition-all duration-500">

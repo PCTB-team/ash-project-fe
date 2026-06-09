@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Button, message, Tooltip, Spin } from 'antd';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Button, message, Tooltip } from 'antd';
+import { motion } from 'framer-motion';
 import logoFire from '../../../assets/logo_fire.png';
 import logoFolder from '../../../assets/logo_folder.png';
+import logoAvatarDefault from '../../../assets/logo_avatar_default.jpg';
+import { fetchWithAuth } from '../../../utils/apiClient.js';
 
 const USER_PROFILE_API_URL = 'http://localhost:8080/api/v1/user/profile';
 
 export default function ProfileScreen({
+  initialProfileData,
   currentUser,
   documentsCount,
   storagePercentage,
@@ -16,20 +19,13 @@ export default function ProfileScreen({
   accentColor,
   onAccentColorChange,
 }) {
-  const [profileData, setProfileData] = useState(() => {
-    const cached = localStorage.getItem('cachedProfile');
-    if (cached) {
-      try { return JSON.parse(cached); } catch (e) { }
-    }
-    return { id: '', username: '', email: '', fullname: '', avatarUrl: avatarUrl || '', school: '' };
-  });
+  const [profileData, setProfileData] = useState(initialProfileData || { id: '', username: '', email: '', fullname: '', avatarUrl: avatarUrl || '', school: '' });
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [avatarFile, setAvatarFile] = useState(null);
 
   // Xử lý các loại định dạng đường dẫn ảnh trả về từ Backend
   const getDisplayAvatar = (url) => {
-    if (!url) return null;
+    if (!url || url === logoAvatarDefault) return logoAvatarDefault;
     if (url.startsWith('http') || url.startsWith('data:image')) return url;
     if (url.startsWith('/')) return `http://localhost:8080${url}`;
     // Nếu là mã Base64 thô (không có tiền tố data:image...)
@@ -38,42 +34,10 @@ export default function ProfileScreen({
   };
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = localStorage.getItem('accessToken');
-        const response = await fetch(USER_PROFILE_API_URL, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          const resultData = data.result || (data.email ? data : null);
-
-          if ((data.code === 0 || data.code === 1000 || !data.code) && resultData) {
-            const mappedData = {
-              ...resultData,
-              avatarUrl: resultData.avatarUrl || resultData.avatar || ''
-            };
-            setProfileData(mappedData);
-            localStorage.setItem('cachedProfile', JSON.stringify(mappedData));
-            if (mappedData.avatarUrl && onAvatarChange) {
-              onAvatarChange(mappedData.avatarUrl);
-              localStorage.setItem('cachedAvatar', mappedData.avatarUrl);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Lỗi lấy thông tin hồ sơ:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchProfile();
-  }, [onAvatarChange]);
+    if (initialProfileData) {
+      setProfileData(initialProfileData);
+    }
+  }, [initialProfileData]);
 
   const handleSaveSettings = async () => {
     if (!profileData.fullname?.trim()) {
@@ -81,8 +45,6 @@ export default function ProfileScreen({
       return;
     }
     try {
-      const token = localStorage.getItem('accessToken');
-
       const formData = new FormData();
       formData.append('fullname', profileData.fullname || '');
       formData.append('school', profileData.school || '');
@@ -92,11 +54,10 @@ export default function ProfileScreen({
         formData.append('avatar', avatarFile); // Backend thường dùng tên field là 'avatar' hoặc 'file'
       }
 
-      const response = await fetch(USER_PROFILE_API_URL, {
+      const response = await fetchWithAuth(USER_PROFILE_API_URL, {
         method: 'PUT',
         headers: {
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Accept': 'application/json'
         },
         body: formData
       });
@@ -104,8 +65,8 @@ export default function ProfileScreen({
       let data = {};
       try {
         data = await response.json();
-      } catch (e) {
-        console.warn('Cannot parse JSON from response', e);
+      } catch {
+        console.warn('Cannot parse JSON from response');
       }
 
       if (response.ok || data.code === 0 || data.code === 1000) {
@@ -115,10 +76,8 @@ export default function ProfileScreen({
             avatarUrl: data.result.avatarUrl || data.result.avatar || ''
           };
           setProfileData(mappedData);
-          localStorage.setItem('cachedProfile', JSON.stringify(mappedData));
           if (mappedData.avatarUrl && onAvatarChange) {
             onAvatarChange(mappedData.avatarUrl);
-            localStorage.setItem('cachedAvatar', mappedData.avatarUrl);
           }
           setIsEditingProfile(false);
           message.success('Đã lưu thông tin hồ sơ thành công!');
@@ -158,24 +117,22 @@ export default function ProfileScreen({
       // Auto-save logic
       message.loading({ content: 'Đang đồng bộ ảnh đại diện...', key: 'avatar-upload' });
       try {
-        const token = localStorage.getItem('accessToken');
         const formData = new FormData();
         formData.append('fullname', profileData.fullname || '');
         formData.append('school', profileData.school || '');
         formData.append('username', profileData.username || '');
         formData.append('avatar', file);
 
-        const response = await fetch(USER_PROFILE_API_URL, {
+        const response = await fetchWithAuth(USER_PROFILE_API_URL, {
           method: 'PUT',
           headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Accept': 'application/json'
           },
           body: formData
         });
 
         let data = {};
-        try { data = await response.json(); } catch (err) { }
+        try { data = await response.json(); } catch { /* ignore */ }
 
         if (response.ok || data.code === 0 || data.code === 1000) {
           message.success({ content: 'Đã lưu ảnh đại diện thành công!', key: 'avatar-upload' });
@@ -185,16 +142,14 @@ export default function ProfileScreen({
               avatarUrl: data.result.avatarUrl || data.result.avatar || ''
             };
             setProfileData(mappedData);
-            localStorage.setItem('cachedProfile', JSON.stringify(mappedData));
             if (mappedData.avatarUrl && onAvatarChange) {
               onAvatarChange(mappedData.avatarUrl);
-              localStorage.setItem('cachedAvatar', mappedData.avatarUrl);
             }
           }
         } else {
           message.error({ content: data.message || 'Lỗi lưu ảnh', key: 'avatar-upload' });
         }
-      } catch (error) {
+      } catch {
         message.error({ content: 'Lỗi kết nối khi lưu ảnh', key: 'avatar-upload' });
       }
     }
@@ -251,8 +206,8 @@ export default function ProfileScreen({
               <div className="relative w-28 h-28 rounded-full overflow-hidden border-[4px] border-white shadow-xl bg-[#f5f5f7]">
                 <img
                   alt="Avatar"
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  src={getDisplayAvatar(profileData.avatarUrl) || getDisplayAvatar(avatarUrl) || 'https://ui-avatars.com/api/?name=User&background=random'}
+                  className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500"
+                  src={getDisplayAvatar(profileData.avatarUrl) || getDisplayAvatar(avatarUrl) || logoAvatarDefault}
                 />
                 <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-[10px] font-semibold transition-opacity duration-300 cursor-pointer backdrop-blur-sm">
                   <i className="bi bi-camera-fill text-[20px] mb-1" />

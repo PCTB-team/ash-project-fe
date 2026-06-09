@@ -1,27 +1,32 @@
-import { useState, useMemo, useRef } from 'react';
-import { Tag, Tooltip } from 'antd';
-import FileIcon from '../ui/FileIcon.jsx';
-import { getFileTagColor, getFileTypeLabel, classifyFileType } from '../utils/helpers.js';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { Tag, Tooltip, message } from 'antd';
+import FileIcon from './FileIcon.jsx';
+import { fetchWithAuth } from '../../../utils/apiClient.js';
+import { getFileTagColor, getFileTypeLabel, classifyFileType, formatBytes } from '../utils/helpers.js';
 import { formatRelativeTime } from '../utils/dateUtils.js';
 import { MANAGER_TAB_OPTIONS, SORT_EXT_OPTIONS } from '../utils/fileConfig.js';
 import useDragScroll from '../hooks/useDragScroll.js';
 
 const PAGE_SIZE = 8;
+const DOCUMENTS_PAGE_API = 'http://localhost:8080/api/v1/documents/page';
+const FOLDERS_API = 'http://localhost:8080/api/v1/folders';
 
 /**
- * DocumentManager — Classification Tabs + Extension Sort + Paginated Vertical List + Folder Navigation.
+ * DocumentManager — Classification Tabs + Extension Sort + Server Paginated Vertical List + Folder Navigation.
  * Rendered INSIDE the premium glassmorphic container div.
  */
 export default function DocumentManager({
-  documents = [],
   searchTerm = '',
-  currentFolderId = null,
+  folderPath = [],
   onFolderChange,
+  onBreadcrumbClick,
   onPreviewDoc,
   onAskAI,
   onRemoveDocument,
-  onAddDocument,
   onRenameDocument,
+  onRefreshDocuments,
+  onUpdateDocumentsCount,
+  refreshTrigger,
 }) {
   const [activeTab, setActiveTab] = useState('all');
   const [sortExt, setSortExt] = useState('');
@@ -29,89 +34,246 @@ export default function DocumentManager({
   const [currentPage, setCurrentPage] = useState(1);
   const [showNewFolderInput, setShowNewFolderInput] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [folders, setFolders] = useState([]);
+  const [paginatedDocs, setPaginatedDocs] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
+  const [prefetchedTabs, setPrefetchedTabs] = useState({});
+
   const tabsRef = useDragScroll();
   const listRef = useRef(null);
 
-  // ── Current folder object ──
-  const currentFolder = useMemo(() => {
-    if (!currentFolderId) return null;
-    return documents.find((d) => d.id === currentFolderId) || null;
-  }, [documents, currentFolderId]);
+  const currentFolder = folderPath.length > 0 ? folderPath[folderPath.length - 1] : null;
+  const currentFolderId = currentFolder?.id || null;
 
-  // ── Classification + Search + Sort + Folder (memoized) ──
-  const processedDocs = useMemo(() => {
-    let result = [...documents];
-
-    // If inside a folder, show only children
-    if (currentFolderId) {
-      result = result.filter((d) => d.parentId === currentFolderId);
-    } else {
-      // At root: show items without parentId
-      result = result.filter((d) => !d.parentId);
-    }
-
-    // Header search filter
-    if (searchTerm.trim()) {
-      const q = searchTerm.trim().toLowerCase();
-      result = result.filter((d) => d.name.toLowerCase().includes(q));
-    }
-
-    // Tab classification
-    if (activeTab !== 'all') {
-      result = result.filter((d) => classifyFileType(d.type) === activeTab);
-    }
-
-    // Sort: priority extension first → then newest upload
-    result.sort((a, b) => {
-      // Folders always before files (unless sorting by extension)
-      if (!sortExt) {
-        if (a.type === 'folder' && b.type !== 'folder') return -1;
-        if (a.type !== 'folder' && b.type === 'folder') return 1;
+  // ── Fetch Folders ──
+  const fetchFolders = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (currentFolderId) {
+        params.append('parentId', currentFolderId);
+        params.append('parentFolderId', currentFolderId);
       }
-      if (sortExt) {
-        const aPri = a.type === sortExt ? 0 : 1;
-        const bPri = b.type === sortExt ? 0 : 1;
-        if (aPri !== bPri) return aPri - bPri;
+
+      const response = await fetchWithAuth(`${FOLDERS_API}${currentFolderId ? '?' + params.toString() : ''}`);
+      if (response.ok) {
+        const data = await response.json();
+        if ((data.code === 0 || data.code === 1000) && data.result) {
+          const mappedFolders = data.result.map(f => ({
+            id: f.folderId,
+            name: f.name,
+            type: 'folder',
+            parentId: f.parentFolderId,
+            size: formatBytes(f.size || 0),
+            uploadedAt: f.createdAt || new Date().toISOString()
+          }));
+          setFolders(mappedFolders);
+        }
       }
-      return new Date(b.uploadedAt) - new Date(a.uploadedAt);
-    });
+    } catch (e) {
+      console.error("Lỗi lấy danh sách thư mục:", e);
+    }
+  };
 
-    return result;
-  }, [documents, searchTerm, activeTab, sortExt, currentFolderId]);
+  const DOCUMENTS_FILTER_API = 'http://localhost:8080/api/v1/documents/filter';
 
-  // ── Pagination ──
-  const totalPages = Math.max(1, Math.ceil(processedDocs.length / PAGE_SIZE));
-  const safeCurrentPage = Math.min(currentPage, totalPages);
-  const paginatedDocs = useMemo(() => {
-    const start = (safeCurrentPage - 1) * PAGE_SIZE;
-    return processedDocs.slice(start, start + PAGE_SIZE);
-  }, [processedDocs, safeCurrentPage]);
+  // ── Prefetch Filters for Tabs ──
+  const prefetchFilters = async () => {
+    try {
+      const types = ['document', 'audio', 'video', 'image', 'other'];
+      const promises = types.map(async (type) => {
+        const params = new URLSearchParams();
+        if (currentFolderId) params.append('folderId', currentFolderId);
+
+        let url = '';
+        if (type === 'document') {
+          // Chỉ riêng tài liệu (document) thì gọi API /filter/documents
+          url = `${DOCUMENTS_FILTER_API}/documents${params.toString() ? '?' + params.toString() : ''}`;
+        } else {
+          // Các loại khác (audio, video, image, other) thì gọi API /filter?fileType=...
+          params.append('fileType', type);
+          url = `${DOCUMENTS_FILTER_API}?${params.toString()}`;
+        }
+
+        try {
+          const response = await fetchWithAuth(url);
+          if (response.ok) {
+            const data = await response.json();
+            if ((data.code === 0 || data.code === 1000) && data.result) {
+              return { type, total: data.result.total || 0, docs: data.result.documents || [] };
+            }
+          } else {
+            console.warn(`[Prefetch Lỗi] URL: ${url} - Status: ${response.status}`);
+          }
+        } catch (err) {
+          console.error(`[Prefetch Lỗi Network] ${type}:`, err);
+        }
+        return { type, total: 0, docs: [] };
+      });
+
+      const results = await Promise.all(promises);
+      const newPrefetched = {};
+      results.forEach(res => {
+        newPrefetched[res.type] = {
+          total: res.total,
+          docs: res.docs.map(d => ({
+            id: d.documentId,
+            name: d.fileName || d.title || 'Untitled',
+            type: d.fileExtension?.replace('.', '') || 'unknown',
+            fileSizeBytes: d.fileSize || 0,
+            size: formatBytes(d.fileSize || 0),
+            uploadedAt: new Date().toISOString(),
+            timeSinceUpload: d.timeSinceUpload,
+            status: d.status,
+            storageUrl: d.storageUrl,
+            viewUrl: d.viewUrl,
+            downloadUrl: d.downloadUrl,
+            parentId: d.folderId
+          }))
+        };
+      });
+      setPrefetchedTabs(newPrefetched);
+    } catch (e) {
+      console.error("Lỗi gọi API prefetch:", e);
+    }
+  };
+
+  // ── Fetch Documents (Paginated or Filtered) ──
+  const fetchDocuments = async () => {
+    try {
+      if (activeTab === 'folder') {
+        setPaginatedDocs([]);
+        setTotalPages(1);
+        setTotalElements(0);
+        return;
+      }
+
+      if (activeTab !== 'all') {
+        const cached = prefetchedTabs[activeTab] || { docs: [], total: 0 };
+        setPaginatedDocs(cached.docs);
+        setTotalPages(1);
+        setTotalElements(cached.total);
+        if (onUpdateDocumentsCount) onUpdateDocumentsCount(cached.total);
+        return;
+      }
+
+      const params = new URLSearchParams({
+        page: currentPage - 1,
+        size: PAGE_SIZE,
+      });
+      if (searchTerm) params.append('search', searchTerm);
+      if (currentFolderId) params.append('folderId', currentFolderId);
+      if (sortExt) params.append('sortBy', sortExt);
+
+      const response = await fetchWithAuth(`${DOCUMENTS_PAGE_API}?${params.toString()}`);
+
+      if (response.ok) {
+        const data = await response.json();
+        if ((data.code === 0 || data.code === 1000) && data.result) {
+          const content = data.result.content || [];
+          const totalElems = data.result.totalElements || 0;
+          const tPages = data.result.totalPages || 1;
+
+          const mappedDocs = content.map(d => ({
+            id: d.documentId,
+            name: d.fileName || d.title || 'Untitled',
+            type: d.fileExtension?.replace('.', '') || 'unknown',
+            fileSizeBytes: d.fileSize || 0,
+            size: formatBytes(d.fileSize || 0),
+            uploadedAt: new Date().toISOString(),
+            timeSinceUpload: d.timeSinceUpload,
+            status: d.status,
+            storageUrl: d.storageUrl,
+            viewUrl: d.viewUrl,
+            downloadUrl: d.downloadUrl,
+            parentId: d.folderId
+          }));
+          setPaginatedDocs(mappedDocs);
+          setTotalPages(tPages);
+          setTotalElements(totalElems);
+          if (onUpdateDocumentsCount) onUpdateDocumentsCount(totalElems);
+        }
+      }
+    } catch (e) {
+      console.error("Lỗi lấy danh sách tài liệu:", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchFolders();
+    prefetchFilters();
+  }, [currentFolderId, refreshTrigger]);
+
+  useEffect(() => {
+    fetchDocuments();
+  }, [currentPage, activeTab, sortExt, searchTerm, currentFolderId, refreshTrigger, prefetchedTabs]);
 
   // Reset page when filters change
-  useMemo(() => { setCurrentPage(1); }, [activeTab, sortExt, searchTerm, currentFolderId]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { setCurrentPage(1); }, [activeTab, sortExt, searchTerm, currentFolderId]);
 
-  // ── Tab counts (memoized) ──
-  const tabCounts = useMemo(() => {
-    let base = documents.filter((d) => currentFolderId ? d.parentId === currentFolderId : !d.parentId);
+  // ── Folders for current view ──
+  const currentViewFolders = useMemo(() => {
+    // Only show folders if no search term, or if search term matches folder name
+    let base = folders.filter((f) => currentFolderId ? f.parentId === currentFolderId : !f.parentId);
     if (searchTerm.trim()) {
       const q = searchTerm.trim().toLowerCase();
-      base = base.filter((d) => d.name.toLowerCase().includes(q));
+      base = base.filter((f) => f.name.toLowerCase().includes(q));
     }
-    const counts = { all: base.length };
-    MANAGER_TAB_OPTIONS.forEach((t) => {
-      if (t.value !== 'all') {
-        counts[t.value] = base.filter((d) => classifyFileType(d.type) === t.value).length;
-      }
-    });
+    return base;
+  }, [folders, currentFolderId, searchTerm]);
+
+  // ── All items for current view (folders + docs) ──
+  const processedDocs = useMemo(() => {
+    let combined = [];
+
+    if (activeTab === 'folder') {
+      combined = [...currentViewFolders];
+    } else if (activeTab === 'all') {
+      combined = [...currentViewFolders, ...paginatedDocs];
+    } else {
+      combined = [...paginatedDocs];
+    }
+
+    // Local Search Filter
+    if (searchTerm.trim()) {
+      const q = searchTerm.trim().toLowerCase();
+      combined = combined.filter(item => item.name.toLowerCase().includes(q));
+    }
+
+    // Prioritize by SortExt
+    if (sortExt) {
+      const foldersList = combined.filter(item => item.type === 'folder');
+      const prioritizedDocs = combined.filter(item => item.type === sortExt);
+      const otherDocs = combined.filter(item => item.type !== 'folder' && item.type !== sortExt);
+      // Ưu tiên đưa các file được sort lên trên cùng, thậm chí trên cả folder
+      combined = [...prioritizedDocs, ...foldersList, ...otherDocs];
+    }
+
+    return combined;
+  }, [currentViewFolders, paginatedDocs, activeTab, searchTerm, sortExt]);
+
+  // ── Tab counts (memoized from backend if possible, else just totalElements) ──
+  const tabCounts = useMemo(() => {
+    const sumOfFilters = Object.values(prefetchedTabs).reduce((sum, tab) => sum + tab.total, 0);
+    const counts = {
+      all: activeTab === 'all' ? totalElements : sumOfFilters, // Use accurate totalElements when active, else use sum of real-time prefetched filters
+      document: prefetchedTabs.document?.total || 0,
+      audio: prefetchedTabs.audio?.total || 0,
+      video: prefetchedTabs.video?.total || 0,
+      image: prefetchedTabs.image?.total || 0,
+      other: prefetchedTabs.other?.total || 0,
+      folder: currentViewFolders.length
+    };
     return counts;
-  }, [documents, searchTerm, currentFolderId]);
+  }, [activeTab, totalElements, prefetchedTabs, currentViewFolders]);
 
   const sortLabel = SORT_EXT_OPTIONS.find((o) => o.value === sortExt)?.label || 'Mặc định';
 
   // ── Handle folder click ──
   const handleItemClick = (doc) => {
     if (doc.type === 'folder') {
-      onFolderChange?.(doc.id);
+      onFolderChange?.(doc);
       setCurrentPage(1);
     } else {
       onPreviewDoc?.(doc);
@@ -119,20 +281,37 @@ export default function DocumentManager({
   };
 
   // ── Handle create folder ──
-  const handleCreateFolder = () => {
+  const handleCreateFolder = async () => {
     if (!newFolderName.trim()) return;
-    const folder = {
-      id: 'folder_' + Date.now(),
-      name: newFolderName.trim(),
-      uploadedAt: new Date().toISOString(),
-      size: '—',
-      type: 'folder',
-      content: null,
-      parentId: currentFolderId || undefined,
-    };
-    onAddDocument?.(folder);
-    setNewFolderName('');
-    setShowNewFolderInput(false);
+
+    try {
+      const response = await fetchWithAuth(FOLDERS_API, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: newFolderName,
+          parentFolderId: currentFolderId
+        })
+      });
+
+      if (response.ok) {
+        setNewFolderName('');
+        setShowNewFolderInput(false);
+        fetchFolders();
+      } else {
+        let errorMsg = 'Tạo thư mục thất bại!';
+        try {
+          const errorData = await response.json();
+          if (errorData.message) errorMsg = `${errorData.message}`;
+        } catch (err) { /* ignore parse error */ }
+        message.error(errorMsg);
+      }
+    } catch (e) {
+      console.error(e);
+      message.error('Lỗi kết nối khi tạo thư mục!');
+    }
   };
 
   // ── Go to page ──
@@ -143,13 +322,13 @@ export default function DocumentManager({
 
   // ── Tab color palette ──
   const palette = {
-    all:      { on: 'bg-[#1d1d1f] text-white shadow-sm', off: 'bg-black/[0.02] text-black/55 hover:bg-black/[0.05]' },
+    all: { on: 'bg-[#1d1d1f] text-white shadow-sm', off: 'bg-black/[0.02] text-black/55 hover:bg-black/[0.05]' },
     document: { on: 'bg-blue-500 text-white shadow-md shadow-blue-500/15', off: 'bg-blue-50/50 text-blue-500 hover:bg-blue-50' },
-    audio:    { on: 'bg-amber-500 text-white shadow-md shadow-amber-500/15', off: 'bg-amber-50/50 text-amber-600 hover:bg-amber-50' },
-    video:    { on: 'bg-pink-500 text-white shadow-md shadow-pink-500/15', off: 'bg-pink-50/50 text-pink-500 hover:bg-pink-50' },
-    image:    { on: 'bg-purple-500 text-white shadow-md shadow-purple-500/15', off: 'bg-purple-50/50 text-purple-500 hover:bg-purple-50' },
-    folder:   { on: 'bg-orange-500 text-white shadow-md shadow-orange-500/15', off: 'bg-orange-50/50 text-orange-500 hover:bg-orange-50' },
-    other:    { on: 'bg-gray-500 text-white shadow-md shadow-gray-500/15', off: 'bg-gray-100/50 text-gray-500 hover:bg-gray-100' },
+    audio: { on: 'bg-amber-500 text-white shadow-md shadow-amber-500/15', off: 'bg-amber-50/50 text-amber-600 hover:bg-amber-50' },
+    video: { on: 'bg-pink-500 text-white shadow-md shadow-pink-500/15', off: 'bg-pink-50/50 text-pink-500 hover:bg-pink-50' },
+    image: { on: 'bg-purple-500 text-white shadow-md shadow-purple-500/15', off: 'bg-purple-50/50 text-purple-500 hover:bg-purple-50' },
+    folder: { on: 'bg-orange-500 text-white shadow-md shadow-orange-500/15', off: 'bg-orange-50/50 text-orange-500 hover:bg-orange-50' },
+    other: { on: 'bg-gray-500 text-white shadow-md shadow-gray-500/15', off: 'bg-gray-100/50 text-gray-500 hover:bg-gray-100' },
   };
 
   return (
@@ -158,19 +337,33 @@ export default function DocumentManager({
       <div className="flex-shrink-0 border-b border-black/[0.04] bg-white/70 backdrop-blur-xl relative z-20">
 
         {/* Breadcrumb (when inside a folder) */}
-        {currentFolder && (
-          <div className="px-3 sm:px-5 pt-3 flex items-center gap-1.5 text-[11.5px] font-semibold">
+        {folderPath.length > 0 && (
+          <div className="px-3 sm:px-5 pt-3 flex items-center gap-1.5 text-[11.5px] font-semibold flex-wrap">
             <button
               onClick={() => onFolderChange?.(null)}
               className="text-[#ff5c00] hover:text-[#e05000] cursor-pointer flex items-center gap-1 transition-colors"
             >
               <i className="bi bi-house-fill text-[12px]" /> Thư viện
             </button>
-            <i className="bi bi-chevron-right text-[9px] text-black/25" />
-            <span className="text-black/60 flex items-center gap-1.5">
-              <i className="bi bi-folder-fill text-[#ff9500] text-[12px]" />
-              {currentFolder.name}
-            </span>
+            {folderPath.map((folder, index) => (
+              <span key={folder.id} className="flex items-center gap-1.5">
+                <i className="bi bi-chevron-right text-[9px] text-black/25" />
+                <button
+                  onClick={() => {
+                    if (index < folderPath.length - 1) {
+                      onBreadcrumbClick?.(index);
+                    }
+                  }}
+                  className={`flex items-center gap-1.5 transition-colors ${index === folderPath.length - 1
+                      ? 'text-black/60 cursor-default'
+                      : 'text-black/45 hover:text-black/80 cursor-pointer'
+                    }`}
+                >
+                  <i className={`bi bi-folder-fill ${index === folderPath.length - 1 ? 'text-[#ff9500]' : 'text-black/25'} text-[12px]`} />
+                  <span className="max-w-[120px] sm:max-w-[180px] truncate">{folder.name}</span>
+                </button>
+              </span>
+            ))}
           </div>
         )}
 
@@ -190,9 +383,6 @@ export default function DocumentManager({
                 >
                   <i className={`bi ${tab.icon} text-[11px]`} />
                   <span className="whitespace-nowrap">{tab.label}</span>
-                  <span className={`text-[9px] min-w-[18px] text-center px-1.5 py-[1px] rounded-full font-medium ${isActive ? 'bg-white/20' : 'bg-black/[0.04]'}`}>
-                    {count}
-                  </span>
                 </button>
               );
             })}
@@ -214,11 +404,10 @@ export default function DocumentManager({
             <div className="relative flex-1 md:flex-none">
               <button
                 onClick={() => setSortDropdownOpen((v) => !v)}
-                className={`w-full flex items-center justify-center gap-1.5 px-3 py-[7px] rounded-xl text-[11px] sm:text-[11.5px] font-medium border transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.97] ${
-                  sortExt
+                className={`w-full flex items-center justify-center gap-1.5 px-3 py-[7px] rounded-xl text-[11px] sm:text-[11.5px] font-medium border transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.97] ${sortExt
                     ? 'bg-[#ff5c00]/10 text-[#ff5c00] border-[#ff5c00]/20'
                     : 'bg-black/[0.015] text-black/45 border-black/[0.05] hover:border-black/10'
-                }`}
+                  }`}
               >
                 <i className="bi bi-sort-down text-[12px]" />
                 <span className="max-w-[90px] truncate">{sortLabel}</span>
@@ -233,11 +422,10 @@ export default function DocumentManager({
                       <button
                         key={opt.value}
                         onClick={() => { setSortExt(opt.value); setSortDropdownOpen(false); }}
-                        className={`w-full text-left px-3.5 py-[7px] text-[11.5px] font-semibold transition-colors cursor-pointer flex items-center justify-between ${
-                          sortExt === opt.value
+                        className={`w-full text-left px-3.5 py-[7px] text-[11.5px] font-semibold transition-colors cursor-pointer flex items-center justify-between ${sortExt === opt.value
                             ? 'text-[#ff5c00] bg-[#ff5c00]/5 font-medium'
                             : 'text-black/55 hover:bg-black/[0.03] hover:text-black'
-                        }`}
+                          }`}
                       >
                         {opt.label}
                         {sortExt === opt.value && <i className="bi bi-check2 text-[12px]" />}
@@ -321,7 +509,7 @@ export default function DocumentManager({
 
             {/* Rows */}
             <div className="divide-y divide-black/[0.025]">
-              {paginatedDocs.map((doc) => (
+              {processedDocs.map((doc) => (
                 <DocumentRow
                   key={doc.id}
                   doc={doc}
@@ -341,33 +529,32 @@ export default function DocumentManager({
       {processedDocs.length > 0 && (
         <div className="flex-shrink-0 border-t border-black/[0.04] bg-white/50 backdrop-blur-md px-3 sm:px-5 py-2.5 flex items-center justify-between relative z-10">
           <span className="text-[10.5px] font-semibold text-black/30">
-            {processedDocs.length} tài liệu · Trang {safeCurrentPage}/{totalPages}
+            {totalElements} tài liệu · Trang {currentPage}/{totalPages}
           </span>
 
           {totalPages > 1 && (
             <div className="flex items-center gap-1">
               {/* Prev */}
               <button
-                onClick={() => goToPage(safeCurrentPage - 1)}
-                disabled={safeCurrentPage <= 1}
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage <= 1}
                 className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] text-black/55 hover:bg-black/[0.04] hover:text-black disabled:opacity-25 disabled:cursor-not-allowed cursor-pointer transition-all"
               >
                 <i className="bi bi-chevron-left" />
               </button>
 
               {/* Page numbers */}
-              {generatePageNumbers(safeCurrentPage, totalPages).map((p, i) =>
+              {generatePageNumbers(currentPage, totalPages).map((p, i) =>
                 p === '...' ? (
                   <span key={`dot-${i}`} className="w-6 text-center text-[10px] text-black/20 font-medium">…</span>
                 ) : (
                   <button
                     key={p}
                     onClick={() => goToPage(p)}
-                    className={`w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-medium cursor-pointer transition-all ${
-                      p === safeCurrentPage
+                    className={`w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-medium cursor-pointer transition-all ${p === currentPage
                         ? 'bg-[#ff5c00] text-white shadow-sm shadow-[#ff5c00]/20'
                         : 'text-black/45 hover:bg-black/[0.04] hover:text-black'
-                    }`}
+                      }`}
                   >
                     {p}
                   </button>
@@ -376,8 +563,8 @@ export default function DocumentManager({
 
               {/* Next */}
               <button
-                onClick={() => goToPage(safeCurrentPage + 1)}
-                disabled={safeCurrentPage >= totalPages}
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage >= totalPages}
                 className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] text-black/55 hover:bg-black/[0.04] hover:text-black disabled:opacity-25 disabled:cursor-not-allowed cursor-pointer transition-all"
               >
                 <i className="bi bi-chevron-right" />
@@ -423,13 +610,10 @@ function DocumentRow({ doc, isPriority, onClick, onAskAI, onRemove, onRename }) 
 
   const handleDownload = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:8080/api/v1/documents/${doc.id}/download`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const response = await fetchWithAuth(`http://localhost:8080/api/v1/documents/${doc.id}/download`);
       if (response.ok) {
         const contentType = response.headers.get('content-type') || '';
-        
+
         if (contentType.includes('application/json')) {
           const data = await response.json();
           const url = data.result || data.storageUrl || data;
@@ -460,18 +644,18 @@ function DocumentRow({ doc, isPriority, onClick, onAskAI, onRemove, onRename }) 
       } else {
         // Fallback to storageUrl if API fails
         if (doc.storageUrl) {
-           const fallbackUrl = doc.storageUrl.startsWith('http') ? doc.storageUrl : `http://localhost:8080${doc.storageUrl.startsWith('/') ? '' : '/'}${doc.storageUrl}`;
-           window.open(fallbackUrl, '_blank');
+          const fallbackUrl = doc.storageUrl.startsWith('http') ? doc.storageUrl : `http://localhost:8080${doc.storageUrl.startsWith('/') ? '' : '/'}${doc.storageUrl}`;
+          window.open(fallbackUrl, '_blank');
         } else {
-           console.error("Lỗi download:", response.status);
+          console.error("Lỗi download:", response.status);
         }
       }
     } catch (e) {
       console.error(e);
       // Fallback
       if (doc.storageUrl) {
-         const fallbackUrl = doc.storageUrl.startsWith('http') ? doc.storageUrl : `http://localhost:8080${doc.storageUrl.startsWith('/') ? '' : '/'}${doc.storageUrl}`;
-         window.open(fallbackUrl, '_blank');
+        const fallbackUrl = doc.storageUrl.startsWith('http') ? doc.storageUrl : `http://localhost:8080${doc.storageUrl.startsWith('/') ? '' : '/'}${doc.storageUrl}`;
+        window.open(fallbackUrl, '_blank');
       }
     }
   };
@@ -479,18 +663,16 @@ function DocumentRow({ doc, isPriority, onClick, onAskAI, onRemove, onRename }) 
   return (
     <div
       onClick={!isEditing ? onClick : undefined}
-      className={`group flex items-center gap-3 px-4 sm:px-5 py-3 sm:py-3.5 transition-all duration-200 ${
-        isEditing ? 'bg-black/[0.02]' : isPriority ? 'bg-[#ff5c00]/[0.03] hover:bg-[#ff5c00]/[0.06] cursor-pointer' : 'hover:bg-black/[0.015] cursor-pointer'
-      }`}
+      className={`group flex items-center gap-3 px-4 sm:px-5 py-3 sm:py-3.5 transition-all duration-200 ${isEditing ? 'bg-black/[0.02]' : isPriority ? 'bg-[#ff5c00]/[0.03] hover:bg-[#ff5c00]/[0.06] cursor-pointer' : 'hover:bg-black/[0.015] cursor-pointer'
+        }`}
     >
       {/* Icon */}
-      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors duration-200 ${
-        isFolder
+      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors duration-200 ${isFolder
           ? 'bg-[#ff9500]/10 border border-[#ff9500]/15'
           : isPriority
             ? 'bg-[#ff5c00]/10 border border-[#ff5c00]/15'
             : 'bg-black/[0.02] border border-black/[0.04] group-hover:border-black/[0.08]'
-      }`}>
+        }`}>
         <FileIcon type={doc.type} style={{ fontSize: 16 }} />
       </div>
 
@@ -512,9 +694,8 @@ function DocumentRow({ doc, isPriority, onClick, onAskAI, onRemove, onRename }) 
               className="text-[12.5px] sm:text-[13px] font-semibold text-black bg-white border border-black/10 rounded-md px-2 py-0.5 outline-none focus:border-[#ff5c00]/40 focus:ring-2 focus:ring-[#ff5c00]/10 w-full max-w-[250px]"
             />
           ) : (
-            <h4 className={`text-[12.5px] sm:text-[13px] font-semibold truncate transition-colors leading-tight ${
-              isFolder ? 'text-black group-hover:text-[#ff9500]' : 'text-black group-hover:text-[#ff5c00]'
-            }`}>
+            <h4 className={`text-[12.5px] sm:text-[13px] font-semibold truncate transition-colors leading-tight ${isFolder ? 'text-black group-hover:text-[#ff9500]' : 'text-black group-hover:text-[#ff5c00]'
+              }`}>
               {doc.name}
             </h4>
           )}
@@ -566,7 +747,7 @@ function DocumentRow({ doc, isPriority, onClick, onAskAI, onRemove, onRename }) 
             </button>
           </Tooltip>
         )}
-        
+
         {/* Download - only for non-folder items */}
         {!isFolder && !isEditing && (
           <Tooltip title="Tải xuống" mouseEnterDelay={0.4}>

@@ -9,7 +9,7 @@
 import { useEffect, useState } from 'react';
 import { Form, Divider } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useGoogleLogin, GoogleLogin } from '@react-oauth/google';
+import { GoogleLogin } from '@react-oauth/google';
 import useAuth from '../hooks/useAuth';
 import AuthLayout from '../components/AuthLayout';
 import AuthCard from '../components/AuthCard';
@@ -24,7 +24,6 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, onNav
 
   const [registerStep, setRegisterStep] = useState('form'); // 'form' | 'otp' | 'success'
   const [registerEmail, setRegisterEmail] = useState('');
-  const [registerValues, setRegisterValues] = useState(null);
 
   const {
     isLoading, isGoogleLoading, errorMsg, setErrorMsg,
@@ -33,18 +32,18 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, onNav
   } = useAuth({ onLoginSuccess, onAdminLoginSuccess });
 
   useEffect(() => {
-    setErrorMsg('');
-    setShowPassword(false);
-    setRegisterStep('form');
-    setRegisterValues(null);
-    form.resetFields();
+    setTimeout(() => {
+      setErrorMsg('');
+      setShowPassword(false);
+      setRegisterStep('form');
+      form.resetFields();
+    }, 0);
   }, [currentView, form, setErrorMsg, setShowPassword]);
 
   const handleToggleMode = () => {
     setErrorMsg('');
     form.resetFields();
     setRegisterStep('form');
-    setRegisterValues(null);
     onNavigate(isRegister ? 'login' : 'register');
   };
 
@@ -52,7 +51,6 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, onNav
     const success = await handleRegister(values);
     if (success) {
       setRegisterEmail(values.usernameOrEmail);
-      setRegisterValues(values);
       setRegisterStep('otp');
     }
   };
