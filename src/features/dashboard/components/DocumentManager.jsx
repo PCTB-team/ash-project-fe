@@ -85,7 +85,9 @@ export default function DocumentManager({
         if (currentFolderId) params.append('folderId', currentFolderId);
 
         if (type !== 'document') {
-          params.append('fileType', type.toUpperCase());
+          let fileType = type.toUpperCase();
+          if (fileType === 'OTHER') fileType = 'OTHERS'; // Dự phòng OTHERS vì OTHER trả về 400
+          params.append('fileType', fileType);
         }
         const url = type === 'document'
           ? `${DOCUMENTS_FILTER_API}/documents${params.toString() ? '?' + params.toString() : ''}`

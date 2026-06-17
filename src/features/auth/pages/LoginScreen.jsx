@@ -172,7 +172,6 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, onNav
                         size="large"
                         shape="pill"
                         text="signin_with"
-                        width="100%"
                       />
                     </div>
                   </motion.div>
