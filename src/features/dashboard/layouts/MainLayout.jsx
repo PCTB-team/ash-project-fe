@@ -9,7 +9,6 @@ import AppHeader from '../layouts/AppHeader.jsx';
  */
 export default function MainLayout({
   currentView,
-  onNavigate,
   onLogout,
   currentUser,
   storagePercentage,
@@ -45,7 +44,6 @@ export default function MainLayout({
       {/* Modern Sidebar (Flex Sibling) */}
       <Sidebar
         currentView={currentView}
-        onNavigate={onNavigate}
         onLogout={onLogout}
         currentUser={currentUser}
         storagePercentage={storagePercentage}
@@ -71,7 +69,6 @@ export default function MainLayout({
             avatarUrl={avatarUrl}
             accentColor={accentColor}
             onToggleMobileMenu={() => setIsMobileMenuOpen(prev => !prev)}
-            onNavigate={onNavigate}
           />
         </header>
 

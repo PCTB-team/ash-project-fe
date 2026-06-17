@@ -9,7 +9,11 @@ import EmptyState from '../components/shared/EmptyState';
 
 
 
-export default function CommunityScreen({ searchTerm = '', currentUser, onNavigate }) {
+import { useNavigate, useOutletContext } from 'react-router-dom';
+
+export default function CommunityScreen() {
+  const navigate = useNavigate();
+  const { searchTerm = '', fullName: currentUser } = useOutletContext();
   const { groups, isLoading, fetchMyGroups, createGroup } = useGroups();
   const [localSearch, setLocalSearch] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -25,7 +29,7 @@ export default function CommunityScreen({ searchTerm = '', currentUser, onNaviga
     return res;
   };
 
-  const onViewDetail = (groupId, groupData) => onNavigate('group-detail', { groupId, groupData });
+  const onViewDetail = (groupId, groupData) => navigate(`/dashboard/group/${groupId}`, { state: { groupData } });
   const onRequestJoin = () => setShowJoinModal(true);
 
   const query = localSearch || searchTerm || '';

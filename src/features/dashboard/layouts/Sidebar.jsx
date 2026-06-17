@@ -8,9 +8,10 @@ import logoImg from "../../../assets/logo.png";
  * Supports collapse/expand toggle on desktop.
  * Profile widget removed as requested.
  */
+import { useNavigate } from 'react-router-dom';
+
 export default function Sidebar({
   currentView,
-  onNavigate,
   onLogout,
   currentUser,
   storagePercentage,
@@ -22,6 +23,21 @@ export default function Sidebar({
   isCollapsed = false,
   onToggleCollapse,
 }) {
+  const navigate = useNavigate();
+  
+  const handleNavigation = (view) => {
+    const routeMap = {
+      dashboard: '/dashboard',
+      community: '/dashboard/group',
+      ai: '/dashboard/ai',
+      payment: '/dashboard/payment',
+      profile: '/dashboard/profile',
+      trash: '/dashboard/trash'
+    };
+    if (routeMap[view]) {
+      navigate(routeMap[view]);
+    }
+  };
   const menuItems = [
     {
       key: 'dashboard',
@@ -77,7 +93,7 @@ export default function Sidebar({
         {/* Brand Logo */}
         <motion.div
           whileHover={{ scale: 1.02 }}
-          onClick={() => onNavigate('dashboard')}
+          onClick={() => handleNavigation('dashboard')}
           className={`flex items-center gap-3 ${isCollapsed ? 'px-1.5 py-2.5 justify-center' : 'px-3 py-3'} mb-8 cursor-pointer group rounded-xl bg-black/[0.01] border border-black/5 hover:border-black/10 transition-all`}
         >
           <div className="relative w-10 h-10 shrink-0 group-hover:scale-105 transition-all duration-500">
@@ -112,7 +128,7 @@ export default function Sidebar({
                 whileHover={{ x: isCollapsed ? 0 : 4, backgroundColor: 'rgba(0, 0, 0, 0.02)' }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => {
-                  onNavigate(item.key);
+                  handleNavigation(item.key);
                   onCloseMobileMenu && onCloseMobileMenu();
                 }}
                 className={`flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-4'} gap-3 py-3 rounded-xl transition-all w-full text-left cursor-pointer text-[13px] relative overflow-hidden group ${isActive
@@ -177,7 +193,7 @@ export default function Sidebar({
               {/* Upgrade CTA */}
               <button
                 onClick={() => {
-                  onNavigate('payment');
+                  handleNavigation('payment');
                   onCloseMobileMenu && onCloseMobileMenu();
                 }}
                 className="mt-3 w-full py-2 rounded-xl bg-gradient-to-r from-[#ff8a00] to-[#ff5c00] text-white text-[11px] font-medium cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all shadow-md shadow-[#ff5c00]/15 flex items-center justify-center gap-1.5"
@@ -205,7 +221,7 @@ export default function Sidebar({
                   whileHover={{ x: isCollapsed ? 0 : 4, backgroundColor: 'rgba(0, 0, 0, 0.02)' }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    onNavigate('profile');
+                    handleNavigation('profile');
                     onCloseMobileMenu && onCloseMobileMenu();
                   }}
                   className={`flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-4'} gap-3 py-2.5 rounded-xl transition-all w-full text-left cursor-pointer text-[12px] font-medium ${currentView === 'profile'
@@ -229,7 +245,7 @@ export default function Sidebar({
                   whileHover={{ x: isCollapsed ? 0 : 4, backgroundColor: 'rgba(0, 0, 0, 0.02)' }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    onNavigate('trash');
+                    handleNavigation('trash');
                     onCloseMobileMenu && onCloseMobileMenu();
                   }}
                   className={`flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-4'} gap-3 py-2.5 rounded-xl transition-all w-full text-left cursor-pointer text-[12px] font-medium ${currentView === 'trash'

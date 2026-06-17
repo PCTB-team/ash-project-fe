@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Tooltip, message } from 'antd';
+import { useNavigate } from 'react-router-dom';
 
-export default function GroupHeader({ group, isOwner, maxMembers, onNavigate }) {
+export default function GroupHeader({ group, isOwner, maxMembers }) {
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
   const copyInviteLink = () => {
     const link = group.inviteLink || group.inviteToken || `${window.location.origin}/join?token=${group.id}`;
@@ -16,7 +18,7 @@ export default function GroupHeader({ group, isOwner, maxMembers, onNavigate }) 
       <motion.button
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
-        onClick={() => onNavigate('community')}
+        onClick={() => navigate('/dashboard/group')}
         className="mb-5 text-black/50 hover:text-[var(--color-primary)] font-medium text-[13px] flex items-center gap-2 transition-all hover:-translate-x-1 cursor-pointer"
       >
         <div className="w-8 h-8 rounded-full bg-white border border-black/5 flex items-center justify-center shadow-sm">
