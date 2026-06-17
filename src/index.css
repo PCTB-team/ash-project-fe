@@ -11,3 +11,68 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+:root {
+  /* Premium Primary Palette */
+  --color-primary: #ff5c00; /* Màu cam chủ đạo */
+  --color-primary-container: #fff5f0;
+  
+  /* Bề mặt (Surfaces) */
+  --color-surface: #ffffff;
+  --color-surface-container-low: #f9f9fb;
+  --color-surface-container-high: #f5f5f7;
+  --color-on-surface: #1d1d1f; /* Text chính */
+}
+
+/* Ghi đè CSS Modules & Component Global */
+.premium-glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Ghi đè Modal của Ant Design để đẹp như Apple */
+.modern-glass-modal .ant-modal-content {
+  border-radius: 28px !important;
+  padding: 32px !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  overflow: hidden; /* Dùng cho GroupDetail modal */
+}
+.modern-glass-modal.p-0 .ant-modal-content {
+  padding: 0 !important; /* Dùng riêng cho upload modal */
+}
+.modern-glass-modal .ant-modal-close {
+  top: 16px;
+  right: 16px;
+}
+
+/* Ghi đè Pagination */
+.custom-modern-pagination .ant-pagination-item {
+  border-radius: 8px !important;
+  border: none !important;
+  background: #f5f5f7;
+  font-weight: 600;
+}
+.custom-modern-pagination .ant-pagination-item-active {
+  background: var(--color-primary) !important;
+}
+.custom-modern-pagination .ant-pagination-item-active a {
+  color: white !important;
+}
+.custom-modern-pagination .ant-pagination-prev .ant-pagination-item-link,
+.custom-modern-pagination .ant-pagination-next .ant-pagination-item-link {
+  border-radius: 8px !important;
+  border: none !important;
+  background: #f5f5f7;
+}
+
+/* Utilities cho Hide Scrollbar */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

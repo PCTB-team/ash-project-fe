@@ -4,7 +4,7 @@ import FileIcon from '../components/FileIcon.jsx';
 import { formatRelativeTime } from '../utils/dateUtils.js';
 import { fetchWithAuth } from '../../../utils/apiClient.js';
 
-const DOCUMENTS_API_URL = 'http://localhost:8080/api/v1/documents';
+const DOCUMENTS_API_URL = 'https://ash-project-be.onrender.com/api/v1/documents';
 
 export default function TrashScreen({
   trashDocuments,

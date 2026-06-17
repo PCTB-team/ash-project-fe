@@ -27,18 +27,20 @@ export const featuresList = [
 ];
 
 export const footerProducts = [
-  { label: 'Quản lý tài liệu', action: 'login' },
-  { label: 'Trợ lý học tập AI', action: 'login' },
-  { label: 'Nhóm học tập', action: 'login' },
+  { label: 'Kho tài liệu', action: 'login', redirect: '/dashboard' },
+  { label: 'Trợ lý AI', action: 'login', redirect: '/ai' },
+  { label: 'Nhóm học tập', action: 'login', redirect: '/group' },
+  { label: 'Lưu trữ đám mây', action: 'login', redirect: '/dashboard' },
 ];
 
 export const footerCommunity = [
-  { label: 'Nhóm Machine Learning', action: 'login' },
-  { label: 'Nhóm Khoa học dữ liệu', action: 'login' },
+  { label: 'Hướng dẫn sử dụng', action: 'landing' },
+  { label: 'Câu hỏi thường gặp', action: 'landing' },
+  { label: 'Đóng góp ý kiến', action: 'landing' },
 ];
 
 export const footerSupport = [
-  { label: 'Trung tâm trợ giúp', type: 'text' },
-  { label: 'vuongbaovipvip@gmail.com', type: 'email', color: 'text-[#ff5c00]' },
-  { label: 'Chính sách bảo mật', type: 'text' },
+  { label: 'Hỗ trợ kỹ thuật', type: 'text' },
+  { label: 'capystudy.team@gmail.com', type: 'email', color: 'text-[#ff5c00]' },
+  { label: 'Báo lỗi & Phản hồi', type: 'text' },
 ];

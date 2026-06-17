@@ -2,14 +2,14 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { Tag, Tooltip, message } from 'antd';
 import FileIcon from './FileIcon.jsx';
 import { fetchWithAuth } from '../../../utils/apiClient.js';
-import { getFileTagColor, getFileTypeLabel, classifyFileType, formatBytes } from '../utils/helpers.js';
+import { getFileTagColor, getFileTypeLabel, formatBytes } from '../utils/helpers.js';
 import { formatRelativeTime } from '../utils/dateUtils.js';
 import { MANAGER_TAB_OPTIONS, SORT_EXT_OPTIONS } from '../utils/fileConfig.js';
 import useDragScroll from '../hooks/useDragScroll.js';
 
 const PAGE_SIZE = 8;
-const DOCUMENTS_PAGE_API = 'http://localhost:8080/api/v1/documents/page';
-const FOLDERS_API = 'http://localhost:8080/api/v1/folders';
+const DOCUMENTS_PAGE_API = 'https://ash-project-be.onrender.com/api/v1/documents/page';
+const FOLDERS_API = 'https://ash-project-be.onrender.com/api/v1/folders';
 
 /**
  * DocumentManager — Classification Tabs + Extension Sort + Server Paginated Vertical List + Folder Navigation.
@@ -24,7 +24,6 @@ export default function DocumentManager({
   onAskAI,
   onRemoveDocument,
   onRenameDocument,
-  onRefreshDocuments,
   onUpdateDocumentsCount,
   refreshTrigger,
 }) {
@@ -75,7 +74,7 @@ export default function DocumentManager({
     }
   };
 
-  const DOCUMENTS_FILTER_API = 'http://localhost:8080/api/v1/documents/filter';
+  const DOCUMENTS_FILTER_API = 'https://ash-project-be.onrender.com/api/v1/documents/filter';
 
   // ── Prefetch Filters for Tabs ──
   const prefetchFilters = async () => {
@@ -85,15 +84,12 @@ export default function DocumentManager({
         const params = new URLSearchParams();
         if (currentFolderId) params.append('folderId', currentFolderId);
 
-        let url = '';
-        if (type === 'document') {
-          // Chỉ riêng tài liệu (document) thì gọi API /filter/documents
-          url = `${DOCUMENTS_FILTER_API}/documents${params.toString() ? '?' + params.toString() : ''}`;
-        } else {
-          // Các loại khác (audio, video, image, other) thì gọi API /filter?fileType=...
-          params.append('fileType', type);
-          url = `${DOCUMENTS_FILTER_API}?${params.toString()}`;
+        if (type !== 'document') {
+          params.append('fileType', type.toUpperCase());
         }
+        const url = type === 'document'
+          ? `${DOCUMENTS_FILTER_API}/documents${params.toString() ? '?' + params.toString() : ''}`
+          : `${DOCUMENTS_FILTER_API}?${params.toString()}`;
 
         try {
           const response = await fetchWithAuth(url);
@@ -200,12 +196,16 @@ export default function DocumentManager({
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchFolders();
     prefetchFilters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentFolderId, refreshTrigger]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchDocuments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, activeTab, sortExt, searchTerm, currentFolderId, refreshTrigger, prefetchedTabs]);
 
   // Reset page when filters change
@@ -225,7 +225,7 @@ export default function DocumentManager({
 
   // ── All items for current view (folders + docs) ──
   const processedDocs = useMemo(() => {
-    let combined = [];
+    let combined;
 
     if (activeTab === 'folder') {
       combined = [...currentViewFolders];
@@ -252,21 +252,6 @@ export default function DocumentManager({
 
     return combined;
   }, [currentViewFolders, paginatedDocs, activeTab, searchTerm, sortExt]);
-
-  // ── Tab counts (memoized from backend if possible, else just totalElements) ──
-  const tabCounts = useMemo(() => {
-    const sumOfFilters = Object.values(prefetchedTabs).reduce((sum, tab) => sum + tab.total, 0);
-    const counts = {
-      all: activeTab === 'all' ? totalElements : sumOfFilters, // Use accurate totalElements when active, else use sum of real-time prefetched filters
-      document: prefetchedTabs.document?.total || 0,
-      audio: prefetchedTabs.audio?.total || 0,
-      video: prefetchedTabs.video?.total || 0,
-      image: prefetchedTabs.image?.total || 0,
-      other: prefetchedTabs.other?.total || 0,
-      folder: currentViewFolders.length
-    };
-    return counts;
-  }, [activeTab, totalElements, prefetchedTabs, currentViewFolders]);
 
   const sortLabel = SORT_EXT_OPTIONS.find((o) => o.value === sortExt)?.label || 'Mặc định';
 
@@ -305,7 +290,7 @@ export default function DocumentManager({
         try {
           const errorData = await response.json();
           if (errorData.message) errorMsg = `${errorData.message}`;
-        } catch (err) { /* ignore parse error */ }
+        } catch { /* ignore parse error */ }
         message.error(errorMsg);
       }
     } catch (e) {
@@ -374,7 +359,6 @@ export default function DocumentManager({
             {MANAGER_TAB_OPTIONS.map((tab) => {
               const isActive = activeTab === tab.value;
               const p = palette[tab.value] || palette.other;
-              const count = tabCounts[tab.value] || 0;
               return (
                 <button
                   key={tab.value}
@@ -610,7 +594,7 @@ function DocumentRow({ doc, isPriority, onClick, onAskAI, onRemove, onRename }) 
 
   const handleDownload = async () => {
     try {
-      const response = await fetchWithAuth(`http://localhost:8080/api/v1/documents/${doc.id}/download`);
+      const response = await fetchWithAuth(`https://ash-project-be.onrender.com/api/v1/documents/${doc.id}/download`);
       if (response.ok) {
         const contentType = response.headers.get('content-type') || '';
 
@@ -620,14 +604,14 @@ function DocumentRow({ doc, isPriority, onClick, onAskAI, onRemove, onRename }) 
           if (typeof url === 'string' && url.startsWith('http')) {
             window.open(url, '_blank');
           } else if (typeof url === 'string') {
-            window.open(`http://localhost:8080${url.startsWith('/') ? '' : '/'}${url}`, '_blank');
+            window.open(`https://ash-project-be.onrender.com${url.startsWith('/') ? '' : '/'}${url}`, '_blank');
           }
         } else if (contentType.includes('text/plain')) {
           const textUrl = await response.text();
           if (textUrl.startsWith('http')) {
             window.open(textUrl, '_blank');
           } else {
-            window.open(`http://localhost:8080${textUrl.startsWith('/') ? '' : '/'}${textUrl}`, '_blank');
+            window.open(`https://ash-project-be.onrender.com${textUrl.startsWith('/') ? '' : '/'}${textUrl}`, '_blank');
           }
         } else {
           // Binary blob (PDF, image, docx, etc)
@@ -644,7 +628,7 @@ function DocumentRow({ doc, isPriority, onClick, onAskAI, onRemove, onRename }) 
       } else {
         // Fallback to storageUrl if API fails
         if (doc.storageUrl) {
-          const fallbackUrl = doc.storageUrl.startsWith('http') ? doc.storageUrl : `http://localhost:8080${doc.storageUrl.startsWith('/') ? '' : '/'}${doc.storageUrl}`;
+          const fallbackUrl = doc.storageUrl.startsWith('http') ? doc.storageUrl : `https://ash-project-be.onrender.com${doc.storageUrl.startsWith('/') ? '' : '/'}${doc.storageUrl}`;
           window.open(fallbackUrl, '_blank');
         } else {
           console.error("Lỗi download:", response.status);
@@ -654,7 +638,7 @@ function DocumentRow({ doc, isPriority, onClick, onAskAI, onRemove, onRename }) 
       console.error(e);
       // Fallback
       if (doc.storageUrl) {
-        const fallbackUrl = doc.storageUrl.startsWith('http') ? doc.storageUrl : `http://localhost:8080${doc.storageUrl.startsWith('/') ? '' : '/'}${doc.storageUrl}`;
+        const fallbackUrl = doc.storageUrl.startsWith('http') ? doc.storageUrl : `https://ash-project-be.onrender.com${doc.storageUrl.startsWith('/') ? '' : '/'}${doc.storageUrl}`;
         window.open(fallbackUrl, '_blank');
       }
     }

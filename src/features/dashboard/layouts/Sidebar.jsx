@@ -105,7 +105,7 @@ export default function Sidebar({
         {/* Navigation List */}
         <nav className="flex-1 space-y-1.5">
           {menuItems.map((item) => {
-            const isActive = currentView === item.key;
+            const isActive = currentView === item.key || (item.key === 'community' && currentView === 'group-detail');
             const button = (
               <motion.button
                 key={item.key}
