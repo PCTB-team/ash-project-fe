@@ -33,9 +33,9 @@ export default function AppHeader({
   const getDisplayAvatar = (url) => {
     if (!url || url === logoAvatarDefault) return logoAvatarDefault;
     if (url.startsWith('http') || url.startsWith('data:image')) return url;
-    if (url.startsWith('/')) return `http://localhost:8080${url}`;
+    if (url.startsWith('/')) return `https://ash-project-be.onrender.com${url}`;
     if (/^[A-Za-z0-9+/=]{50,}$/.test(url.trim())) return `data:image/jpeg;base64,${url.trim()}`;
-    return `http://localhost:8080/${url}`;
+    return `https://ash-project-be.onrender.com/${url}`;
   };
 
   const handleToggleExpand = () => {

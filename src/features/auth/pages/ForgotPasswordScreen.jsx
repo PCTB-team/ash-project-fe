@@ -12,10 +12,10 @@ import ResetPasswordForm from '../components/ResetPasswordForm';
 // 🔗 API PLACEHOLDER (FORGOT PASSWORD)
 // Khi backend deploy, hãy điền link API thực tế vào biến dưới đây để gửi/xác thực OTP.
 // ============================================================================
-export const FORGOT_PASSWORD_API_URL = "http://localhost:8080/api/v1/auth/forgot-password/send-otp";
+export const FORGOT_PASSWORD_API_URL = "https://ash-project-be.onrender.com/api/v1/auth/forgot-password/send-otp";
 
-export const FORGOT_PASSWORD_VERIFY_OTP_API_URL = "http://localhost:8080/api/v1/auth/forgot-password/verify-otp";
-export const FORGOT_PASSWORD_RESET_API_URL = "http://localhost:8080/api/v1/auth/forgot-password/reset";
+export const FORGOT_PASSWORD_VERIFY_OTP_API_URL = "https://ash-project-be.onrender.com/api/v1/auth/forgot-password/verify-otp";
+export const FORGOT_PASSWORD_RESET_API_URL = "https://ash-project-be.onrender.com/api/v1/auth/forgot-password/reset";
 
 export default function ForgotPasswordScreen({ onNavigate }) {
   const [form] = Form.useForm();

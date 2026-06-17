@@ -7,11 +7,12 @@
  * - Navigation handlers cho các trang public
  */
 
-import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 
 // ── Pages ──
 import IntroScreen from './features/intro/pages/IntroScreen';
+import NotFoundScreen from './features/intro/pages/NotFoundScreen';
 import LoginScreen from './features/auth/pages/LoginScreen';
 import ForgotPasswordScreen from './features/auth/pages/ForgotPasswordScreen';
 import DashboardContainer from './features/dashboard/pages/DashboardContainer.jsx';
@@ -29,19 +30,33 @@ function App() {
 
   // ── Navigation Handlers ──
 
-  const handleNavigate = (view) => {
+  const handleNavigate = (view, redirect) => {
     const routes = {
       'landing': '/',
       'login': '/login',
       'register': '/register',
       'forgot-password': '/forgot-password',
       'dashboard': '/dashboard',
+      'ai': '/ai',
+      'community': '/group',
     };
     const path = routes[view];
-    if (path) navigate(path);
+    if (path) {
+      // Nếu chuyển đến login với redirect, thêm query param để sau login chuyển đúng trang
+      if (view === 'login' && redirect) {
+        navigate(`${path}?redirect=${encodeURIComponent(redirect)}`);
+      } else {
+        navigate(path);
+      }
+    }
   };
 
-  const handleLoginSuccess = () => navigate('/dashboard');
+  // Đọc redirect param từ URL để sau login chuyển đến đúng trang
+  const handleLoginSuccess = () => {
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('redirect');
+    navigate(redirect || '/dashboard');
+  };
   const handleLogout = () => navigate('/');
 
   // ── Routes ──
@@ -70,9 +85,11 @@ function App() {
 
       {/* Protected Pages */}
       <Route path="/dashboard" element={<DashboardContainer onLogout={handleLogout} />} />
+      <Route path="/ai" element={<DashboardContainer onLogout={handleLogout} initialView="ai" />} />
+      <Route path="/group" element={<DashboardContainer onLogout={handleLogout} initialView="community" />} />
 
       {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFoundScreen onNavigate={handleNavigate} />} />
     </Routes>
   );
 }

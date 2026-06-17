@@ -9,6 +9,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { message } from 'antd';
 import { LOGOUT_API_URL } from '../../auth/hooks/useAuth';
 import { fetchWithAuth } from '../../../utils/apiClient.js';
@@ -17,12 +18,13 @@ import MainLayout from '../layouts/MainLayout.jsx';
 import DashboardScreen from './DashboardScreen.jsx';
 import ProfileScreen from './ProfileScreen.jsx';
 import TrashScreen from './TrashScreen.jsx';
+import CommunityScreen from '../../groups/pages/CommunityScreen';
+import GroupDetailScreen from '../../groups/pages/GroupDetailScreen';
 import logoAvatarDefault from '../../../assets/logo_avatar_default.jpg';
 
 // ── API Endpoints ──
-const DOCUMENTS_API_URL = 'http://localhost:8080/api/v1/documents';
-const TRASH_API_URL = 'http://localhost:8080/api/v1/documents/trash';
-const USER_PROFILE_API_URL = 'http://localhost:8080/api/v1/user/profile';
+const TRASH_API_URL = 'https://ash-project-be.onrender.com/api/v1/documents/trash';
+const USER_PROFILE_API_URL = 'https://ash-project-be.onrender.com/api/v1/user/profile';
 
 // ── Constants ──
 
@@ -47,9 +49,12 @@ const getInitialFullName = () => {
   return 'User';
 };
 
-export default function DashboardContainer({ onLogout }) {
+export default function DashboardContainer({ onLogout, initialView }) {
+  const navigate = useNavigate();
   // ── State ──
-  const [currentView, setCurrentView] = useState('dashboard');
+  const [currentView, setCurrentView] = useState(initialView || 'dashboard');
+  const [selectedGroupId, setSelectedGroupId] = useState(null);
+  const [selectedGroupData, setSelectedGroupData] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [accentColor, setAccentColor] = useState('#ff5c00');
   const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATAR);
@@ -138,7 +143,19 @@ export default function DashboardContainer({ onLogout }) {
 
   // ── Handlers ──
 
-  const handleNavigate = (view) => setCurrentView(view);
+  const handleNavigate = (view, payload) => {
+    if (view === 'group-detail') {
+      setSelectedGroupId(payload?.groupId || payload);
+      setSelectedGroupData(payload?.groupData || null);
+    }
+    setCurrentView(view);
+
+    // Cập nhật URL trình duyệt cho các view có route riêng
+    const urlMap = { dashboard: '/dashboard', community: '/group', ai: '/ai' };
+    if (urlMap[view]) {
+      navigate(urlMap[view], { replace: true });
+    }
+  };
 
   const handleLogoutClick = async () => {
     try {
@@ -165,10 +182,6 @@ export default function DashboardContainer({ onLogout }) {
       localStorage.removeItem('refreshToken');
       if (onLogout) onLogout();
     }
-  };
-
-  const handleRenameDocument = (docId, newName) => {
-    // handled internally now
   };
 
   // ── Page Rendering ──
@@ -209,6 +222,36 @@ export default function DashboardContainer({ onLogout }) {
             onRefreshDocuments={refreshAll}
             onNavigate={handleNavigate}
           />
+        );
+      case 'community':
+        return (
+          <CommunityScreen
+            searchTerm={searchTerm}
+            currentUser={fullName}
+            onNavigate={handleNavigate}
+          />
+        );
+      case 'group-detail':
+        return (
+          <GroupDetailScreen
+            groupId={selectedGroupId}
+            initialGroupData={selectedGroupData}
+            currentUser={fullName}
+            onNavigate={handleNavigate}
+          />
+        );
+      case 'ai':
+        return (
+          <div className="flex flex-col items-center justify-center h-full text-center py-20 px-6">
+            <div className="w-20 h-20 bg-gradient-to-br from-[#ff8a00]/10 to-[#ff5c00]/10 rounded-3xl flex items-center justify-center mb-6 border border-[#ff5c00]/20">
+              <i className="bi bi-stars text-[36px] text-[#ff5c00]" />
+            </div>
+            <h2 className="text-[24px] font-semibold text-[#1d1d1f] mb-3 tracking-tight">Trợ lý AI</h2>
+            <p className="text-[14px] text-black/50 max-w-md font-medium leading-relaxed">
+              Tính năng Trợ lý AI đang được phát triển. Bạn sẽ sớm có thể trò chuyện, đặt câu hỏi và tóm tắt tài liệu tự động tại đây.
+            </p>
+            <span className="mt-6 text-[11px] font-semibold text-[#ff5c00] bg-[#ff5c00]/10 px-4 py-1.5 rounded-full uppercase tracking-wider">Coming Soon</span>
+          </div>
         );
       default:
         return <div>View not found</div>;

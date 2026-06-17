@@ -305,7 +305,10 @@ export default function IntroScreen({ onNavigate }) {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
-                  onClick={() => onNavigate('login')}
+                  onClick={() => {
+                    const redirectMap = { dashboard: '/dashboard', ai: '/ai', community: '/group' };
+                    onNavigate('login', redirectMap[f.view] || '/dashboard');
+                  }}
                   className="p-6 bg-white border border-black/5 rounded-3xl transition-all duration-300 cursor-pointer group flex flex-col justify-between hover-card-depth shadow-sm relative overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-transparent to-[#ff5c00]/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />

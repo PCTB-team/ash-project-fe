@@ -6,7 +6,7 @@ import logoFolder from '../../../assets/logo_folder.png';
 import logoAvatarDefault from '../../../assets/logo_avatar_default.jpg';
 import { fetchWithAuth } from '../../../utils/apiClient.js';
 
-const USER_PROFILE_API_URL = 'http://localhost:8080/api/v1/user/profile';
+const USER_PROFILE_API_URL = 'https://ash-project-be.onrender.com/api/v1/user/profile';
 
 export default function ProfileScreen({
   initialProfileData,
@@ -27,14 +27,15 @@ export default function ProfileScreen({
   const getDisplayAvatar = (url) => {
     if (!url || url === logoAvatarDefault) return logoAvatarDefault;
     if (url.startsWith('http') || url.startsWith('data:image')) return url;
-    if (url.startsWith('/')) return `http://localhost:8080${url}`;
+    if (url.startsWith('/')) return `https://ash-project-be.onrender.com${url}`;
     // Nếu là mã Base64 thô (không có tiền tố data:image...)
     if (/^[A-Za-z0-9+/=]{50,}$/.test(url.trim())) return `data:image/jpeg;base64,${url.trim()}`;
-    return `http://localhost:8080/${url}`; // Fallback cho relative path không có dấu /
+    return `https://ash-project-be.onrender.com/${url}`; // Fallback cho relative path không có dấu /
   };
 
   useEffect(() => {
     if (initialProfileData) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setProfileData(initialProfileData);
     }
   }, [initialProfileData]);

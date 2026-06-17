@@ -1,6 +1,6 @@
 import { message } from 'antd';
 
-const REFRESH_TOKEN_API_URL = "http://localhost:8080/api/v1/auth/refresh-token";
+const REFRESH_TOKEN_API_URL = "https://ash-project-be.onrender.com/api/v1/auth/refresh-token";
 
 // Trạng thái lock để tránh gọi API refresh nhiều lần cùng lúc
 let isRefreshing = false;
@@ -28,8 +28,7 @@ export const fetchWithAuth = async (url, options = {}) => {
 
   const config = { ...options, headers };
 
-  try {
-    let response = await fetch(url, config);
+  let response = await fetch(url, config);
 
     // Nếu lỗi 401 (Hết hạn token)
     if (response.status === 401) {
@@ -89,7 +88,4 @@ export const fetchWithAuth = async (url, options = {}) => {
     }
 
     return response;
-  } catch (error) {
-    throw error;
-  }
 };

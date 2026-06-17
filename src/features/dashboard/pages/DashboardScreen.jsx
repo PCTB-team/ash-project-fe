@@ -13,8 +13,8 @@ import { UPLOAD_TYPE_OPTIONS } from '../utils/fileConfig.js';
 import { fetchWithAuth } from '../../../utils/apiClient.js';
 
 
-const UPLOAD_DOCUMENT_API_URL = 'http://localhost:8080/api/v1/documents/uploads';
-const DOCUMENTS_API_URL = 'http://localhost:8080/api/v1/documents';
+const UPLOAD_DOCUMENT_API_URL = 'https://ash-project-be.onrender.com/api/v1/documents/uploads';
+const DOCUMENTS_API_URL = 'https://ash-project-be.onrender.com/api/v1/documents';
 
 const { Dragger } = Upload;
 

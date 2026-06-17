@@ -1,4 +1,4 @@
-import { Modal, Button, Tag } from 'antd';
+import { Modal, Button, Tag, message } from 'antd';
 import { motion } from 'framer-motion';
 import FileIcon from './FileIcon.jsx';
 import { getFileTagColor, getFileTypeLabel } from '../utils/helpers.js';
@@ -19,7 +19,7 @@ export default function DocumentViewer({
 
   const handleDownload = async () => {
     try {
-      const response = await fetchWithAuth(`http://localhost:8080/api/v1/documents/${doc.id}/download`);
+      const response = await fetchWithAuth(`https://ash-project-be.onrender.com/api/v1/documents/${doc.id}/download`);
       if (response.ok) {
         const contentType = response.headers.get('content-type') || '';
         
@@ -29,14 +29,14 @@ export default function DocumentViewer({
           if (typeof url === 'string' && url.startsWith('http')) {
             window.open(url, '_blank');
           } else if (typeof url === 'string') {
-            window.open(`http://localhost:8080${url.startsWith('/') ? '' : '/'}${url}`, '_blank');
+            window.open(`https://ash-project-be.onrender.com${url.startsWith('/') ? '' : '/'}${url}`, '_blank');
           }
         } else if (contentType.includes('text/plain')) {
           const textUrl = await response.text();
           if (textUrl.startsWith('http')) {
             window.open(textUrl, '_blank');
           } else {
-            window.open(`http://localhost:8080${textUrl.startsWith('/') ? '' : '/'}${textUrl}`, '_blank');
+            window.open(`https://ash-project-be.onrender.com${textUrl.startsWith('/') ? '' : '/'}${textUrl}`, '_blank');
           }
         } else {
           // Binary blob (PDF, image, docx, etc)
@@ -53,7 +53,7 @@ export default function DocumentViewer({
       } else {
         // Fallback to storageUrl if API fails
         if (doc.storageUrl) {
-           const fallbackUrl = doc.storageUrl.startsWith('http') ? doc.storageUrl : `http://localhost:8080${doc.storageUrl.startsWith('/') ? '' : '/'}${doc.storageUrl}`;
+           const fallbackUrl = doc.storageUrl.startsWith('http') ? doc.storageUrl : `https://ash-project-be.onrender.com${doc.storageUrl.startsWith('/') ? '' : '/'}${doc.storageUrl}`;
            window.open(fallbackUrl, '_blank');
         } else {
            console.error("Lỗi download:", response.status);
@@ -63,7 +63,7 @@ export default function DocumentViewer({
       console.error(e);
       // Fallback
       if (doc.storageUrl) {
-         const fallbackUrl = doc.storageUrl.startsWith('http') ? doc.storageUrl : `http://localhost:8080${doc.storageUrl.startsWith('/') ? '' : '/'}${doc.storageUrl}`;
+         const fallbackUrl = doc.storageUrl.startsWith('http') ? doc.storageUrl : `https://ash-project-be.onrender.com${doc.storageUrl.startsWith('/') ? '' : '/'}${doc.storageUrl}`;
          window.open(fallbackUrl, '_blank');
       }
     }
@@ -71,12 +71,12 @@ export default function DocumentViewer({
 
   const handleView = async () => {
     if (doc.viewUrl) {
-      window.open(doc.viewUrl.startsWith('http') ? doc.viewUrl : `http://localhost:8080${doc.viewUrl.startsWith('/') ? '' : '/'}${doc.viewUrl}`, '_blank');
+      window.open(doc.viewUrl.startsWith('http') ? doc.viewUrl : `https://ash-project-be.onrender.com${doc.viewUrl.startsWith('/') ? '' : '/'}${doc.viewUrl}`, '_blank');
       return;
     }
 
     try {
-      const response = await fetchWithAuth(`http://localhost:8080/api/v1/documents/${doc.id}/view`);
+      const response = await fetchWithAuth(`https://ash-project-be.onrender.com/api/v1/documents/${doc.id}/view`);
       if (response.ok) {
          // The view API might return a URL in JSON, or text URL, or redirect.
          const contentType = response.headers.get('content-type') || '';
@@ -84,11 +84,11 @@ export default function DocumentViewer({
             const data = await response.json();
             const url = data.result || data.viewUrl || data;
             if (typeof url === 'string') {
-               window.open(url.startsWith('http') ? url : `http://localhost:8080${url.startsWith('/') ? '' : '/'}${url}`, '_blank');
+               window.open(url.startsWith('http') ? url : `https://ash-project-be.onrender.com${url.startsWith('/') ? '' : '/'}${url}`, '_blank');
             }
          } else if (contentType.includes('text/plain')) {
             const textUrl = await response.text();
-            window.open(textUrl.startsWith('http') ? textUrl : `http://localhost:8080${textUrl.startsWith('/') ? '' : '/'}${textUrl}`, '_blank');
+            window.open(textUrl.startsWith('http') ? textUrl : `https://ash-project-be.onrender.com${textUrl.startsWith('/') ? '' : '/'}${textUrl}`, '_blank');
          } else {
              // If binary file is returned directly for viewing
              const blob = await response.blob();
