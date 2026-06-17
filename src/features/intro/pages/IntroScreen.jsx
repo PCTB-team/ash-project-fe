@@ -16,7 +16,10 @@ import IntroHeader from '../components/IntroHeader';
 import IntroFooter from '../components/IntroFooter';
 import './intro_styles.css';
 
-export default function IntroScreen({ onNavigate }) {
+import { useNavigate } from 'react-router-dom';
+
+export default function IntroScreen() {
+  const navigate = useNavigate();
   // Live breathing AI terminal simulation states
   const [terminalLines, setTerminalLines] = useState([simulationData[0]]);
   const terminalIndexRef = useRef(0);
@@ -49,7 +52,7 @@ export default function IntroScreen({ onNavigate }) {
       <div className="absolute top-[35%] left-[20%] w-[40%] h-[40%] bg-[#a855f7]/2 rounded-full blur-[100px] pointer-events-none -z-10" />
 
       {/* Top Navigation Bar Component */}
-      <IntroHeader onNavigate={onNavigate} />
+      <IntroHeader />
 
       {/* Main Content */}
       <main className="pt-[68px] flex-1">
@@ -104,7 +107,7 @@ export default function IntroScreen({ onNavigate }) {
                   type="primary"
                   shape="round"
                   size="large"
-                  onClick={() => onNavigate('login')}
+                  onClick={() => navigate('/login')}
                   className="group !h-12 !px-8 !text-white !bg-gradient-to-b !from-[#ff7a00] !to-[#ff5c00] !font-medium !text-[14px] !border-none !shadow-[0_1px_3px_rgba(255,92,0,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] orange-glow hover:!brightness-110 hover:!shadow-[0_8px_24px_rgba(255,92,0,0.4)] transition-all duration-300 flex items-center gap-2"
                 >
                   Khám phá ngay <i className="bi bi-arrow-right text-[15px] group-hover:translate-x-1 transition-transform duration-300" />
@@ -112,7 +115,7 @@ export default function IntroScreen({ onNavigate }) {
                 <Button
                   shape="round"
                   size="large"
-                  onClick={() => onNavigate('login')}
+                  onClick={() => navigate('/login')}
                   className="!h-12 !px-8 !border !border-[#ff5c00]/30 hover:!border-[#ff5c00] !bg-[#ff5c00]/[0.02] hover:!bg-[#ff5c00]/[0.08] !shadow-sm transition-all duration-300 group"
                 >
                   <span className="font-semibold text-[#ff5c00] group-hover:text-[#ff3b00] transition-colors text-[14px]">
@@ -306,8 +309,8 @@ export default function IntroScreen({ onNavigate }) {
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
                   onClick={() => {
-                    const redirectMap = { dashboard: '/dashboard', ai: '/ai', community: '/group' };
-                    onNavigate('login', redirectMap[f.view] || '/dashboard');
+                    const redirectMap = { dashboard: '/dashboard', ai: '/dashboard/ai', community: '/dashboard/group' };
+                    navigate(`/login?redirect=${encodeURIComponent(redirectMap[f.view] || '/dashboard')}`);
                   }}
                   className="p-6 bg-white border border-black/5 rounded-3xl transition-all duration-300 cursor-pointer group flex flex-col justify-between hover-card-depth shadow-sm relative overflow-hidden"
                 >
@@ -331,7 +334,7 @@ export default function IntroScreen({ onNavigate }) {
       </main>
 
       {/* Footer Component */}
-      <IntroFooter onNavigate={onNavigate} />
+      <IntroFooter />
     </div>
   );
 }

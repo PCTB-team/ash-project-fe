@@ -18,7 +18,10 @@ import RegisterForm from '../components/RegisterForm';
 import OtpVerification from '../components/OtpVerification';
 import { ANIM } from '../utils/constants';
 
-export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, onNavigate, currentView }) {
+import { useNavigate } from 'react-router-dom';
+
+export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, currentView }) {
+  const navigate = useNavigate();
   const [form] = Form.useForm();
   const isRegister = currentView === 'register';
 
@@ -44,7 +47,7 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, onNav
     setErrorMsg('');
     form.resetFields();
     setRegisterStep('form');
-    onNavigate(isRegister ? 'login' : 'register');
+    navigate(isRegister ? '/login' : '/register');
   };
 
   const handleRegisterSubmit = async (values) => {
@@ -70,7 +73,6 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, onNav
       <AuthCard
         isRegister={isRegister}
         errorMsg={errorMsg}
-        onNavigate={onNavigate}
         onToggleMode={handleToggleMode}
         hideToggle={isOtpStep || isSuccessStep}
         title={isOtpStep ? 'Xác minh Email' : isSuccessStep ? 'Thành công' : undefined}
@@ -91,7 +93,7 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, onNav
                 onClick={() => {
                   setRegisterStep('form');
                   form.resetFields();
-                  onNavigate('login');
+                  navigate('/login');
                 }}
                 className="w-full h-[42px] text-white bg-gradient-to-b from-[#ff7a00] to-[#ff5c00] font-medium rounded-full text-[13.5px] border-none shadow-[0_1px_3px_rgba(255,92,0,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] flex items-center justify-center gap-2 cursor-pointer transition-all duration-200"
               >
@@ -123,7 +125,7 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, onNav
                   {isRegister ? (
                     <RegisterForm form={form} showPassword={showPassword} setShowPassword={setShowPassword} />
                   ) : (
-                    <LoginForm form={form} showPassword={showPassword} setShowPassword={setShowPassword} onNavigate={onNavigate} />
+                    <LoginForm form={form} showPassword={showPassword} setShowPassword={setShowPassword} />
                   )}
 
                   {/* ── Submit Button ── */}
@@ -160,7 +162,7 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, onNav
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.35, delay: 0.25, ease: [0.25, 1, 0.5, 1] }}
                   >
-                    <div className="flex justify-center w-full [&>div]:w-full [&_iframe]:w-full">
+                    <div className="flex justify-center w-full mt-1">
                       <GoogleLogin
                         onSuccess={credentialResponse => {
                           handleGoogleLogin(credentialResponse.credential);

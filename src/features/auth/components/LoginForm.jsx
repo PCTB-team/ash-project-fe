@@ -1,12 +1,14 @@
 import { Form, Checkbox } from 'antd';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { INPUT_CLS, INPUT_CLS_PR, LABEL_CLS, ICON_WRAP, ANIM } from '../utils/constants';
 
 /**
  * LoginForm — Apple-style login form fields.
  * Email/username, password with toggle, remember-me, forgot password.
  */
-export default function LoginForm({ form, showPassword, setShowPassword, onNavigate }) {
+export default function LoginForm({ form, showPassword, setShowPassword }) {
+  const navigate = useNavigate();
   return (
     <>
       {/* Email / Username */}
@@ -49,7 +51,7 @@ export default function LoginForm({ form, showPassword, setShowPassword, onNavig
           <Checkbox className="text-[11.5px] font-normal text-black/40 select-none">Ghi nhớ</Checkbox>
         </Form.Item>
         <button type="button"
-          onClick={() => onNavigate('forgot-password')}
+          onClick={() => navigate('/forgot-password')}
           className="text-[11.5px] font-medium text-[#0071e3] hover:text-[#0077ED] transition-colors cursor-pointer">
           Quên mật khẩu?
         </button>

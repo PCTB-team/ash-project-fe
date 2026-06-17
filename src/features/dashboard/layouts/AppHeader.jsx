@@ -16,15 +16,17 @@ import logoAvatarDefault from '../../../assets/logo_avatar_default.jpg';
  * Includes elegant keyboard shortcut badge (⌘K), dynamic border glows using accentColor,
  * and a premium double ringed avatar layout.
  */
+import { useNavigate } from 'react-router-dom';
+
 export default function AppHeader({
   searchTerm,
   onSearchChange,
   avatarUrl,
   accentColor = '#ff5c00',
   onToggleMobileMenu,
-  onNavigate,
   children,
 }) {
+  const navigate = useNavigate();
   const [isFocused, setIsFocused] = useState(false);
   const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -219,7 +221,7 @@ export default function AppHeader({
           <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => onNavigate && onNavigate('profile')}
+            onClick={() => navigate('/dashboard/profile')}
             className="w-8.5 h-8.5 rounded-full overflow-hidden shadow-sm flex items-center justify-center bg-white cursor-pointer relative p-[1.5px] transition-all"
             style={{ border: `1.5px solid ${accentColor}30` }}
           >

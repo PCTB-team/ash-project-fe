@@ -4,13 +4,16 @@ import FileIcon from '../components/FileIcon.jsx';
 import { formatRelativeTime } from '../utils/dateUtils.js';
 import { fetchWithAuth } from '../../../utils/apiClient.js';
 
+import { useOutletContext } from 'react-router-dom';
+
 const DOCUMENTS_API_URL = 'https://ash-project-be.onrender.com/api/v1/documents';
 
-export default function TrashScreen({
-  trashDocuments,
-  searchTerm,
-  onRefreshDocuments,
-}) {
+export default function TrashScreen() {
+  const {
+    trashDocuments,
+    searchTerm,
+    refreshAll: onRefreshDocuments,
+  } = useOutletContext();
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Lọc theo tìm kiếm

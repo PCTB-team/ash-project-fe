@@ -23,20 +23,21 @@ export const featuresList = [
   { icon: 'bi-folder2-open', title: 'Quản lý tập trung', desc: 'Lưu trữ bài giảng, PDF, tài liệu nghiên cứu tập trung khoa học tại một nơi duy nhất.', link: 'Đến thư viện', view: 'dashboard' },
   { icon: 'bi-shield-check', title: 'Lưu trữ đám mây', desc: 'Đồng bộ hóa dữ liệu đám mây thời gian thực, truy xuất mọi lúc mọi nơi từ điện thoại, laptop.', link: 'Mở kho lưu trữ', view: 'dashboard' },
   { icon: 'bi-stars', title: 'Trợ lý AI thông minh', desc: 'Trò chuyện, đặt câu hỏi, tóm tắt tự động giáo trình hàng trăm trang chỉ trong vài giây.', link: 'Nhắn tin với AI', view: 'ai' },
-  { icon: 'bi-people', title: 'Cộng đồng học tập', desc: 'Tham gia các nhóm trao đổi tài liệu, bài tập lớn, kết nối tri thức cùng đồng đội.', link: 'Vào nhóm học tập', view: 'community' },
+  { icon: 'bi-people', title: 'Nhóm học tập', desc: 'Tham gia các nhóm trao đổi tài liệu, bài tập lớn, kết nối tri thức cùng đồng đội.', link: 'Vào nhóm học tập', view: 'community' },
 ];
 
 export const footerProducts = [
   { label: 'Kho tài liệu', action: 'login', redirect: '/dashboard' },
-  { label: 'Trợ lý AI', action: 'login', redirect: '/ai' },
-  { label: 'Nhóm học tập', action: 'login', redirect: '/group' },
+  { label: 'Trợ lý AI', action: 'login', redirect: '/dashboard/ai' },
+  { label: 'Nhóm học tập', action: 'login', redirect: '/dashboard/group' },
   { label: 'Lưu trữ đám mây', action: 'login', redirect: '/dashboard' },
 ];
 
 export const footerCommunity = [
-  { label: 'Hướng dẫn sử dụng', action: 'landing' },
-  { label: 'Câu hỏi thường gặp', action: 'landing' },
-  { label: 'Đóng góp ý kiến', action: 'landing' },
+  { label: 'Hướng dẫn sử dụng', action: '/' },
+  { label: 'Câu hỏi thường gặp', action: '/' },
+  { label: 'Blog & Tin tức', action: '/' },
+  { label: 'Cộng đồng', action: '/dashboard/group' },
 ];
 
 export const footerSupport = [

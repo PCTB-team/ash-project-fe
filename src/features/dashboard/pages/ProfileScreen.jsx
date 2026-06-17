@@ -6,19 +6,23 @@ import logoFolder from '../../../assets/logo_folder.png';
 import logoAvatarDefault from '../../../assets/logo_avatar_default.jpg';
 import { fetchWithAuth } from '../../../utils/apiClient.js';
 
+import { useOutletContext } from 'react-router-dom';
+
 const USER_PROFILE_API_URL = 'https://ash-project-be.onrender.com/api/v1/user/profile';
 
-export default function ProfileScreen({
-  initialProfileData,
-  currentUser,
-  documentsCount,
-  storagePercentage,
-  totalStorageMB = 0,
-  avatarUrl,
-  onAvatarChange,
-  accentColor,
-  onAccentColorChange,
-}) {
+export default function ProfileScreen() {
+  const {
+    profileData: initialProfileData,
+    fullName: currentUser,
+    documentsCount,
+    storagePercentage,
+    totalStorageMB,
+    avatarUrl,
+    setAvatarUrl: onAvatarChange,
+    accentColor,
+    setAccentColor: onAccentColorChange,
+  } = useOutletContext();
+
   const [profileData, setProfileData] = useState(initialProfileData || { id: '', username: '', email: '', fullname: '', avatarUrl: avatarUrl || '', school: '' });
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [avatarFile, setAvatarFile] = useState(null);

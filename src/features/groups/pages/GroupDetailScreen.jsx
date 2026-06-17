@@ -12,7 +12,15 @@ import GroupTrashTab from '../components/group-detail/GroupTrashTab';
 import GroupSettingsTab from '../components/group-detail/GroupSettingsTab';
 import UploadDocumentModal from '../components/group-detail/UploadDocumentModal';
 
-export default function GroupDetailScreen({ groupId, initialGroupData, currentUser, onNavigate }) {
+import { useParams, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
+
+export default function GroupDetailScreen() {
+  const { groupId } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { fullName: currentUser } = useOutletContext();
+  const initialGroupData = location.state?.groupData;
+
   const {
     currentGroup, files, trashFiles,
     fetchGroupById, fetchFiles, fetchTrashFiles,
@@ -49,14 +57,14 @@ export default function GroupDetailScreen({ groupId, initialGroupData, currentUs
   if (!isMember && !isOwner) {
     return (
       <div className="flex-1 w-full h-full overflow-y-auto px-4 md:px-8 pb-12 pt-4 max-w-[1400px] mx-auto">
-        <GroupHeader group={group} isOwner={false} maxMembers={maxMembers} onNavigate={onNavigate} />
+        <GroupHeader group={group} isOwner={false} maxMembers={maxMembers} />
         <div className="bg-[var(--color-surface)] border border-black/[0.04] rounded-[32px] p-12 text-center shadow-sm max-w-2xl mx-auto mt-8">
           <div className="w-24 h-24 bg-[var(--color-primary)]/5 rounded-[24px] flex items-center justify-center mx-auto mb-6 text-[var(--color-primary)] border border-[var(--color-primary)]/10">
             <i className="bi bi-shield-lock-fill text-[40px]" />
           </div>
           <h3 className="text-[18px] font-semibold text-[var(--color-on-surface)] mb-2 tracking-tight">Khu vực riêng tư</h3>
           <p className="text-[14px] text-black/50 font-medium max-w-md mx-auto mb-8">Nội dung của nhóm chỉ dành cho thành viên chính thức.</p>
-          <button onClick={() => onNavigate('community')}
+          <button onClick={() => navigate('/dashboard/group')}
             className="bg-[var(--color-primary)] text-white font-medium rounded-xl h-12 px-8 shadow-lg shadow-[var(--color-primary)]/20 border-none cursor-pointer hover:opacity-90 transition-all">
             Trở về cộng đồng
           </button>
@@ -89,7 +97,7 @@ export default function GroupDetailScreen({ groupId, initialGroupData, currentUs
 
   return (
     <div className="flex-1 w-full h-full overflow-y-auto px-4 md:px-8 pb-12 pt-4 text-left select-none bg-transparent max-w-[1400px] mx-auto">
-      <GroupHeader group={group} isOwner={isOwner} maxMembers={maxMembers} onNavigate={onNavigate} />
+      <GroupHeader group={group} isOwner={isOwner} maxMembers={maxMembers} />
 
       {/* Discord-style Layout */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">

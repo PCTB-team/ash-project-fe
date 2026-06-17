@@ -5,7 +5,10 @@ import {
   footerSupport
 } from '../utils/intro.mock';
 
-export default function IntroFooter({ onNavigate }) {
+import { useNavigate } from 'react-router-dom';
+
+export default function IntroFooter() {
+  const navigate = useNavigate();
   return (
     <footer className="bg-[#f5f5f7] py-16 border-t border-black/5 relative">
       <div className="max-w-7xl mx-auto px-6 md:px-12">
@@ -20,7 +23,7 @@ export default function IntroFooter({ onNavigate }) {
             <h5 className="font-semibold text-black text-[13.5px] mb-5">Sản phẩm</h5>
             <ul className="space-y-3 text-[12.5px] text-black/55 font-medium">
               {footerProducts.map((item, i) => (
-                <li key={i}><button onClick={() => onNavigate(item.action, item.redirect)} className="hover:text-black transition-colors cursor-pointer">{item.label}</button></li>
+                <li key={i}><button onClick={() => navigate(item.action === 'login' && item.redirect ? `/login?redirect=${encodeURIComponent(item.redirect)}` : `/${item.action}`)} className="hover:text-black transition-colors cursor-pointer">{item.label}</button></li>
               ))}
             </ul>
           </div>
@@ -28,7 +31,7 @@ export default function IntroFooter({ onNavigate }) {
             <h5 className="font-semibold text-black text-[13.5px] mb-5">Hỗ trợ</h5>
             <ul className="space-y-3 text-[12.5px] text-black/55 font-medium">
               {footerCommunity.map((item, i) => (
-                <li key={i}><button onClick={() => onNavigate(item.action)} className="hover:text-black transition-colors cursor-pointer">{item.label}</button></li>
+                <li key={i}><button onClick={() => navigate(item.action.startsWith('/') ? item.action : `/${item.action}`)} className="hover:text-black transition-colors cursor-pointer">{item.label}</button></li>
               ))}
             </ul>
           </div>

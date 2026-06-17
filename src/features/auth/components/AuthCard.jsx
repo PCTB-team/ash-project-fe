@@ -1,11 +1,13 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { ANIM } from '../utils/constants';
 import logoImg from "../../../assets/logo.png";
 
 /**
  * AuthCard — Apple-style centered card with brand, error alert, toggle, and footer.
  */
-export default function AuthCard({ children, isRegister, errorMsg, onNavigate, onToggleMode, title, subtitle, hideToggle, hideFooter }) {
+export default function AuthCard({ children, isRegister, errorMsg, onToggleMode, title, subtitle, hideToggle, hideFooter }) {
+  const navigate = useNavigate();
   return (
     <div className="bg-white/80 backdrop-blur-2xl border border-black/[0.06] rounded-[24px] shadow-[0_8px_40px_rgba(0,0,0,0.06)] px-8 py-8 sm:px-10 sm:py-9">
 
@@ -13,7 +15,7 @@ export default function AuthCard({ children, isRegister, errorMsg, onNavigate, o
       <div className="flex flex-col items-center text-center mb-7">
         <div
           className="flex items-center gap-2.5 cursor-pointer group mb-3"
-          onClick={() => onNavigate('landing')}
+          onClick={() => navigate('/')}
         >
           <div className="relative w-10 h-10 shrink-0 group-hover:scale-105 transition-all duration-500">
             {/* Glowing Aura */}
@@ -69,7 +71,7 @@ export default function AuthCard({ children, isRegister, errorMsg, onNavigate, o
       {/* ── Footer ── */}
       {!hideFooter && (
         <div className="mt-5 flex items-center justify-center gap-3 text-[10.5px] text-black/40 font-semibold tracking-wide">
-          <button onClick={() => onNavigate('landing')} className="hover:text-black/70 cursor-pointer transition-colors">Trang chủ</button>
+          <button onClick={() => navigate('/')} className="hover:text-black/70 cursor-pointer transition-colors">Trang chủ</button>
           <span className="w-[3px] h-[3px] rounded-full bg-black/10" />
           <button className="hover:text-black/70 cursor-pointer transition-colors">Điều khoản</button>
           <span className="w-[3px] h-[3px] rounded-full bg-black/10" />

@@ -13,20 +13,22 @@ import { UPLOAD_TYPE_OPTIONS } from '../utils/fileConfig.js';
 import { fetchWithAuth } from '../../../utils/apiClient.js';
 
 
+import { useNavigate, useOutletContext } from 'react-router-dom';
+
 const UPLOAD_DOCUMENT_API_URL = 'https://ash-project-be.onrender.com/api/v1/documents/uploads';
 const DOCUMENTS_API_URL = 'https://ash-project-be.onrender.com/api/v1/documents';
 
 const { Dragger } = Upload;
 
-export default function DashboardScreen({
-  searchTerm,
-  onRemoveDocument,
-  onRenameDocument,
-  onNavigate,
-  onRefreshDocuments,
-  onUpdateDocumentsCount,
-  refreshTrigger,
-}) {
+export default function DashboardScreen() {
+  const navigate = useNavigate();
+  const { 
+    searchTerm, 
+    refreshKey: refreshTrigger, 
+    setDocumentsCount: onUpdateDocumentsCount, 
+    refreshAll: onRefreshDocuments 
+  } = useOutletContext();
+  
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [previewDoc, setPreviewDoc] = useState(null);
   const [folderPath, setFolderPath] = useState([]);
@@ -156,7 +158,7 @@ export default function DashboardScreen({
 
   const handleAskAIOnDoc = () => {
     // TODO: Khi có trang AI, truyền doc vào context/state trước khi navigate
-    onNavigate('ai');
+    navigate('/dashboard/ai');
   };
 
   return (

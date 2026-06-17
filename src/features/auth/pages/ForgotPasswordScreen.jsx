@@ -17,7 +17,10 @@ export const FORGOT_PASSWORD_API_URL = "https://ash-project-be.onrender.com/api/
 export const FORGOT_PASSWORD_VERIFY_OTP_API_URL = "https://ash-project-be.onrender.com/api/v1/auth/forgot-password/verify-otp";
 export const FORGOT_PASSWORD_RESET_API_URL = "https://ash-project-be.onrender.com/api/v1/auth/forgot-password/reset";
 
-export default function ForgotPasswordScreen({ onNavigate }) {
+import { useNavigate } from 'react-router-dom';
+
+export default function ForgotPasswordScreen() {
+  const navigate = useNavigate();
   const [form] = Form.useForm();
   const [step, setStep] = useState('email'); // 'email' | 'otp' | 'reset' | 'success'
   const [isLoading, setIsLoading] = useState(false);
@@ -153,7 +156,6 @@ export default function ForgotPasswordScreen({ onNavigate }) {
   return (
     <AuthLayout>
       <AuthCard
-        onNavigate={onNavigate}
         errorMsg={errorMsg}
         hideToggle={true}
         title={getCardProps().title}
@@ -166,7 +168,7 @@ export default function ForgotPasswordScreen({ onNavigate }) {
                 form={form}
                 isLoading={isLoading}
                 onSubmit={handleSendOtp}
-                onBack={() => onNavigate('login')}
+                onBack={() => navigate('/login')}
               />
             </motion.div>
           )}
@@ -204,7 +206,7 @@ export default function ForgotPasswordScreen({ onNavigate }) {
               <motion.button
                 whileHover={{ scale: 1.005, opacity: 0.92 }}
                 whileTap={{ scale: 0.997 }}
-                onClick={() => onNavigate('login')}
+                onClick={() => navigate('/login')}
                 className="w-full h-[42px] text-white bg-gradient-to-b from-[#ff7a00] to-[#ff5c00] font-medium rounded-[12px] text-[13.5px] border-none shadow-[0_1px_3px_rgba(255,92,0,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] flex items-center justify-center gap-2 cursor-pointer transition-all duration-200"
               >
                 Về trang đăng nhập

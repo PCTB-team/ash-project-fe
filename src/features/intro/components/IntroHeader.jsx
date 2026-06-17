@@ -3,7 +3,10 @@ import { Button } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
 import logoImg from '../../../assets/logo.png';
 
-export default function IntroHeader({ onNavigate }) {
+import { useNavigate } from 'react-router-dom';
+
+export default function IntroHeader() {
+  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
@@ -19,7 +22,7 @@ export default function IntroHeader({ onNavigate }) {
           className="flex items-center gap-3 cursor-pointer group"
           onClick={() => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            onNavigate('landing');
+            navigate('/');
           }}
         >
           <div className="relative w-10 h-10 shrink-0 group-hover:scale-105 transition-all duration-500">
@@ -38,21 +41,21 @@ export default function IntroHeader({ onNavigate }) {
 
         {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-8 text-[13.5px] font-medium text-[#1d1d1f]/60">
-          <button onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); onNavigate('landing'); }} className="hover:text-[#ff5c00] transition-colors cursor-pointer">Trang chủ</button>
+          <button onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); navigate('/'); }} className="hover:text-[#ff5c00] transition-colors cursor-pointer">Trang chủ</button>
           <a href="#features-section" className="text-[#1d1d1f]/60 hover:text-[#ff5c00] transition-colors cursor-pointer no-underline">Tính năng</a>
-          <button onClick={() => onNavigate('login', '/dashboard')} className="hover:text-[#ff5c00] transition-colors cursor-pointer">Tài liệu</button>
-          <button onClick={() => onNavigate('login', '/group')} className="hover:text-[#ff5c00] transition-colors cursor-pointer">Cộng đồng</button>
-          <button onClick={() => onNavigate('login', '/ai')} className="hover:text-[#ff5c00] transition-colors cursor-pointer">Trợ lý AI</button>
+          <button onClick={() => navigate('/login?redirect=/dashboard')} className="hover:text-[#ff5c00] transition-colors cursor-pointer">Tài liệu</button>
+          <button onClick={() => navigate('/login?redirect=/dashboard/group')} className="hover:text-[#ff5c00] transition-colors cursor-pointer">Nhóm học tập</button>
+          <button onClick={() => navigate('/login?redirect=/dashboard/ai')} className="hover:text-[#ff5c00] transition-colors cursor-pointer">Trợ lý AI</button>
         </div>
 
         <div className="hidden md:flex items-center gap-3">
-          <Button type="text" shape="round" onClick={() => onNavigate('login')} className="!font-medium !text-[13.5px] !text-black/75 hover:!text-black">
+          <Button type="text" shape="round" onClick={() => navigate('/login')} className="!font-medium !text-[13.5px] !text-black/75 hover:!text-black">
             Đăng nhập
           </Button>
           <Button
             type="primary"
             shape="round"
-            onClick={() => onNavigate('register')}
+            onClick={() => navigate('/register')}
             className="!bg-gradient-to-b !from-[#ff7a00] !to-[#ff5c00] !border-none !text-white !font-medium !text-[13.5px] !h-10 !px-5 !shadow-[0_1px_3px_rgba(255,92,0,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] hover:!brightness-110 hover:!shadow-[0_4px_14px_rgba(255,92,0,0.35)] transition-all duration-300"
           >
             Đăng ký ngay
@@ -81,17 +84,17 @@ export default function IntroHeader({ onNavigate }) {
             className="fixed top-[68px] left-0 right-0 bg-white/95 backdrop-blur-3xl border-b border-black/[0.04] p-6 flex flex-col gap-6 z-40 shadow-2xl md:hidden"
           >
             <div className="flex flex-col gap-5 text-[15px] font-medium text-[#1d1d1f]/70">
-              <button onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); onNavigate('landing'); setIsMobileMenuOpen(false); }} className="text-left hover:text-[#ff5c00] transition-colors py-2 border-b border-black/[0.03]">Trang chủ</button>
+              <button onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); navigate('/'); setIsMobileMenuOpen(false); }} className="text-left hover:text-[#ff5c00] transition-colors py-2 border-b border-black/[0.03]">Trang chủ</button>
               <a href="#features-section" onClick={() => setIsMobileMenuOpen(false)} className="text-left text-[#1d1d1f]/70 hover:text-[#ff5c00] transition-colors py-2 border-b border-black/[0.03] no-underline">Tính năng</a>
-              <button onClick={() => { onNavigate('login', '/dashboard'); setIsMobileMenuOpen(false); }} className="text-left hover:text-[#ff5c00] transition-colors py-2 border-b border-black/[0.03]">Thư viện</button>
-              <button onClick={() => { onNavigate('login', '/group'); setIsMobileMenuOpen(false); }} className="text-left hover:text-[#ff5c00] transition-colors py-2 border-b border-black/[0.03]">Cộng đồng</button>
-              <button onClick={() => { onNavigate('login', '/ai'); setIsMobileMenuOpen(false); }} className="text-left hover:text-[#ff5c00] transition-colors py-2 border-b border-black/[0.03]">Trợ lý AI</button>
+              <button onClick={() => { navigate('/login?redirect=/dashboard'); setIsMobileMenuOpen(false); }} className="text-left hover:text-[#ff5c00] transition-colors py-2 border-b border-black/[0.03]">Thư viện</button>
+              <button onClick={() => { navigate('/login?redirect=/dashboard/group'); setIsMobileMenuOpen(false); }} className="text-left hover:text-[#ff5c00] transition-colors py-2 border-b border-black/[0.03]">Nhóm học tập</button>
+              <button onClick={() => { navigate('/login?redirect=/dashboard/ai'); setIsMobileMenuOpen(false); }} className="text-left hover:text-[#ff5c00] transition-colors py-2 border-b border-black/[0.03]">Trợ lý AI</button>
             </div>
             <div className="flex flex-col gap-3 mt-2">
-              <Button type="text" block shape="round" size="large" onClick={() => onNavigate('login')} className="!h-12 !text-black !bg-black/[0.04] hover:!bg-black/[0.08] !font-medium !text-[15px] !border-none transition-colors">
+              <Button type="text" block shape="round" size="large" onClick={() => navigate('/login')} className="!h-12 !text-black !bg-black/[0.04] hover:!bg-black/[0.08] !font-medium !text-[15px] !border-none transition-colors">
                 Đăng nhập
               </Button>
-              <Button type="primary" block shape="round" size="large" onClick={() => onNavigate('register')} className="!h-12 !text-white !bg-gradient-to-b !from-[#ff7a00] !to-[#ff5c00] !font-medium !text-[15px] !border-none !shadow-[0_4px_10px_rgba(255,92,0,0.3)] hover:!brightness-110 transition-all">
+              <Button type="primary" block shape="round" size="large" onClick={() => navigate('/register')} className="!h-12 !text-white !bg-gradient-to-b !from-[#ff7a00] !to-[#ff5c00] !font-medium !text-[15px] !border-none !shadow-[0_4px_10px_rgba(255,92,0,0.3)] hover:!brightness-110 transition-all">
                 Đăng ký ngay
               </Button>
             </div>

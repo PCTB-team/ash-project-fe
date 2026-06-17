@@ -1,7 +1,9 @@
 import { Button } from 'antd';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
-export default function NotFoundScreen({ onNavigate }) {
+export default function NotFoundScreen() {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-[var(--color-surface)] flex flex-col items-center justify-center p-6 text-center select-none overflow-hidden relative">
       {/* Background glowing blobs */}
@@ -33,7 +35,7 @@ export default function NotFoundScreen({ onNavigate }) {
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
           <Button
             type="primary"
-            onClick={() => onNavigate ? onNavigate('landing') : window.location.href = '/'}
+            onClick={() => navigate('/')}
             className="h-12 px-8 rounded-full font-semibold text-[15px] bg-[var(--color-primary)] shadow-lg shadow-[var(--color-primary)]/20 border-none transition-all hover:brightness-110"
           >
             Trở về Trang chủ

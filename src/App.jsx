@@ -8,88 +8,60 @@
  */
 
 import { Routes, Route, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+
+// ── Guards ──
+import PublicRoute from './routes/PublicRoute.jsx';
+import ProtectedRoute from './routes/ProtectedRoute.jsx';
 
 // ── Pages ──
-import IntroScreen from './features/intro/pages/IntroScreen';
-import NotFoundScreen from './features/intro/pages/NotFoundScreen';
-import LoginScreen from './features/auth/pages/LoginScreen';
-import ForgotPasswordScreen from './features/auth/pages/ForgotPasswordScreen';
-import DashboardContainer from './features/dashboard/pages/DashboardContainer.jsx';
+import IntroScreen from './features/intro/pages/IntroScreen.jsx';
+import NotFoundScreen from './features/intro/pages/NotFoundScreen.jsx';
+import LoginScreen from './features/auth/pages/LoginScreen.jsx';
+import ForgotPasswordScreen from './features/auth/pages/ForgotPasswordScreen.jsx';
+
+// ── Dashboard Pages ──
+import DashboardLayout from './features/dashboard/layouts/DashboardLayout.jsx';
+import DashboardScreen from './features/dashboard/pages/DashboardScreen.jsx';
+import ProfileScreen from './features/dashboard/pages/ProfileScreen.jsx';
+import TrashScreen from './features/dashboard/pages/TrashScreen.jsx';
+
+// ── Groups Pages ──
+import CommunityScreen from './features/groups/pages/CommunityScreen.jsx';
+import GroupDetailScreen from './features/groups/pages/GroupDetailScreen.jsx';
 
 function App() {
   const navigate = useNavigate();
 
-  // Auto-redirect: nếu đã đăng nhập → vào dashboard
-  useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (token && window.location.pathname === '/') {
-      navigate('/dashboard');
-    }
-  }, [navigate]);
-
-  // ── Navigation Handlers ──
-
-  const handleNavigate = (view, redirect) => {
-    const routes = {
-      'landing': '/',
-      'login': '/login',
-      'register': '/register',
-      'forgot-password': '/forgot-password',
-      'dashboard': '/dashboard',
-      'ai': '/ai',
-      'community': '/group',
-    };
-    const path = routes[view];
-    if (path) {
-      // Nếu chuyển đến login với redirect, thêm query param để sau login chuyển đúng trang
-      if (view === 'login' && redirect) {
-        navigate(`${path}?redirect=${encodeURIComponent(redirect)}`);
-      } else {
-        navigate(path);
-      }
-    }
-  };
-
-  // Đọc redirect param từ URL để sau login chuyển đến đúng trang
   const handleLoginSuccess = () => {
     const params = new URLSearchParams(window.location.search);
     const redirect = params.get('redirect');
     navigate(redirect || '/dashboard');
   };
-  const handleLogout = () => navigate('/');
-
-  // ── Routes ──
 
   return (
     <Routes>
       {/* Public Pages */}
-      <Route path="/" element={<IntroScreen onNavigate={handleNavigate} />} />
-      <Route path="/login" element={
-        <LoginScreen
-          currentView="login"
-          onNavigate={handleNavigate}
-          onLoginSuccess={handleLoginSuccess}
-          onAdminLoginSuccess={handleLoginSuccess}
-        />
-      } />
-      <Route path="/register" element={
-        <LoginScreen
-          currentView="register"
-          onNavigate={handleNavigate}
-          onLoginSuccess={handleLoginSuccess}
-          onAdminLoginSuccess={handleLoginSuccess}
-        />
-      } />
-      <Route path="/forgot-password" element={<ForgotPasswordScreen onNavigate={handleNavigate} />} />
+      <Route element={<PublicRoute />}>
+        <Route path="/" element={<IntroScreen />} />
+        <Route path="/login" element={<LoginScreen currentView="login" onLoginSuccess={handleLoginSuccess} />} />
+        <Route path="/register" element={<LoginScreen currentView="register" onLoginSuccess={handleLoginSuccess} />} />
+        <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
+      </Route>
 
       {/* Protected Pages */}
-      <Route path="/dashboard" element={<DashboardContainer onLogout={handleLogout} />} />
-      <Route path="/ai" element={<DashboardContainer onLogout={handleLogout} initialView="ai" />} />
-      <Route path="/group" element={<DashboardContainer onLogout={handleLogout} initialView="community" />} />
+      <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route index element={<DashboardScreen />} />
+          <Route path="profile" element={<ProfileScreen />} />
+          <Route path="trash" element={<TrashScreen />} />
+          <Route path="group" element={<CommunityScreen />} />
+          <Route path="group/:groupId" element={<GroupDetailScreen />} />
+          <Route path="ai" element={<div className="p-8 text-center">Trang AI (Đang phát triển)</div>} />
+        </Route>
+      </Route>
 
       {/* Fallback */}
-      <Route path="*" element={<NotFoundScreen onNavigate={handleNavigate} />} />
+      <Route path="*" element={<NotFoundScreen />} />
     </Routes>
   );
 }
