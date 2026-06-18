@@ -81,12 +81,15 @@ export default function DocumentManager({
     try {
       const types = ['document', 'audio', 'video', 'image', 'other'];
       const promises = types.map(async (type) => {
+        if (type === 'other') {
+          return { type: 'other', total: 0, docs: [] };
+        }
+
         const params = new URLSearchParams();
         if (currentFolderId) params.append('folderId', currentFolderId);
 
         if (type !== 'document') {
           let fileType = type.toUpperCase();
-          if (fileType === 'OTHER') fileType = 'OTHERS'; // Dự phòng OTHERS vì OTHER trả về 400
           params.append('fileType', fileType);
         }
         const url = type === 'document'

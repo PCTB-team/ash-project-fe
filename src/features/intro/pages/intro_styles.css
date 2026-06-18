@@ -1,4 +1,9 @@
-/* Apple/Linear Luxury Glassmorphism in Light Mode */
+/* ═══════════════════════════════════════
+   Capy Study — Intro Page Styles
+   Premium Apple-inspired light theme
+   ═══════════════════════════════════════ */
+
+/* Glassmorphism */
 .premium-glass {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(24px) saturate(180%);
@@ -6,17 +11,108 @@
   border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-/* Cosmic glows and neon auras for light theme */
+/* Orange Glow */
 .orange-glow {
   box-shadow: 0 4px 24px rgba(255, 92, 0, 0.12), 0 0 40px rgba(255, 92, 0, 0.04);
 }
 
-/* Custom interactive classes */
+/* Card Depth Hover */
 .hover-card-depth {
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .hover-card-depth:hover {
-  transform: translateY(-4px) scale(1.005);
+  transform: translateY(-6px) scale(1.005);
   border-color: rgba(255, 92, 0, 0.2);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06), 0 0 30px rgba(255, 92, 0, 0.04);
+}
+
+/* ═══ Dashboard Mockup Animation ═══ */
+@keyframes float-gentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+@keyframes float-gentle-delay {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.animate-float {
+  animation: float-gentle 6s ease-in-out infinite;
+}
+.animate-float-delay {
+  animation: float-gentle-delay 5s ease-in-out infinite 1s;
+}
+
+/* ═══ Floating Badges ═══ */
+@keyframes badge-float-1 {
+  0%, 100% { transform: translate(0, 0) rotate(-2deg); }
+  33% { transform: translate(6px, -10px) rotate(1deg); }
+  66% { transform: translate(-4px, -5px) rotate(-1deg); }
+}
+@keyframes badge-float-2 {
+  0%, 100% { transform: translate(0, 0) rotate(1deg); }
+  33% { transform: translate(-8px, -6px) rotate(-2deg); }
+  66% { transform: translate(4px, -12px) rotate(2deg); }
+}
+@keyframes badge-float-3 {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(5px, -8px) rotate(1deg); }
+  66% { transform: translate(-6px, -4px) rotate(-1deg); }
+}
+.animate-badge-1 { animation: badge-float-1 7s ease-in-out infinite; }
+.animate-badge-2 { animation: badge-float-2 8s ease-in-out infinite 0.5s; }
+.animate-badge-3 { animation: badge-float-3 6s ease-in-out infinite 1s; }
+
+/* ═══ Mockup File Row Shimmer ═══ */
+@keyframes shimmer-row {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.mockup-row-shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,92,0,0.04) 50%, transparent 100%);
+  background-size: 200% 100%;
+}
+.mockup-row-shimmer:hover {
+  animation: shimmer-row 2s ease-in-out;
+}
+
+/* ═══ Stats Counter Animation ═══ */
+@keyframes count-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+.stat-value {
+  animation: count-pulse 3s ease-in-out infinite;
+}
+
+/* ═══ How It Works Timeline ═══ */
+.step-connector {
+  background: linear-gradient(180deg, #ff5c00 0%, #ff5c00 50%, rgba(255,92,0,0.15) 100%);
+}
+
+/* ═══ CTA Section Gradient ═══ */
+.cta-gradient {
+  background: linear-gradient(135deg, #ff7a00 0%, #ff5c00 40%, #e54d00 100%);
+  position: relative;
+  overflow: hidden;
+}
+.cta-gradient::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.08) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* ═══ Feature Card Accent Border ═══ */
+.feature-card-blue:hover { border-color: rgba(0, 122, 255, 0.25) !important; }
+.feature-card-orange:hover { border-color: rgba(255, 92, 0, 0.25) !important; }
+.feature-card-green:hover { border-color: rgba(52, 199, 89, 0.25) !important; }
+
+/* ═══ Scroll Fade Mask ═══ */
+.mask-fade-right {
+  -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
+  mask-image: linear-gradient(to right, black 90%, transparent 100%);
 }

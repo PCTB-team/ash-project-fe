@@ -1,4 +1,4 @@
-import { Form, Checkbox } from 'antd';
+import { Form, Checkbox, ConfigProvider } from 'antd';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { INPUT_CLS, INPUT_CLS_PR, LABEL_CLS, ICON_WRAP, ANIM } from '../utils/constants';
@@ -48,11 +48,13 @@ export default function LoginForm({ form, showPassword, setShowPassword }) {
       {/* Remember + Forgot */}
       <motion.div variants={ANIM.child} className="flex items-center justify-between mb-1 -mt-1">
         <Form.Item name="remember" valuePropName="checked" noStyle>
-          <Checkbox className="text-[11.5px] font-normal text-black/40 select-none">Ghi nhớ</Checkbox>
+          <ConfigProvider theme={{ token: { colorPrimary: '#ff5c00' } }}>
+            <Checkbox className="text-[11.5px] font-normal text-black/40 select-none">Ghi nhớ</Checkbox>
+          </ConfigProvider>
         </Form.Item>
         <button type="button"
           onClick={() => navigate('/forgot-password')}
-          className="text-[11.5px] font-medium text-[#0071e3] hover:text-[#0077ED] transition-colors cursor-pointer">
+          className="text-[11.5px] font-medium text-[#ff5c00] hover:text-[#e05000] transition-colors cursor-pointer">
           Quên mật khẩu?
         </button>
       </motion.div>

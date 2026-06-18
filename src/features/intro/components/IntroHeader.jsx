@@ -86,7 +86,7 @@ export default function IntroHeader() {
             <div className="flex flex-col gap-5 text-[15px] font-medium text-[#1d1d1f]/70">
               <button onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); navigate('/'); setIsMobileMenuOpen(false); }} className="text-left hover:text-[#ff5c00] transition-colors py-2 border-b border-black/[0.03]">Trang chủ</button>
               <a href="#features-section" onClick={() => setIsMobileMenuOpen(false)} className="text-left text-[#1d1d1f]/70 hover:text-[#ff5c00] transition-colors py-2 border-b border-black/[0.03] no-underline">Tính năng</a>
-              <button onClick={() => { navigate('/login?redirect=/dashboard'); setIsMobileMenuOpen(false); }} className="text-left hover:text-[#ff5c00] transition-colors py-2 border-b border-black/[0.03]">Thư viện</button>
+              <button onClick={() => { navigate('/login?redirect=/dashboard'); setIsMobileMenuOpen(false); }} className="text-left hover:text-[#ff5c00] transition-colors py-2 border-b border-black/[0.03]">Tài liệu</button>
               <button onClick={() => { navigate('/login?redirect=/dashboard/group'); setIsMobileMenuOpen(false); }} className="text-left hover:text-[#ff5c00] transition-colors py-2 border-b border-black/[0.03]">Nhóm học tập</button>
               <button onClick={() => { navigate('/login?redirect=/dashboard/ai'); setIsMobileMenuOpen(false); }} className="text-left hover:text-[#ff5c00] transition-colors py-2 border-b border-black/[0.03]">Trợ lý AI</button>
             </div>

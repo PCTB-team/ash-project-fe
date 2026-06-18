@@ -30,11 +30,13 @@ export default function AppHeader({
   const [isFocused, setIsFocused] = useState(false);
   const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   // Xử lý các loại định dạng đường dẫn ảnh trả về từ Backend
   const getDisplayAvatar = (url) => {
     if (!url || url === logoAvatarDefault) return logoAvatarDefault;
     if (url.startsWith('http') || url.startsWith('data:image')) return url;
+    if (url.startsWith('res.cloudinary.com')) return `https://${url}`;
     if (url.startsWith('/')) return `https://ash-project-be.onrender.com${url}`;
     if (/^[A-Za-z0-9+/=]{50,}$/.test(url.trim())) return `data:image/jpeg;base64,${url.trim()}`;
     return `https://ash-project-be.onrender.com/${url}`;
@@ -227,9 +229,10 @@ export default function AppHeader({
           >
             <div className="w-full h-full rounded-full overflow-hidden">
               <img 
-                src={getDisplayAvatar(avatarUrl)} 
+                src={imgError ? logoAvatarDefault : getDisplayAvatar(avatarUrl)} 
                 alt="Avatar" 
                 className="w-full h-full object-cover object-center" 
+                onError={() => setImgError(true)}
               />
             </div>
           </motion.div>
@@ -238,4 +241,3 @@ export default function AppHeader({
     </motion.header>
   );
 }
-
