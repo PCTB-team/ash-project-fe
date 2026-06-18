@@ -24,7 +24,7 @@ export default function Sidebar({
   onToggleCollapse,
 }) {
   const navigate = useNavigate();
-  
+
   const handleNavigation = (view) => {
     const routeMap = {
       dashboard: '/dashboard',
