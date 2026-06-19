@@ -126,7 +126,7 @@ export default function GroupDetailScreen() {
 
   return (
     <div className="flex-1 w-full h-full overflow-y-auto px-4 md:px-6 pb-12 pt-4 text-left select-none bg-transparent max-w-[1100px] mx-auto">
-      <GroupHeader group={group} isOwner={isOwner} maxMembers={maxMembers} />
+      <GroupHeader group={group} isOwner={isOwner} maxMembers={maxMembers} onLeaveGroup={handleLeaveGroup} />
 
       {/* Discord-style Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
