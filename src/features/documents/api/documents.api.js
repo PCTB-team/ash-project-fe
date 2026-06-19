@@ -58,10 +58,13 @@ export const documentsApi = {
     
     // Client-side filtering for 'other' tab to approximate behavior
     if (activeTab === 'other' && response.data?.result?.content) {
-      const excludedTypes = ['DOCUMENT', 'AUDIO', 'VIDEO', 'IMAGE', 'FOLDER'];
-      const filteredContent = response.data.result.content.filter(
-        item => !excludedTypes.includes(item.type?.toUpperCase())
-      );
+      const allowedExtensions = ['zip', 'rar', 'md'];
+      const filteredContent = response.data.result.content.filter(item => {
+        const ext = item.fileExtension?.replace('.', '').toLowerCase() || 
+                    item.fileName?.split('.').pop()?.toLowerCase() || 
+                    item.name?.split('.').pop()?.toLowerCase();
+        return allowedExtensions.includes(ext);
+      });
       response.data.result.content = filteredContent;
       response.data.result.totalElements = filteredContent.length;
       response.data.result.totalPages = 1;

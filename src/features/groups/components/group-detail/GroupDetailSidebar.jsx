@@ -10,7 +10,7 @@ const tabs = [
 
 export default function GroupDetailSidebar({ activeTab, onTabChange, isOwner, trashCount = 0 }) {
   const visibleTabs = tabs.filter(t => {
-    if (t.key === 'settings' && !isOwner) return false;
+    if ((t.key === 'settings' || t.key === 'members' || t.key === 'trash') && !isOwner) return false;
     return true;
   });
 

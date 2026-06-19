@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from 'antd';
+import { Button, Modal } from 'antd';
 import EmptyState from '../shared/EmptyState';
 
 const fileTypeIcons = {
@@ -29,6 +29,19 @@ export default function GroupDocumentsTab({ group, files = [], currentUser, isOw
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / 1048576).toFixed(1) + ' MB';
+  };
+
+  const handleTrash = (docId, name) => {
+    Modal.confirm({
+      title: 'Đưa vào thùng rác',
+      content: `Bạn có chắc muốn đưa tài liệu "${name}" vào thùng rác?`,
+      okText: 'Xóa',
+      cancelText: 'Hủy',
+      okButtonProps: { danger: true, className: '!rounded-xl' },
+      cancelButtonProps: { className: '!rounded-xl' },
+      centered: true,
+      onOk: () => onDelete(group.id, docId),
+    });
   };
 
   return (
@@ -90,7 +103,7 @@ export default function GroupDocumentsTab({ group, files = [], currentUser, isOw
                         <i className="bi bi-download text-[13px]" />
                       </button>
                       {isOwner && (
-                        <button onClick={() => onDelete(group.id, doc.id || doc.documentId)} className="w-8 h-8 rounded-lg flex items-center justify-center text-black/40 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer" title="Xóa">
+                        <button onClick={() => handleTrash(doc.id || doc.documentId, name)} className="w-8 h-8 rounded-lg flex items-center justify-center text-black/40 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer" title="Xóa">
                           <i className="bi bi-trash3 text-[13px]" />
                         </button>
                       )}

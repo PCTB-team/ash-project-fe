@@ -19,9 +19,9 @@ export default function TrashScreen() {
     !searchTerm || doc.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleRestore = async (docId) => {
+  const handleRestore = async (doc) => {
     setIsProcessing(true);
-    const result = await restoreDocument(docId);
+    const result = await restoreDocument(doc);
     if (result.success) {
       message.success('Đã khôi phục tài liệu thành công!');
       if (onRefreshDocuments) onRefreshDocuments();
@@ -40,7 +40,7 @@ export default function TrashScreen() {
       cancelText: 'Hủy',
       onOk: async () => {
         setIsProcessing(true);
-        const result = await deleteDocumentPermanent(doc.id);
+        const result = await deleteDocumentPermanent(doc);
         if (result.success) {
           message.success('Đã xóa vĩnh viễn!');
           if (onRefreshDocuments) onRefreshDocuments();
@@ -109,7 +109,7 @@ export default function TrashScreen() {
                     <Tooltip title="Khôi phục">
                       <button
                         disabled={isProcessing}
-                        onClick={() => handleRestore(doc.id)}
+                        onClick={() => handleRestore(doc)}
                         className="w-7 h-7 rounded-lg bg-green-50 text-green-500 hover:bg-green-500 hover:text-white flex items-center justify-center transition-all cursor-pointer text-[12px] disabled:opacity-50"
                       >
                         <i className="bi bi-arrow-counterclockwise" />

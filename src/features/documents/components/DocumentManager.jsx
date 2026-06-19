@@ -24,6 +24,7 @@ export default function DocumentManager({
   onRemoveDocument,
   onRenameDocument,
   onUpdateDocumentsCount,
+  onRefreshDocuments,
   refreshTrigger,
 }) {
   const [activeTab, setActiveTab] = useState('all');
@@ -298,8 +299,8 @@ export default function DocumentManager({
                   isPriority={!!(sortExt && doc.type === sortExt)}
                   onClick={() => handleItemClick(doc)}
                   onAskAI={() => onAskAI?.(doc)}
-                  onRemove={() => onRemoveDocument?.(doc.id)}
-                  onRename={(newName) => onRenameDocument?.(doc.id, newName)}
+                  onRemove={() => onRemoveDocument?.(doc)}
+                  onRename={(newName) => onRenameDocument?.(doc, newName)}
                   downloadDocument={downloadDocument}
                 />
               ))}

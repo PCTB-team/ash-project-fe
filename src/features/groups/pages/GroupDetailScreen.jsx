@@ -15,21 +15,21 @@ import UploadDocumentModal from '../components/group-detail/UploadDocumentModal'
 import { useParams, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 export default function GroupDetailScreen() {
-  const { groupId } = useParams();
+  const { groupId, tab } = useParams();
+  const activeTab = tab || 'overview';
   const location = useLocation();
   const navigate = useNavigate();
   const { fullName: currentUser } = useOutletContext();
   const initialGroupData = location.state?.groupData;
 
   const {
-    currentGroup, files, trashFiles,
-    fetchGroupById, fetchFiles, fetchTrashFiles,
+    currentGroup, files, trashFiles, members,
+    fetchGroupById, fetchFiles, fetchTrashFiles, fetchMembers,
     toggleUploadPermission, kickMember,
     uploadFile, deleteFile, restoreFile, regenerateInvite,
     leaveGroup, updateGroupPassword,
   } = useGroups();
 
-  const [activeTab, setActiveTab] = useState('overview');
   const [showUploadModal, setShowUploadModal] = useState(false);
 
   useEffect(() => {
@@ -38,6 +38,18 @@ export default function GroupDetailScreen() {
       fetchFiles(groupId);
     }
   }, [groupId, fetchGroupById, fetchFiles]);
+
+  useEffect(() => {
+    if (groupId && activeTab === 'members') {
+      fetchMembers(groupId);
+    }
+  }, [groupId, activeTab, fetchMembers]);
+
+  useEffect(() => {
+    if (groupId && activeTab === 'trash') {
+      fetchTrashFiles(groupId);
+    }
+  }, [groupId, activeTab, fetchTrashFiles]);
 
   const group = initialGroupData || currentGroup;
 
@@ -76,7 +88,18 @@ export default function GroupDetailScreen() {
 
   const handleUpload = async (file) => {
     await uploadFile(group.id, file);
+    await fetchGroupById(group.id); // update counts
     setShowUploadModal(false);
+  };
+
+  const handleDeleteFile = async (groupId, fileId) => {
+    await deleteFile(groupId, fileId);
+    await fetchGroupById(group.id); // update counts
+  };
+
+  const handleRestoreFile = async (groupId, fileId) => {
+    await restoreFile(groupId, fileId);
+    await fetchGroupById(group.id); // update counts
   };
 
   const handleLeaveGroup = async () => {
@@ -89,11 +112,11 @@ export default function GroupDetailScreen() {
       case 'overview':
         return <GroupOverviewTab group={group} isOwner={isOwner} maxMembers={maxMembers} />;
       case 'documents':
-        return <GroupDocumentsTab group={group} files={files} currentUser={currentUser} isOwner={isOwner} canUpload={canUpload} onUpload={() => setShowUploadModal(true)} onDelete={deleteFile} />;
+        return <GroupDocumentsTab group={group} files={files} currentUser={currentUser} isOwner={isOwner} canUpload={canUpload} onUpload={() => setShowUploadModal(true)} onDelete={handleDeleteFile} />;
       case 'members':
-        return <GroupMembersTab group={group} currentUser={currentUser} isOwner={isOwner} onTogglePermission={toggleUploadPermission} onKick={kickMember} />;
+        return <GroupMembersTab group={group} members={members} currentUser={currentUser} isOwner={isOwner} onTogglePermission={toggleUploadPermission} onKick={kickMember} />;
       case 'trash':
-        return <GroupTrashTab group={group} trashFiles={trashFiles} fetchTrashFiles={fetchTrashFiles} onRestore={restoreFile} />;
+        return <GroupTrashTab group={group} trashFiles={trashFiles} fetchTrashFiles={fetchTrashFiles} onRestore={handleRestoreFile} />;
       case 'settings':
         return <GroupSettingsTab group={group} onRegenerateInvite={regenerateInvite} onUpdatePassword={updateGroupPassword} onLeaveGroup={handleLeaveGroup} currentUser={currentUser} isOwner={isOwner} />;
       default:
@@ -111,9 +134,9 @@ export default function GroupDetailScreen() {
         <div className="lg:col-span-3">
           <GroupDetailSidebar
             activeTab={activeTab}
-            onTabChange={setActiveTab}
+            onTabChange={(newTab) => navigate(`/dashboard/group/${groupId}/${newTab}`)}
             isOwner={isOwner}
-            trashCount={trashFiles.length}
+            trashCount={group.trashCount || 0}
           />
         </div>
 

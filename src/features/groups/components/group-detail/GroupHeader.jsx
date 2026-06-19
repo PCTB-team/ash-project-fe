@@ -4,7 +4,6 @@ import { Tooltip, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 
 export default function GroupHeader({ group, isOwner, maxMembers }) {
-  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const copyInviteLink = () => {
@@ -56,17 +55,7 @@ export default function GroupHeader({ group, isOwner, maxMembers }) {
                   <span className="text-[12px] font-medium text-black/60 group-hover/btn:text-[#007aff] truncate max-w-[100px]">Copy Link</span>
                 </button>
               </Tooltip>
-              {isOwner && (
-                <div className="flex items-center gap-2 bg-[#f5f5f7] border border-black/[0.04] rounded-xl px-3 py-2 shadow-sm">
-                  <i className="bi bi-key text-amber-500 text-[14px]" />
-                  <span className="text-[12px] font-medium text-black/60 truncate max-w-[100px]">
-                    {showPassword ? (group.password || '123456') : '••••••••'}
-                  </span>
-                  <button onClick={() => setShowPassword(!showPassword)} className="text-black/40 hover:text-black/70 cursor-pointer ml-1">
-                    <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'}`} />
-                  </button>
-                </div>
-              )}
+
             </div>
           </div>
 

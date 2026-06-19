@@ -2,6 +2,13 @@ import { motion } from 'framer-motion';
 import { Tooltip, message } from 'antd';
 
 export default function GroupOverviewTab({ group, isOwner }) {
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    if (isNaN(date)) return dateString;
+    return date.toLocaleDateString('vi-VN');
+  };
+
   const stats = [
     { label: 'Thành viên', value: group.memberCount || group.members?.length || 0, icon: 'bi-people-fill', color: 'text-[var(--color-primary)]', bg: 'bg-[var(--color-primary)]/10' },
     { label: 'Tài liệu', value: group.fileCount || group.activeFileCount || group.documents?.length || 0, icon: 'bi-folder2-open', color: 'text-blue-500', bg: 'bg-blue-500/10' },
@@ -44,11 +51,11 @@ export default function GroupOverviewTab({ group, isOwner }) {
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-xl px-3 py-2 border border-white/10">
               <i className="bi bi-person-circle text-white/70" />
-              <span className="text-[12px] font-medium text-white/80">{group.owner || 'Leader'}</span>
+              <span className="text-[12px] font-medium text-white/80">{group.ownerName || group.owner || 'Leader'}</span>
             </div>
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-xl px-3 py-2 border border-white/10">
               <i className="bi bi-calendar3 text-white/70" />
-              <span className="text-[12px] font-medium text-white/80">{group.createdAt || 'N/A'}</span>
+              <span className="text-[12px] font-medium text-white/80">{formatDate(group.createdAt)}</span>
             </div>
             <Tooltip title="Nhấp để copy Link tham gia">
               <button onClick={copyInviteLink} className="flex items-center gap-2 bg-white/15 hover:bg-white/25 backdrop-blur-md rounded-xl px-3 py-2 border border-white/15 transition-all cursor-pointer group">
