@@ -50,11 +50,7 @@ export const joinGroupViaInvite = async (inviteToken, password) => {
   }
 };
 
-// ─── 6. Group Statistics ─── GET /groups/{groupId}/statistics
-export const getGroupStatistics = async (groupId) => {
-  const response = await axiosClient.get(`${BASE_URL}/${groupId}/statistics`);
-  return response.data;
-};
+
 
 // ─── 7. Get Group Members ─── GET /groups/{groupId}/members
 export const getGroupMembers = async (groupId) => {
@@ -62,11 +58,7 @@ export const getGroupMembers = async (groupId) => {
   return response.data;
 };
 
-// ─── 8. Member Count ─── GET /groups/{groupId}/members/count
-export const getMemberCount = async (groupId) => {
-  const response = await axiosClient.get(`${BASE_URL}/${groupId}/members/count`);
-  return response.data;
-};
+
 
 // ─── 9. Regenerate Invite Token ─── PUT /groups/{groupId}/regenerate-invite-token
 export const regenerateInviteToken = async (groupId) => {
@@ -109,9 +101,21 @@ export const deleteGroupFile = async (groupId, fileId) => {
   return response.data;
 };
 
-// ─── 15. Get Trash Files ─── GET /groups/{groupId}/trash/files
+// ─── 15. Get Trash Files ─── GET /groups/{groupId}/files?deleted=true
 export const getTrashFiles = async (groupId) => {
-  const response = await axiosClient.get(`${BASE_URL}/${groupId}/trash/files`);
+  const response = await axiosClient.get(`${BASE_URL}/${groupId}/files?deleted=true`);
+  return response.data;
+};
+
+// ─── 17. Leave Group ─── PUT /groups/{groupId}/leave
+export const leaveGroup = async (groupId) => {
+  const response = await axiosClient.put(`${BASE_URL}/${groupId}/leave`);
+  return response.data;
+};
+
+// ─── 18. Update Group Password ─── PUT /groups/{groupId}/password
+export const updateGroupPassword = async (groupId, newPassword, confirmPassword) => {
+  const response = await axiosClient.put(`${BASE_URL}/${groupId}/password`, { newPassword, confirmPassword });
   return response.data;
 };
 
