@@ -191,7 +191,7 @@ export default function Sidebar({
                 className="mb-2"
               />
               <p className="text-[10px] font-medium text-black/55">
-                {totalStorageMB < 1 ? `${(totalStorageMB * 1024).toFixed(1)} KB` : `${totalStorageMB.toFixed(1)} MB`} / 1.0 GB
+                {totalStorageMB < 1 ? `${(totalStorageMB * 1024).toFixed(1)} KB` : `${totalStorageMB.toFixed(1)} MB`} / 500 MB
               </p>
 
               {/* Upgrade CTA */}

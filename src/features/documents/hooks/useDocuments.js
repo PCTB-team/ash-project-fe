@@ -48,13 +48,6 @@ export const useDocuments = () => {
   };
 
   const fetchDocuments = useCallback(async (activeTab, currentPage, PAGE_SIZE, debouncedSearchTerm, currentFolderId, sortExt, onUpdateDocumentsCount) => {
-    if (activeTab === 'folder' || activeTab === 'other') {
-      setPaginatedDocs([]);
-      setTotalPages(1);
-      setTotalElements(0);
-      return;
-    }
-
     setIsLoading(true);
     try {
       const params = new URLSearchParams({

@@ -11,5 +11,10 @@ export const profileApi = {
   updateProfile: async (formData) => {
     const response = await axiosClient.put(USER_PROFILE_API_URL, formData);
     return response.data;
+  },
+  
+  getStorageUsage: async () => {
+    const response = await axiosClient.get('https://ash-project-be.onrender.com/api/v1/user/storage');
+    return response.data;
   }
 };

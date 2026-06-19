@@ -8,7 +8,7 @@ import { Button, Modal, Form, Select, Upload, message } from 'antd';
 import { motion } from 'framer-motion';
 import DocumentViewer from '../components/DocumentViewer.jsx';
 import DocumentManager from '../components/DocumentManager.jsx';
-import { detectFileType } from "../../dashboard/utils/helpers.js";
+import { detectFileType, formatBytes } from "../../dashboard/utils/helpers.js";
 import { UPLOAD_TYPE_OPTIONS } from "../../dashboard/utils/fileConfig.js";
 import { axiosClient } from '../../../utils/apiClient.js';
 
@@ -48,10 +48,18 @@ export default function DashboardScreen() {
 
     const executeUpload = async (replaceExisting = false) => {
       const formData = new FormData();
-      formData.append('file', selectedFile);
-      formData.append('name', finalName);
-      formData.append('type', values.type);
-      formData.append('content', values.content || '');
+      
+      let fileToSend = selectedFile;
+      const ext = selectedFile.name.split('.').pop().toLowerCase();
+      // If it's a markdown file, we use the original file but force text/plain just in case the backend is strict about MIME types
+      if (ext === 'md' || ext === 'txt') {
+        fileToSend = new Blob([selectedFile], { type: 'text/plain' });
+      } else {
+        fileToSend = selectedFile.originFileObj || selectedFile;
+      }
+      
+      // Step 1: Upload the file exactly as Swagger expects (only 'file' and 'folderId')
+      formData.append('file', fileToSend, selectedFile.name);
 
       const params = new URLSearchParams();
       const currentFolder = folderPath.length > 0 ? folderPath[folderPath.length - 1] : null;
@@ -69,12 +77,21 @@ export default function DashboardScreen() {
         const data = response.data;
 
         if (response.status === 200 || data.code === 0 || data.code === 1000) {
+          const documentId = data.result?.documentId;
+          
+          if (documentId && finalName !== selectedFile.name) {
+             try {
+               await axiosClient.put(`${DOCUMENTS_API_URL}/${documentId}`, { fileName: finalName });
+             } catch (renameError) {
+               console.error("Failed to rename document after upload:", renameError);
+             }
+          }
+
           if (onRefreshDocuments) onRefreshDocuments();
           form.resetFields();
           setSelectedFile(null);
           setShowUploadModal(false);
-          const uploadedName = (data.result && data.result.fileName) || finalName;
-          message.success(`Đã tải lên "${uploadedName}" thành công!`);
+          message.success(`Đã tải lên "${finalName}" thành công!`);
         } else {
           const errMsg = data.message || "";
           
@@ -94,8 +111,9 @@ export default function DashboardScreen() {
           }
         }
       } catch (error) {
-        console.error("Upload error:", error);
-        const errMsg = error.response?.data?.message || "";
+        const errorData = error.response?.data ? JSON.stringify(error.response.data) : error.message;
+        console.error("Upload error detailed:", errorData);
+        const errMsg = error.response?.data?.message || errorData;
         if (errMsg.toLowerCase().includes('tồn tại') || errMsg.toLowerCase().includes('exist')) {
             Modal.confirm({
               title: 'Tài liệu đã tồn tại',
@@ -108,7 +126,7 @@ export default function DashboardScreen() {
               }
             });
         } else {
-            message.error("Lỗi kết nối máy chủ khi tải lên!");
+            message.error(errMsg || "Không thể tải tệp lên!");
         }
       }
     };
@@ -156,11 +174,11 @@ export default function DashboardScreen() {
   };
 
   return (
-    <div className="flex-1 w-full h-full overflow-y-auto px-4 md:px-6 pb-10 pt-5 text-left select-none relative max-w-[1100px] mx-auto">
-      <div>
+    <div className="flex-1 w-full h-full overflow-hidden flex flex-col px-4 md:px-6 pb-6 pt-5 text-left select-none relative max-w-[1100px] mx-auto">
+      <div className="flex-1 flex flex-col min-h-0">
 
         {/* Title + Action bar */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-5 sm:mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-5 sm:mb-6 flex-shrink-0">
           <div>
             <h1 className="text-xl font-semibold text-[#1d1d1f]">Thư viện của tôi</h1>
             <p className="text-[12px] text-black/55 font-medium mt-0.5">Quản lý và số hóa học phần học thuật cùng Trợ lý AI</p>
@@ -255,7 +273,7 @@ export default function DashboardScreen() {
                   form.setFieldsValue({
                     name: file.name,
                     type: detectFileType(file.name),
-                    size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+                    size: formatBytes(file.size),
                   });
                   return false;
                 }}
