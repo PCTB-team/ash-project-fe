@@ -10,17 +10,21 @@ export const useTrash = () => {
     try {
       const data = await trashApi.getTrash();
       if ((data.code === 0 || data.code === 1000) && data.result) {
-        const mappedDocs = data.result.map(d => ({
-          id: d.documentId,
-          name: d.fileName || 'Untitled',
-          type: d.fileExtension?.replace('.', '') || 'unknown',
-          fileSizeBytes: d.fileSize || 0,
-          size: d.fileSize ? `${(d.fileSize / (1024 * 1024)).toFixed(2)} MB` : '0 MB',
-          uploadedAt: d.deletedAt || new Date().toISOString(),
-          timeSinceUpload: d.timeSinceUpload,
-          status: d.status,
-          storageUrl: d.storageUrl
-        }));
+        const items = data.result.items || data.result;
+        const mappedDocs = (Array.isArray(items) ? items : []).map(d => {
+          const isFolder = d.type === 'FOLDER' || d.type === 'folder' || (!d.fileExtension && (d.folderId || !d.documentId));
+          return {
+            id: d.documentId || d.folderId || d.id,
+            name: d.name || d.fileName || 'Untitled',
+            type: isFolder ? 'folder' : (d.fileExtension?.replace('.', '') || d.type?.toLowerCase() || 'unknown'),
+            fileSizeBytes: d.size || d.fileSize || 0,
+            size: (d.size || d.fileSize) ? `${((d.size || d.fileSize) / (1024 * 1024)).toFixed(2)} MB` : '0 MB',
+            uploadedAt: d.deletedAt || new Date().toISOString(),
+            timeSinceUpload: d.timeSinceUpload || d.timeSinceDeleted,
+            status: d.status,
+            storageUrl: d.storageUrl
+          };
+        });
         setTrashDocuments(mappedDocs);
         return mappedDocs;
       }
@@ -32,11 +36,12 @@ export const useTrash = () => {
     return [];
   }, []);
 
-  const restoreDocument = async (docId) => {
+  const restoreDocument = async (doc) => {
     try {
-      const data = await trashApi.restoreDocument(docId);
+      const isFolder = doc.type === 'folder';
+      const data = await trashApi.restoreDocument(doc.id, isFolder);
       if (data.code === 0 || data.code === 1000) {
-        setTrashDocuments(prev => prev.filter(doc => doc.id !== docId));
+        setTrashDocuments(prev => prev.filter(d => d.id !== doc.id));
         return { success: true };
       }
       return { success: false, message: data.message };
@@ -46,11 +51,12 @@ export const useTrash = () => {
     }
   };
 
-  const deleteDocumentPermanent = async (docId) => {
+  const deleteDocumentPermanent = async (doc) => {
     try {
-      const data = await trashApi.deleteDocumentPermanent(docId);
+      const isFolder = doc.type === 'folder';
+      const data = await trashApi.deleteDocumentPermanent(doc.id, isFolder);
       if (data.code === 0 || data.code === 1000) {
-        setTrashDocuments(prev => prev.filter(doc => doc.id !== docId));
+        setTrashDocuments(prev => prev.filter(d => d.id !== doc.id));
         return { success: true };
       }
       return { success: false, message: data.message };

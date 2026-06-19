@@ -3,9 +3,8 @@ import { motion } from 'framer-motion';
 import { Input, Modal } from 'antd';
 import EmptyState from '../shared/EmptyState';
 
-export default function GroupMembersTab({ group, currentUser, isOwner, onTogglePermission, onKick }) {
+export default function GroupMembersTab({ group, members = [], currentUser, isOwner, onTogglePermission, onKick }) {
   const [search, setSearch] = useState('');
-  const members = group.members || [];
 
   const filtered = members.filter(m => {
     const name = (m.fullName || m.email || '').toLowerCase();

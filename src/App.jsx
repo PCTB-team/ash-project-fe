@@ -29,6 +29,7 @@ import AIScreen from './features/ai/pages/AIScreen.jsx';
 // ── Groups Pages ──
 import CommunityScreen from './features/groups/pages/CommunityScreen.jsx';
 import GroupDetailScreen from './features/groups/pages/GroupDetailScreen.jsx';
+import JoinGroupScreen from './features/groups/pages/JoinGroupScreen.jsx';
 
 function App() {
   const navigate = useNavigate();
@@ -57,9 +58,13 @@ function App() {
           <Route path="trash" element={<TrashScreen />} />
           <Route path="group" element={<CommunityScreen />} />
           <Route path="group/:groupId" element={<GroupDetailScreen />} />
+          <Route path="group/:groupId/:tab" element={<GroupDetailScreen />} />
           <Route path="ai" element={<AIScreen />} />
         </Route>
       </Route>
+
+      {/* Unguarded Pages (Accessible to both logged-in and guests) */}
+      <Route path="/join/:inviteToken" element={<JoinGroupScreen />} />
 
       {/* Fallback */}
       <Route path="*" element={<NotFoundScreen />} />

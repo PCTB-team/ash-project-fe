@@ -33,6 +33,7 @@ export default function DashboardScreen() {
   const [previewDoc, setPreviewDoc] = useState(null);
   const [folderPath, setFolderPath] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [form] = Form.useForm();
 
 
@@ -42,6 +43,8 @@ export default function DashboardScreen() {
       message.error("Vui lòng chọn tài liệu để tải lên!");
       return;
     }
+    if (isUploading) return;
+    setIsUploading(true);
 
     let finalName = values.name;
     if (!finalName.includes('.')) finalName += `.${values.type}`;
@@ -71,6 +74,7 @@ export default function DashboardScreen() {
       }
 
       try {
+        setIsUploading(true);
         const uploadUrl = `${UPLOAD_DOCUMENT_API_URL}${params.toString() ? '?' + params.toString() : ''}`;
         
         const response = await axiosClient.post(uploadUrl, formData);
@@ -128,15 +132,22 @@ export default function DashboardScreen() {
         } else {
             message.error(errMsg || "Không thể tải tệp lên!");
         }
+      } finally {
+        setIsUploading(false);
       }
     };
 
     executeUpload(false);
   };
 
-  const handleRenameDocument = async (docId, newName) => {
+  const handleRenameDocument = async (doc, newName) => {
     try {
-      const response = await axiosClient.put(`${DOCUMENTS_API_URL}/${docId}`, { fileName: newName });
+      const isFolder = doc.type === 'folder' || doc.type === 'FOLDER';
+      const url = isFolder 
+        ? `https://ash-project-be.onrender.com/api/v1/folders/${doc.id}`
+        : `${DOCUMENTS_API_URL}/${doc.id}`;
+      const payload = isFolder ? { name: newName } : { fileName: newName };
+      const response = await axiosClient.put(url, payload);
       const data = response.data;
       if (data.code === 0 || data.code === 1000 || response.status === 200) {
         message.success('Đổi tên thành công!');
@@ -151,12 +162,16 @@ export default function DashboardScreen() {
     }
   };
 
-  const handleRemoveDocument = async (docId) => {
+  const handleRemoveDocument = async (doc) => {
     try {
-      const response = await axiosClient.delete(`${DOCUMENTS_API_URL}/${docId}`);
+      const isFolder = doc.type === 'folder' || doc.type === 'FOLDER';
+      const url = isFolder 
+        ? `https://ash-project-be.onrender.com/api/v1/folders/${doc.id}`
+        : `${DOCUMENTS_API_URL}/${doc.id}`;
+      const response = await axiosClient.delete(url);
       const data = response.data;
       if (data.code === 0 || data.code === 1000 || response.status === 200) {
-        message.success('Đã chuyển tài liệu vào Thùng rác.');
+        message.success(isFolder ? 'Đã chuyển thư mục vào Thùng rác.' : 'Đã chuyển tài liệu vào Thùng rác.');
         if (onRefreshDocuments) onRefreshDocuments();
       } else {
         // Không được phép xóa cục bộ ở đây
@@ -349,9 +364,14 @@ export default function DashboardScreen() {
                   <Button
                     type="primary"
                     htmlType="submit"
-                    className="!rounded-full !font-medium !text-[13px] !h-10 !px-8 !bg-gradient-to-b !from-[#ff7a00] !to-[#ff5c00] !border-none !text-white !shadow-[0_1px_3px_rgba(255,92,0,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] hover:!brightness-110 hover:!shadow-[0_8px_24px_rgba(255,92,0,0.4)] transition-all duration-300 group"
+                    disabled={isUploading}
+                    className="!rounded-full !font-medium !text-[13px] !h-10 !px-8 !bg-gradient-to-b !from-[#ff7a00] !to-[#ff5c00] !border-none !text-white !shadow-[0_1px_3px_rgba(255,92,0,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] hover:!brightness-110 hover:!shadow-[0_8px_24px_rgba(255,92,0,0.4)] transition-all duration-300 group disabled:!opacity-70 disabled:!cursor-not-allowed disabled:!shadow-none"
                   >
-                    <i className="bi bi-cloud-arrow-up-fill mr-1" /> Xác nhận Tải lên
+                    {isUploading ? (
+                      <><i className="bi bi-hourglass-split mr-1 animate-[spin_2s_linear_infinite]" /> Đang tải lên...</>
+                    ) : (
+                      <><i className="bi bi-cloud-arrow-up-fill mr-1" /> Xác nhận Tải lên</>
+                    )}
                   </Button>
                 </div>
               </Form>

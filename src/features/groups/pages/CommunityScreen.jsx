@@ -15,13 +15,17 @@ export default function CommunityScreen() {
   const navigate = useNavigate();
   const { searchTerm = '', fullName: currentUser } = useOutletContext();
   const { groups, isLoading, fetchMyGroups, createGroup } = useGroups();
-  const [localSearch, setLocalSearch] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 6;
 
   useEffect(() => { fetchMyGroups(); }, [fetchMyGroups]);
+
+  // Reset pagination to page 1 when global search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const handleCreateGroup = async (values) => {
     const res = await createGroup({ name: values.name, description: values.description, password: values.password });
@@ -32,7 +36,7 @@ export default function CommunityScreen() {
   const onViewDetail = (groupId, groupData) => navigate(`/dashboard/group/${groupId}`, { state: { groupData } });
   const onRequestJoin = () => setShowJoinModal(true);
 
-  const query = localSearch || searchTerm || '';
+  const query = searchTerm || '';
   const filteredGroups = groups.filter((grp) => {
     const matchesSearch = grp.name?.toLowerCase().includes(query.toLowerCase());
     return matchesSearch;
@@ -74,15 +78,7 @@ export default function CommunityScreen() {
         </div>
       </motion.div>
 
-      {/* Search */}
-      <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="relative w-full">
-          <i className="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-black/30 text-[13px]" />
-          <input type="text" value={localSearch} onChange={e => { setLocalSearch(e.target.value); setCurrentPage(1); }}
-            placeholder="Tìm kiếm nhóm theo tên..."
-            className="w-full sm:max-w-md h-11 pl-11 pr-4 rounded-2xl bg-[var(--color-surface)] border border-black/[0.06] text-[13px] font-medium text-[var(--color-on-surface)] focus:outline-none focus:border-[var(--color-primary)]/40 focus:shadow-[0_0_0_3px_rgba(255,92,0,0.08)] transition-all placeholder:text-black/30" />
-        </div>
-      </div>
+
 
       {/* Groups Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

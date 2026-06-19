@@ -14,28 +14,7 @@ export const useGroups = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchGroups = useCallback(async () => {
-    setIsLoading(true); setError(null);
-    try { 
-      const data = await groupApi.getGroups(); 
-      const raw = data.result || data || [];
-      const mapped = raw.map(g => ({
-        ...g,
-        id: g.groupId || g.id,
-        owner: g.ownerId || g.owner,
-        ownerName: g.ownerName,
-        role: g.role,
-        canUpload: g.canUpload,
-        inviteEnabled: g.inviteEnabled,
-        inviteLink: g.inviteLink,
-        memberCount: g.memberCount || g.members?.length || 0,
-        fileCount: g.activeFileCount || g.fileCount || g.documents?.length || 0,
-      }));
-      setGroups(mapped); 
-    }
-    catch (err) { setError(err.message); message.error('Không thể tải danh sách nhóm.'); }
-    finally { setIsLoading(false); }
-  }, []);
+
 
   const fetchMyGroups = useCallback(async () => {
     setIsLoading(true); setError(null);
@@ -55,6 +34,7 @@ export const useGroups = () => {
         inviteLink: g.inviteLink,
         memberCount: g.memberCount || 0,
         fileCount: g.activeFileCount || 0,
+        trashCount: g.trashFileCount || 0,
         createdAt: g.createdAt,
         updatedAt: g.updatedAt,
         // Mark as member since this is "my groups"
@@ -78,8 +58,9 @@ export const useGroups = () => {
           id: raw.groupId || raw.id,
           owner: raw.ownerId || raw.owner,
           ownerName: raw.ownerName,
-          memberCount: raw.memberCount || raw.members?.length || 0,
-          fileCount: raw.activeFileCount || raw.fileCount || raw.documents?.length || 0,
+          memberCount: raw.memberCount || 0,
+          fileCount: raw.activeFileCount || 0,
+          trashCount: raw.trashFileCount || 0,
         });
       } else {
         setCurrentGroup(null);
@@ -90,7 +71,7 @@ export const useGroups = () => {
   }, []);
 
   const createGroup = async (groupData) => {
-    try { const data = await groupApi.createGroup(groupData); message.success(`Tạo nhóm "${groupData.name}" thành công!`); await fetchGroups(); return data; }
+    try { const data = await groupApi.createGroup(groupData); message.success(`Tạo nhóm "${groupData.name}" thành công!`); await fetchMyGroups(); return data; }
     catch (err) { message.error('Lỗi khi tạo nhóm: ' + err.message); throw err; }
   };
 
@@ -102,7 +83,7 @@ export const useGroups = () => {
   };
 
   const joinViaInvite = async (inviteToken, password) => {
-    try { const data = await groupApi.joinGroupViaInvite(inviteToken, password); message.success('Đã gửi yêu cầu tham gia. Vui lòng chờ Leader duyệt.'); await fetchGroups(); return data; }
+    try { const data = await groupApi.joinGroupViaInvite(inviteToken, password); message.success('Đã gửi yêu cầu tham gia. Vui lòng chờ Leader duyệt.'); await fetchMyGroups(); return data; }
     catch (err) {
       if (err.message === 'WRONG_PASSWORD') message.error('Mật khẩu nhóm không chính xác.');
       else if (err.message === 'ALREADY_MEMBER') message.warning('Bạn đã là thành viên hoặc đang chờ duyệt.');
@@ -192,7 +173,7 @@ export const useGroups = () => {
 
   return {
     groups, currentGroup, groupPreview, members, memberCount, files, trashFiles, statistics, isLoading, error,
-    fetchGroups, fetchMyGroups, fetchGroupById, createGroup, previewGroup, joinViaInvite,
+    fetchMyGroups, fetchGroupById, createGroup, previewGroup, joinViaInvite,
     fetchMembers, toggleUploadPermission, kickMember,
     fetchFiles, uploadFile, deleteFile, fetchTrashFiles, restoreFile,
     regenerateInvite, leaveGroup, updateGroupPassword,

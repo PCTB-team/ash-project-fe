@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Button, Modal, message, Input } from 'antd';
+import { Button, Modal, message, Input, Form } from 'antd';
 
 export default function GroupSettingsTab({ group, onRegenerateInvite, onUpdatePassword, onLeaveGroup, currentUser, isOwner }) {
   const [regenerating, setRegenerating] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
   const [changingPassword, setChangingPassword] = useState(false);
+  const [form] = Form.useForm();
 
   const copyInviteLink = () => {
     const link = group.inviteLink || group.inviteToken || '';
@@ -30,18 +30,27 @@ export default function GroupSettingsTab({ group, onRegenerateInvite, onUpdatePa
     });
   };
 
-  const handleChangePassword = async () => {
-    if (!newPassword.trim()) {
-      message.warning('Vui lòng nhập mật khẩu mới');
-      return;
-    }
+  const handleChangePassword = async (values) => {
     setChangingPassword(true);
     try {
-      await onUpdatePassword(group.id, newPassword, newPassword);
-      setNewPassword('');
+      await onUpdatePassword(group.id, values.newPassword, values.confirmPassword);
+      form.resetFields();
     } finally {
       setChangingPassword(false);
     }
+  };
+
+  const handleLeaveConfirm = () => {
+    Modal.confirm({
+      title: 'Rời khỏi nhóm',
+      content: 'Bạn có chắc chắn muốn rời khỏi nhóm này không? Bạn sẽ không thể xem tài liệu của nhóm nữa trừ khi được mời lại.',
+      okText: 'Rời nhóm',
+      cancelText: 'Hủy',
+      okButtonProps: { danger: true, className: '!rounded-xl' },
+      cancelButtonProps: { className: '!rounded-xl' },
+      centered: true,
+      onOk: () => onLeaveGroup(),
+    });
   };
 
   return (
@@ -84,23 +93,37 @@ export default function GroupSettingsTab({ group, onRegenerateInvite, onUpdatePa
         </div>
 
         <div className="p-5 rounded-[18px] bg-[var(--color-surface-container-low)] border border-black/[0.03]">
-          <div className="text-[11px] font-semibold text-black/40 uppercase mb-3">Đổi mật khẩu nhóm</div>
-          <div className="flex items-center gap-3">
-            <Input.Password
-              placeholder="Nhập mật khẩu mới..."
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="!h-10 !rounded-xl !bg-[var(--color-surface)] !border-black/5 flex-1"
-            />
+          <div className="text-[11px] font-semibold text-black/40 uppercase mb-4">Đổi mật khẩu nhóm</div>
+          <Form form={form} layout="vertical" onFinish={handleChangePassword} requiredMark={false} className="max-w-md">
+            <Form.Item name="newPassword" rules={[{ required: true, message: 'Vui lòng nhập mật khẩu mới' }]} className="mb-3">
+              <Input.Password
+                placeholder="Nhập mật khẩu mới..."
+                className="!h-11 !rounded-xl !bg-[var(--color-surface)] !border-black/5"
+              />
+            </Form.Item>
+            <Form.Item name="confirmPassword" dependencies={['newPassword']} className="mb-4" rules={[
+              { required: true, message: 'Vui lòng xác nhận mật khẩu' },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue('newPassword') === value) return Promise.resolve();
+                  return Promise.reject(new Error('Mật khẩu xác nhận không khớp!'));
+                },
+              }),
+            ]}>
+              <Input.Password
+                placeholder="Xác nhận mật khẩu mới..."
+                className="!h-11 !rounded-xl !bg-[var(--color-surface)] !border-black/5"
+              />
+            </Form.Item>
             <Button
               type="primary"
-              onClick={handleChangePassword}
+              htmlType="submit"
               loading={changingPassword}
-              className="!rounded-xl !font-medium !text-[12px] !h-10 !px-5 !bg-[var(--color-primary)] !border-none"
+              className="!rounded-xl !font-medium !text-[13px] !h-10 !px-6 !bg-[var(--color-primary)] !border-none w-full sm:w-auto"
             >
-              Cập nhật
+              Cập nhật mật khẩu
             </Button>
-          </div>
+          </Form>
         </div>
       </div>
       )}
@@ -144,7 +167,7 @@ export default function GroupSettingsTab({ group, onRegenerateInvite, onUpdatePa
             <i className="bi bi-trash3 mr-1.5" /> Xóa nhóm (Sắp ra mắt)
           </Button>
         ) : (
-          <Button danger onClick={onLeaveGroup} className="!rounded-xl !font-medium !text-[12px] !h-10 border-red-500 text-red-500 hover:!bg-red-50 hover:!border-red-500 hover:!text-red-600 transition-colors">
+          <Button danger onClick={handleLeaveConfirm} className="!rounded-xl !font-medium !text-[12px] !h-10 border-red-500 text-red-500 hover:!bg-red-50 hover:!border-red-500 hover:!text-red-600 transition-colors">
             <i className="bi bi-box-arrow-right mr-1.5" /> Rời khỏi nhóm
           </Button>
         )}
