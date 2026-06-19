@@ -116,10 +116,7 @@ export const useGroups = () => {
     catch (err) { message.error('Không thể tải danh sách thành viên.'); throw err; }
   }, []);
 
-  const fetchMemberCount = useCallback(async (groupId) => {
-    try { const data = await groupApi.getMemberCount(groupId); const c = data.result ?? 0; setMemberCount(c); return c; }
-    catch { return 0; }
-  }, []);
+
 
   const fetchFiles = useCallback(async (groupId) => {
     try { 
@@ -166,10 +163,7 @@ export const useGroups = () => {
     catch (err) { message.error('Lỗi khi khôi phục.'); throw err; }
   };
 
-  const fetchStatistics = useCallback(async (groupId) => {
-    try { const data = await groupApi.getGroupStatistics(groupId); const s = data.result || null; setStatistics(s); return s; }
-    catch (err) { message.error('Không thể tải thống kê.'); throw err; }
-  }, []);
+
 
   const toggleUploadPermission = async (groupId, memberId, canUpload) => {
     try { const data = await groupApi.updateUploadPermission(groupId, memberId, canUpload); message.success('Đã cập nhật quyền upload.'); await fetchMembers(groupId); return data; }
@@ -186,11 +180,21 @@ export const useGroups = () => {
     catch (err) { message.error('Lỗi khi tạo Link mời.'); throw err; }
   };
 
+  const leaveGroup = async (groupId) => {
+    try { const data = await groupApi.leaveGroup(groupId); message.success('Đã rời nhóm thành công.'); return data; }
+    catch (err) { message.error('Lỗi khi rời nhóm.'); throw err; }
+  };
+
+  const updateGroupPassword = async (groupId, newPassword, confirmPassword) => {
+    try { const data = await groupApi.updateGroupPassword(groupId, newPassword, confirmPassword); message.success('Cập nhật mật khẩu thành công!'); return data; }
+    catch (err) { message.error('Lỗi khi cập nhật mật khẩu.'); throw err; }
+  };
+
   return {
     groups, currentGroup, groupPreview, members, memberCount, files, trashFiles, statistics, isLoading, error,
     fetchGroups, fetchMyGroups, fetchGroupById, createGroup, previewGroup, joinViaInvite,
-    fetchMembers, fetchMemberCount, toggleUploadPermission, kickMember,
+    fetchMembers, toggleUploadPermission, kickMember,
     fetchFiles, uploadFile, deleteFile, fetchTrashFiles, restoreFile,
-    fetchStatistics, regenerateInvite,
+    regenerateInvite, leaveGroup, updateGroupPassword,
   };
 };

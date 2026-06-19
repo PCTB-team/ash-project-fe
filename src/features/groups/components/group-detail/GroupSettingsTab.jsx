@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button, Modal, message, Input } from 'antd';
 
-export default function GroupSettingsTab({ group, onRegenerateInvite, currentUser, isOwner }) {
+export default function GroupSettingsTab({ group, onRegenerateInvite, onUpdatePassword, onLeaveGroup, currentUser, isOwner }) {
   const [regenerating, setRegenerating] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [changingPassword, setChangingPassword] = useState(false);
@@ -36,12 +36,12 @@ export default function GroupSettingsTab({ group, onRegenerateInvite, currentUse
       return;
     }
     setChangingPassword(true);
-    // Simulate API call for now since backend doesn't have PUT /groups/{id}/password yet
-    setTimeout(() => {
-      message.success('Đổi mật khẩu thành công!');
+    try {
+      await onUpdatePassword(group.id, newPassword, newPassword);
       setNewPassword('');
+    } finally {
       setChangingPassword(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -68,7 +68,8 @@ export default function GroupSettingsTab({ group, onRegenerateInvite, currentUse
       </div>
 
       {/* Security */}
-      <div className="bg-[var(--color-surface)] border border-black/[0.04] rounded-2xl p-6 shadow-sm">
+      {isOwner && (
+        <div className="bg-[var(--color-surface)] border border-black/[0.04] rounded-2xl p-6 shadow-sm">
         <h4 className="text-[14px] font-semibold text-[var(--color-on-surface)] mb-5 flex items-center gap-2">
           <i className="bi bi-shield-lock text-black/40" /> Bảo mật & Mật khẩu
         </h4>
@@ -102,9 +103,11 @@ export default function GroupSettingsTab({ group, onRegenerateInvite, currentUse
           </div>
         </div>
       </div>
+      )}
 
       {/* Invite Management */}
-      <div className="bg-[var(--color-surface)] border border-black/[0.04] rounded-2xl p-6 shadow-sm">
+      {isOwner && (
+        <div className="bg-[var(--color-surface)] border border-black/[0.04] rounded-2xl p-6 shadow-sm">
         <h4 className="text-[14px] font-semibold text-[var(--color-on-surface)] mb-5 flex items-center gap-2">
           <i className="bi bi-link-45deg text-black/40" /> Quản lý lời mời
         </h4>
@@ -128,6 +131,7 @@ export default function GroupSettingsTab({ group, onRegenerateInvite, currentUse
           <i className="bi bi-exclamation-triangle-fill" /> Link cũ sẽ không còn hiệu lực sau khi tạo mới
         </p>
       </div>
+      )}
 
       {/* Danger Zone */}
       <div className="border border-red-200 rounded-2xl p-6 bg-red-50/50">
@@ -135,9 +139,15 @@ export default function GroupSettingsTab({ group, onRegenerateInvite, currentUse
           <i className="bi bi-exclamation-triangle-fill" /> Vùng nguy hiểm
         </h4>
         <p className="text-[12px] text-red-500/70 font-medium mb-4">Các hành động trong khu vực này không thể hoàn tác.</p>
-        <Button danger disabled className="!rounded-xl !font-medium !text-[12px] !h-10">
-          <i className="bi bi-trash3 mr-1.5" /> Xóa nhóm (Sắp ra mắt)
-        </Button>
+        {isOwner ? (
+          <Button danger disabled className="!rounded-xl !font-medium !text-[12px] !h-10">
+            <i className="bi bi-trash3 mr-1.5" /> Xóa nhóm (Sắp ra mắt)
+          </Button>
+        ) : (
+          <Button danger onClick={onLeaveGroup} className="!rounded-xl !font-medium !text-[12px] !h-10 border-red-500 text-red-500 hover:!bg-red-50 hover:!border-red-500 hover:!text-red-600 transition-colors">
+            <i className="bi bi-box-arrow-right mr-1.5" /> Rời khỏi nhóm
+          </Button>
+        )}
       </div>
     </motion.div>
   );

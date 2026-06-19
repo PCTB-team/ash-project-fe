@@ -82,7 +82,11 @@ export default function GroupDocumentsTab({ group, files = [], currentUser, isOw
                       <i className="bi bi-person mr-1" />{uploader === currentUser ? 'Bạn' : (uploader?.split('@')[0] || 'N/A')}
                     </span>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="w-8 h-8 rounded-lg flex items-center justify-center text-black/40 hover:text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-all cursor-pointer" title="Tải xuống">
+                      <button 
+                        onClick={() => window.open(doc.url || doc.storageUrl, '_blank')}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-black/40 hover:text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-all cursor-pointer" 
+                        title="Tải xuống"
+                      >
                         <i className="bi bi-download text-[13px]" />
                       </button>
                       {isOwner && (

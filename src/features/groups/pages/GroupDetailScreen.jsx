@@ -26,6 +26,7 @@ export default function GroupDetailScreen() {
     fetchGroupById, fetchFiles, fetchTrashFiles,
     toggleUploadPermission, kickMember,
     uploadFile, deleteFile, restoreFile, regenerateInvite,
+    leaveGroup, updateGroupPassword,
   } = useGroups();
 
   const [activeTab, setActiveTab] = useState('overview');
@@ -33,8 +34,8 @@ export default function GroupDetailScreen() {
 
   useEffect(() => {
     if (groupId) {
-      // Bỏ qua fetchGroupById vì chưa có API này, dùng initialGroupData thay thế
-      // fetchFiles(groupId); // Tạm tắt để tránh lỗi 500
+      fetchGroupById(groupId);
+      fetchFiles(groupId);
     }
   }, [groupId, fetchGroupById, fetchFiles]);
 
@@ -78,6 +79,11 @@ export default function GroupDetailScreen() {
     setShowUploadModal(false);
   };
 
+  const handleLeaveGroup = async () => {
+    await leaveGroup(group.id);
+    navigate('/dashboard/group');
+  };
+
   const renderTab = () => {
     switch (activeTab) {
       case 'overview':
@@ -89,7 +95,7 @@ export default function GroupDetailScreen() {
       case 'trash':
         return <GroupTrashTab group={group} trashFiles={trashFiles} fetchTrashFiles={fetchTrashFiles} onRestore={restoreFile} />;
       case 'settings':
-        return <GroupSettingsTab group={group} onRegenerateInvite={regenerateInvite} currentUser={currentUser} isOwner={isOwner} />;
+        return <GroupSettingsTab group={group} onRegenerateInvite={regenerateInvite} onUpdatePassword={updateGroupPassword} onLeaveGroup={handleLeaveGroup} currentUser={currentUser} isOwner={isOwner} />;
       default:
         return <GroupOverviewTab group={group} isOwner={isOwner} maxMembers={maxMembers} />;
     }
