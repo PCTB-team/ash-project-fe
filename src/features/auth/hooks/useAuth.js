@@ -1,29 +1,21 @@
 import { useState } from 'react';
 import { message } from 'antd';
 import { ADMIN_CREDENTIALS } from '../utils/constants';
+import { axiosClient } from '../../../utils/apiClient.js';
 
-export const LOGIN_API_URL = "https://ash-project-be.onrender.com/api/v1/auth/login";
-export const REGISTER_API_URL = "https://ash-project-be.onrender.com/api/v1/auth/register";
-export const VERIFY_REGISTER_OTP_API_URL = "https://ash-project-be.onrender.com/api/v1/auth/otp-verification";
-export const RESEND_OTP_API_URL = "https://ash-project-be.onrender.com/api/v1/auth/otp-requests";
-export const REFRESH_TOKEN_API_URL = "https://ash-project-be.onrender.com/api/v1/auth/refresh-token";
-export const LOGOUT_API_URL = "https://ash-project-be.onrender.com/api/v1/auth/logout";
-export const GOOGLE_LOGIN_API_URL = "https://ash-project-be.onrender.com/api/v1/auth/google-login";
+export const LOGIN_API_URL = "/api/v1/auth/login";
+export const REGISTER_API_URL = "/api/v1/auth/register";
+export const VERIFY_REGISTER_OTP_API_URL = "/api/v1/auth/otp-verification";
+export const RESEND_OTP_API_URL = "/api/v1/auth/otp-requests";
+export const REFRESH_TOKEN_API_URL = "/api/v1/auth/refresh-token";
+export const LOGOUT_API_URL = "/api/v1/auth/logout";
+export const GOOGLE_LOGIN_API_URL = "/api/v1/auth/google-login";
 
 export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-
-  const safeJsonParse = async (response) => {
-    try {
-      const text = await response.text();
-      return text ? JSON.parse(text) : {};
-    } catch {
-      return {};
-    }
-  };
 
   const handleLogin = async (values) => {
     setErrorMsg('');
@@ -50,18 +42,14 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
     }
 
     try {
-      const response = await fetch(LOGIN_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          identifier: values.usernameOrEmail,
-          password: values.password
-        })
+      const response = await axiosClient.post(LOGIN_API_URL, {
+        identifier: values.usernameOrEmail,
+        password: values.password
       });
 
-      const data = await safeJsonParse(response);
+      const data = response.data;
 
-      if (response.ok || data.code === 1000) {
+      if (response.status === 200 || data.code === 1000) {
         const token = data.result?.token || data.token || data.accessToken || data.result?.accessToken;
         const refreshToken = data.result?.refreshToken || data.refreshToken;
 
@@ -70,16 +58,20 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
 
         message.success('Đăng nhập thành công!');
         onLoginSuccess(values.usernameOrEmail);
-      } else {
-        if (response.status === 401 || response.status === 403) {
+      }
+    } catch (error) {
+      console.error("Login Error:", error);
+      if (error.response) {
+        const status = error.response.status;
+        const data = error.response.data || {};
+        if (status === 401 || status === 403) {
           setErrorMsg('Tài khoản hoặc mật khẩu không chính xác!');
         } else {
           setErrorMsg(data.message || 'Đăng nhập thất bại!');
         }
+      } else {
+        setErrorMsg('Không thể kết nối đến máy chủ.');
       }
-    } catch (error) {
-      console.error("Login Error:", error);
-      setErrorMsg('Không thể kết nối đến máy chủ.');
     } finally {
       setIsLoading(false);
     }
@@ -103,36 +95,35 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
     }
 
     try {
-      const response = await fetch(REGISTER_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: values.displayName.replace(/\s+/g, ''),
-          email: values.usernameOrEmail,
-          fullname: values.fullname,
-          password: values.password,
-          confirmPassword: values.confirmPassword
-        })
+      const response = await axiosClient.post(REGISTER_API_URL, {
+        username: values.displayName.replace(/\s+/g, ''),
+        email: values.usernameOrEmail,
+        fullname: values.fullname,
+        password: values.password,
+        confirmPassword: values.confirmPassword
       });
 
-      const data = await safeJsonParse(response);
+      const data = response.data;
 
-      if (response.ok || data.code === 1000) {
+      if (response.status === 200 || data.code === 1000) {
         message.success('Đã gửi mã xác minh đến email của bạn!');
         return true;
-      } else {
-        if (response.status === 409) {
+      }
+    } catch (error) {
+      console.error("Register Error:", error);
+      if (error.response) {
+        const status = error.response.status;
+        const data = error.response.data || {};
+        if (status === 409) {
           setErrorMsg('Email hoặc tên đăng nhập đã tồn tại!');
-        } else if (response.status === 401) {
+        } else if (status === 401) {
           setErrorMsg('Không có quyền thực hiện thao tác này!');
         } else {
           setErrorMsg(data.message || 'Đăng ký thất bại!');
         }
-        return false;
+      } else {
+        setErrorMsg('Không thể kết nối đến máy chủ.');
       }
-    } catch (error) {
-      console.error("Register Error:", error);
-      setErrorMsg('Không thể kết nối đến máy chủ.');
       return false;
     } finally {
       setIsLoading(false);
@@ -144,24 +135,21 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
     setIsLoading(true);
 
     try {
-      const response = await fetch(VERIFY_REGISTER_OTP_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp })
-      });
+      const response = await axiosClient.post(VERIFY_REGISTER_OTP_API_URL, { email, otp });
+      const data = response.data;
 
-      const data = await safeJsonParse(response);
-
-      if (response.ok || data.code === 1000) {
+      if (response.status === 200 || data.code === 1000) {
         message.success('Xác minh thành công! Vui lòng đăng nhập.');
         return true;
-      } else {
-        setErrorMsg(data.message || 'Mã OTP không hợp lệ!');
-        return false;
       }
     } catch (error) {
       console.error("OTP Verification Error:", error);
-      setErrorMsg('Không thể kết nối đến máy chủ.');
+      if (error.response) {
+        const data = error.response.data || {};
+        setErrorMsg(data.message || 'Mã OTP không hợp lệ!');
+      } else {
+        setErrorMsg('Không thể kết nối đến máy chủ.');
+      }
       return false;
     } finally {
       setIsLoading(false);
@@ -173,24 +161,21 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
     setIsLoading(true);
 
     try {
-      const response = await fetch(RESEND_OTP_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
+      const response = await axiosClient.post(RESEND_OTP_API_URL, { email });
+      const data = response.data;
 
-      const data = await safeJsonParse(response);
-
-      if (response.ok || data.code === 1000) {
+      if (response.status === 200 || data.code === 1000) {
         message.success('Mã xác minh mới đã được gửi đến email của bạn!');
         return true;
-      } else {
-        setErrorMsg(data.message || 'Không thể gửi lại mã OTP!');
-        return false;
       }
     } catch (error) {
       console.error("Resend OTP Error:", error);
-      setErrorMsg('Không thể kết nối đến máy chủ.');
+      if (error.response) {
+        const data = error.response.data || {};
+        setErrorMsg(data.message || 'Không thể gửi lại mã OTP!');
+      } else {
+        setErrorMsg('Không thể kết nối đến máy chủ.');
+      }
       return false;
     } finally {
       setIsLoading(false);
@@ -202,15 +187,10 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
     setErrorMsg('');
 
     try {
-      const response = await fetch(GOOGLE_LOGIN_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: googleCredential })
-      });
+      const response = await axiosClient.post(GOOGLE_LOGIN_API_URL, { token: googleCredential });
+      const data = response.data;
 
-      const data = await safeJsonParse(response);
-
-      if (response.ok || data.code === 1000) {
+      if (response.status === 200 || data.code === 1000) {
         const token = data.result?.token || data.token || data.accessToken || data.result?.accessToken;
         const refreshToken = data.result?.refreshToken || data.refreshToken;
 
@@ -219,12 +199,15 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
 
         message.success('Đăng nhập bằng Google thành công!');
         onLoginSuccess(data.result?.email || data.email || 'Người dùng Google');
-      } else {
-        setErrorMsg(data.message || 'Đăng nhập Google thất bại tại Backend!');
       }
     } catch (error) {
       console.error("Google Login Error:", error);
-      setErrorMsg('Không thể kết nối đến máy chủ.');
+      if (error.response) {
+        const data = error.response.data || {};
+        setErrorMsg(data.message || 'Đăng nhập Google thất bại tại Backend!');
+      } else {
+        setErrorMsg('Không thể kết nối đến máy chủ.');
+      }
     } finally {
       setIsGoogleLoading(false);
     }

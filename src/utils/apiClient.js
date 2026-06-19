@@ -6,7 +6,7 @@ const REFRESH_TOKEN_API_URL = "https://ash-project-be.onrender.com/api/v1/auth/r
 export const axiosClient = axios.create({
   baseURL: 'https://ash-project-be.onrender.com',
   headers: {
-    'Content-Type': 'application/json',
+    // Let Axios automatically set Content-Type
   },
 });
 

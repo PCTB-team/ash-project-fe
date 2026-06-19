@@ -150,7 +150,15 @@ export const useGroups = () => {
       setTrashFiles(mapped); 
       return mapped; 
     }
-    catch (err) { message.error('Không thể tải thùng rác.'); throw err; }
+    catch (err) { 
+      if (err.response?.status === 404) {
+        setTrashFiles([]);
+        return [];
+      }
+      message.error('Không thể tải thùng rác.'); 
+      // return empty instead of throwing to prevent Uncaught Promise
+      return []; 
+    }
   }, []);
 
   const restoreFile = async (groupId, fileId) => {

@@ -1,5 +1,6 @@
 import { axiosClient } from '../../../utils/apiClient.js';
 
+const DOCUMENTS_ITEMS_API = 'https://ash-project-be.onrender.com/api/v1/documents/items';
 const DOCUMENTS_PAGE_API = 'https://ash-project-be.onrender.com/api/v1/documents/page';
 const DOCUMENTS_FILTER_API = 'https://ash-project-be.onrender.com/api/v1/documents/filter';
 const FOLDERS_API = 'https://ash-project-be.onrender.com/api/v1/folders';
@@ -26,7 +27,7 @@ export const documentsApi = {
   getDocuments: async (params, activeTab) => {
     let url;
     if (activeTab === 'all') {
-      url = `${DOCUMENTS_PAGE_API}?${params.toString()}`;
+      url = `${DOCUMENTS_ITEMS_API}?${params.toString()}`;
     } else if (activeTab === 'document') {
       url = `${DOCUMENTS_FILTER_API}/documents?${params.toString()}`;
     } else {
