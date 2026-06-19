@@ -51,8 +51,7 @@ export default function OtpVerification({ isLoading, onVerify, onResend, onBack 
           return (
             <div
               key={index}
-              className={`w-10 h-12 sm:w-11 sm:h-14 bg-[#f5f5f7] border-2 flex items-center justify-center rounded-[12px] text-[20px] font-semibold text-[#1d1d1f] transition-all shadow-sm ${isActive ? 'bg-white border-[#0071e3]/40 ring-[3px] ring-[#0071e3]/[0.08]' : 'border-transparent'
-                }`}
+              className={`w-10 h-12 sm:w-11 sm:h-14 bg-[#f5f5f7] border-2 flex items-center justify-center rounded-[12px] text-[20px] font-semibold text-[#1d1d1f] transition-all shadow-sm ${isActive ? 'bg-white border-[#0071e3]/40 ring-[3px] ring-[#0071e3]/[0.08]' : 'border-transparent' }`}
             >
               {otp[index] || ''}
             </div>

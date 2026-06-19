@@ -30,23 +30,21 @@ export default function GroupHeader({ group, isOwner, maxMembers }) {
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-6 rounded-[28px] bg-gradient-to-br from-[var(--color-primary)] to-[#1a1a1a] p-[2px] shadow-xl shadow-[var(--color-primary)]/10 relative overflow-hidden"
+        className="mb-6 rounded-2xl bg-gradient-to-br from-[var(--color-primary)] to-[#1a1a1a] p-[2px] shadow-sm relative overflow-hidden"
       >
-        <div className="absolute top-[-50%] right-[-10%] w-[80%] h-[200%] bg-white/5 rounded-full blur-[80px] pointer-events-none transform rotate-45" />
-        <div className="bg-[var(--color-surface)] rounded-[26px] p-6 md:p-7 flex flex-col xl:flex-row justify-between items-start gap-6 relative z-10 overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--color-primary)]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="bg-[var(--color-surface)] rounded-2xl p-6 md:p-7 flex flex-col lg:flex-row justify-between items-start gap-6 relative z-10 overflow-hidden">
           <div className="space-y-3 max-w-3xl relative z-10 flex-1">
             <div className="flex flex-wrap items-center gap-3">
-              <div className="w-12 h-12 rounded-[16px] bg-[var(--color-primary)]/10 flex items-center justify-center text-[var(--color-primary)] border border-[var(--color-primary)]/20">
+              <div className="w-12 h-12 rounded-xl bg-[var(--color-primary)]/10 flex items-center justify-center text-[var(--color-primary)] border border-[var(--color-primary)]/20">
                 <i className="bi bi-diagram-3-fill text-[18px]" />
               </div>
               <div>
                 {isOwner && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-gradient-to-r from-amber-300 to-amber-500 rounded-full text-[9px] font-semibold text-white uppercase tracking-widest shadow-sm mb-1">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-gradient-to-r from-amber-300 to-amber-500 rounded-full text-[9px] font-semibold text-white uppercase shadow-sm mb-1">
                     <i className="bi bi-star-fill text-[8px]" /> Leader
                   </span>
                 )}
-                <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[var(--color-on-surface)] leading-tight">{group.name}</h2>
+                <h2 className="text-xl md:text-2xl font-semibold text-[var(--color-on-surface)]">{group.name}</h2>
               </div>
             </div>
             <p className="text-[13px] text-black/55 font-medium leading-relaxed max-w-2xl">{group.description}</p>
@@ -72,17 +70,17 @@ export default function GroupHeader({ group, isOwner, maxMembers }) {
             </div>
           </div>
 
-          <div className="w-full xl:w-64 bg-[var(--color-surface-container-low)] border border-black/[0.04] rounded-[20px] p-4 flex flex-col gap-3 shadow-sm shrink-0 z-10">
-            <h4 className="text-[10px] font-semibold text-black/40 uppercase tracking-widest">Thống kê</h4>
+          <div className="w-full lg:w-64 bg-[var(--color-surface-container-low)] border border-black/[0.04] rounded-xl p-4 flex flex-col gap-3 shadow-sm shrink-0 z-10">
+            <h4 className="text-[10px] font-semibold text-black/40 uppercase">Thống kê</h4>
             <div className="grid grid-cols-2 gap-2.5">
-              <div className="bg-[var(--color-surface)] rounded-[14px] p-3 border border-black/5">
+              <div className="bg-[var(--color-surface)] rounded-xl p-3 border border-black/5">
                 <i className="bi bi-people-fill text-[var(--color-primary)] text-[14px] mb-1 block" />
-                <span className="text-[16px] font-semibold text-[var(--color-on-surface)] block leading-none">{group.memberCount || group.members?.length || 0} / {maxMembers}</span>
+                <span className="text-[16px] font-semibold text-[var(--color-on-surface)] block">{group.memberCount || group.members?.length || 0} / {maxMembers}</span>
                 <span className="text-[9px] font-medium text-black/40">Thành viên</span>
               </div>
-              <div className="bg-[var(--color-surface)] rounded-[14px] p-3 border border-black/5">
+              <div className="bg-[var(--color-surface)] rounded-xl p-3 border border-black/5">
                 <i className="bi bi-folder2-open text-blue-500 text-[14px] mb-1 block" />
-                <span className="text-[16px] font-semibold text-[var(--color-on-surface)] block leading-none">{group.fileCount || group.activeFileCount || group.documents?.length || 0}</span>
+                <span className="text-[16px] font-semibold text-[var(--color-on-surface)] block">{group.fileCount || group.activeFileCount || group.documents?.length || 0}</span>
                 <span className="text-[9px] font-medium text-black/40">Tài liệu</span>
               </div>
             </div>

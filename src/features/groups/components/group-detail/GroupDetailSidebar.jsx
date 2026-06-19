@@ -17,7 +17,7 @@ export default function GroupDetailSidebar({ activeTab, onTabChange, isOwner, tr
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className="hidden xl:flex flex-col gap-1.5 bg-[var(--color-surface)] border border-black/[0.04] rounded-[24px] p-2.5 shadow-sm sticky top-4">
+      <div className="hidden lg:flex flex-col gap-1.5 bg-[var(--color-surface)] border border-black/[0.04] rounded-2xl p-2.5 shadow-sm sticky top-4">
         {visibleTabs.map(tab => {
           const isActive = activeTab === tab.key;
           const badge = tab.key === 'trash' ? trashCount : 0;
@@ -28,11 +28,7 @@ export default function GroupDetailSidebar({ activeTab, onTabChange, isOwner, tr
               whileHover={{ x: 3 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => onTabChange(tab.key)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-[14px] font-medium text-[13px] transition-all w-full text-left cursor-pointer relative
-                ${isActive
-                  ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)] shadow-sm'
-                  : 'text-black/55 hover:bg-[var(--color-surface-container-high)] hover:text-[var(--color-on-surface)]'
-                }`}
+              className={`flex items-center gap-3 px-4 py-3 rounded-[14px] font-medium text-[13px] transition-all w-full text-left cursor-pointer relative ${isActive ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)] shadow-sm' : 'text-black/55 hover:bg-[var(--color-surface-container-high)] hover:text-[var(--color-on-surface)]' }`}
             >
               {isActive && (
                 <motion.div
@@ -54,7 +50,7 @@ export default function GroupDetailSidebar({ activeTab, onTabChange, isOwner, tr
       </div>
 
       {/* Tablet/Mobile Horizontal Tabs */}
-      <div className="xl:hidden flex gap-1.5 bg-[var(--color-surface)] border border-black/[0.04] rounded-[20px] p-2 shadow-sm overflow-x-auto hide-scrollbar">
+      <div className="lg:hidden flex gap-1.5 bg-[var(--color-surface)] border border-black/[0.04] rounded-xl p-2 shadow-sm overflow-x-auto hide-scrollbar">
         {visibleTabs.map(tab => {
           const isActive = activeTab === tab.key;
           const badge = tab.key === 'trash' ? trashCount : 0;
@@ -63,11 +59,7 @@ export default function GroupDetailSidebar({ activeTab, onTabChange, isOwner, tr
             <button
               key={tab.key}
               onClick={() => onTabChange(tab.key)}
-              className={`flex items-center gap-2 px-3.5 py-2.5 rounded-[12px] font-medium text-[12px] transition-all whitespace-nowrap cursor-pointer relative
-                ${isActive
-                  ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)] shadow-sm'
-                  : 'text-black/50 hover:bg-[var(--color-surface-container-high)]'
-                }`}
+              className={`flex items-center gap-2 px-3.5 py-2.5 rounded-[12px] font-medium text-[12px] transition-all whitespace-nowrap cursor-pointer relative ${isActive ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)] shadow-sm' : 'text-black/50 hover:bg-[var(--color-surface-container-high)]' }`}
             >
               <i className={`bi ${tab.icon} text-[14px]`} />
               <span className="hidden sm:inline">{tab.label}</span>

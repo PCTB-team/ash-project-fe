@@ -28,9 +28,9 @@ export default function GroupMembersTab({ group, currentUser, isOwner, onToggleP
   return (
     <motion.div key="members" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-5">
       {/* Header */}
-      <div className="bg-[var(--color-surface)] border border-black/[0.04] rounded-[20px] p-4 shadow-sm flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+      <div className="bg-[var(--color-surface)] border border-black/[0.04] rounded-xl p-4 shadow-sm flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div className="flex items-center gap-3">
-          <h4 className="font-semibold text-[16px] text-[var(--color-on-surface)] tracking-tight">
+          <h4 className="font-semibold text-[16px] text-[var(--color-on-surface)]">
             Thành viên <span className="text-black/30 font-normal text-[14px]">({members.length})</span>
           </h4>
         </div>
@@ -43,7 +43,7 @@ export default function GroupMembersTab({ group, currentUser, isOwner, onToggleP
 
       {/* Member List */}
       {filtered.length === 0 ? (
-        <div className="bg-[var(--color-surface)] border border-black/[0.04] rounded-[24px] shadow-sm">
+        <div className="bg-[var(--color-surface)] border border-black/[0.04] rounded-2xl shadow-sm">
           <EmptyState type="noMembers" title="Không tìm thấy" description="Không có thành viên nào phù hợp với tìm kiếm." />
         </div>
       ) : (
@@ -79,11 +79,7 @@ export default function GroupMembersTab({ group, currentUser, isOwner, onToggleP
                   {isOwner && !isLeader && !isSelf && (
                     <>
                       <button onClick={() => onTogglePermission(group.id, member.memberId || member.id, !member.canUpload)}
-                        className={`h-7 px-2.5 rounded-lg text-[10px] font-medium border transition-all cursor-pointer flex items-center gap-1
-                          ${member.canUpload
-                            ? 'text-[var(--color-primary)] bg-[var(--color-primary)]/10 border-[var(--color-primary)]/20'
-                            : 'text-black/40 bg-black/[0.02] border-black/[0.06] hover:border-[var(--color-primary)]/30 hover:text-[var(--color-primary)]'
-                          }`}>
+                        className={`h-7 px-2.5 rounded-lg text-[10px] font-medium border transition-all cursor-pointer flex items-center gap-1 ${member.canUpload ? 'text-[var(--color-primary)] bg-[var(--color-primary)]/10 border-[var(--color-primary)]/20' : 'text-black/40 bg-black/[0.02] border-black/[0.06] hover:border-[var(--color-primary)]/30 hover:text-[var(--color-primary)]' }`}>
                         <i className={`bi ${member.canUpload ? 'bi-cloud-check-fill' : 'bi-cloud-arrow-up'}`} />
                         {member.canUpload ? 'Upload ✓' : 'Upload'}
                       </button>
@@ -94,11 +90,11 @@ export default function GroupMembersTab({ group, currentUser, isOwner, onToggleP
                     </>
                   )}
                   {isLeader ? (
-                    <span className="bg-gradient-to-r from-amber-100 to-amber-200 text-amber-700 font-medium text-[10px] uppercase tracking-widest rounded-full px-3 py-1 flex items-center gap-1">
+                    <span className="bg-gradient-to-r from-amber-100 to-amber-200 text-amber-700 font-medium text-[10px] uppercase rounded-full px-3 py-1 flex items-center gap-1">
                       <i className="bi bi-star-fill text-[8px]" /> Leader
                     </span>
                   ) : (
-                    <span className="bg-black/[0.03] text-black/40 font-medium text-[10px] uppercase tracking-widest rounded-full px-2.5 py-1">Member</span>
+                    <span className="bg-black/[0.03] text-black/40 font-medium text-[10px] uppercase rounded-full px-2.5 py-1">Member</span>
                   )}
                 </div>
               </motion.div>

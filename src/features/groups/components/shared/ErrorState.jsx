@@ -30,7 +30,7 @@ export default function ErrorState({ code = 500, title, description, onRetry }) 
         </div>
       </div>
 
-      <h4 className="text-[16px] font-semibold text-[var(--color-on-surface)] tracking-tight mb-1.5">
+      <h4 className="text-[16px] font-semibold text-[var(--color-on-surface)] mb-1.5">
         {displayTitle}
       </h4>
       <p className="text-[13px] font-medium text-black/45 max-w-xs leading-relaxed mb-6">

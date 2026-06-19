@@ -117,10 +117,10 @@ function FeatureCard({ feature, index }) {
             borderColor: `${feature.color}20`,
             color: feature.color
           }}>
-          <i className={`bi ${feature.icon} text-[22px]`} />
+          <i className={`bi ${feature.icon} text-xl`} />
         </div>
 
-        <h3 className="text-[19px] font-semibold text-[#1d1d1f] mb-3 tracking-tight group-hover:text-[#ff5c00] transition-colors">
+        <h3 className="text-[19px] font-semibold text-[#1d1d1f] mb-3 group-hover:text-[#ff5c00] transition-colors">
           {feature.title}
         </h3>
         <p className="text-[13.5px] text-black/50 leading-relaxed font-medium mb-5">
@@ -171,12 +171,12 @@ export default function IntroScreen() {
             {/* Left: Copy */}
             <div className="z-10 text-left lg:col-span-6 space-y-6">
               <motion.span {...fadeUp(0)}
-                className="bg-[#ff5c00]/10 border border-[#ff5c00]/20 text-[#ff5c00] font-semibold text-[10.5px] px-4 py-2 rounded-full inline-flex items-center gap-2 tracking-wider uppercase backdrop-blur-md shadow-sm">
+                className="bg-[#ff5c00]/10 border border-[#ff5c00]/20 text-[#ff5c00] font-semibold text-[10.5px] px-4 py-2 rounded-full inline-flex items-center gap-2 uppercase backdrop-blur-md shadow-sm">
                 <i className="bi bi-mortarboard-fill text-[#ff5c00]" /> Nền tảng học tập thông minh
               </motion.span>
 
               <motion.h1 {...fadeUp(0.1)}
-                className="text-[42px] md:text-[50px] lg:text-[60px] font-semibold tracking-tight text-[#1d1d1f] leading-[1.05]">
+                className="text-[42px] md:text-[50px] lg:text-[60px] font-semibold text-[#1d1d1f] leading-[1.05]">
                 Quản lý tài liệu.{' '}
                 <span className="bg-gradient-to-r from-[#ff8a00] to-[#ff5c00] bg-clip-text text-transparent">Học cùng AI.</span>{' '}
                 <span className="block mt-1 text-[#1d1d1f]">Kết nối tri thức.</span>
@@ -253,7 +253,7 @@ export default function IntroScreen() {
         <section id="features-section" className="py-24 md:py-28 bg-[#fafafb]">
           <div className="max-w-7xl mx-auto px-6 md:px-12">
             <motion.div {...fadeUp(0)} className="text-center mb-16">
-              <h2 className="text-[30px] md:text-[38px] font-semibold text-[#1d1d1f] mb-4 tracking-tight">
+              <h2 className="text-[30px] md:text-[38px] font-semibold text-[#1d1d1f] mb-4">
                 Mọi thứ bạn cần, trên một nền tảng
               </h2>
               <p className="text-black/45 max-w-lg mx-auto text-[15px] font-medium">
@@ -274,7 +274,7 @@ export default function IntroScreen() {
         <section className="py-24 md:py-28 bg-[#f5f5f7] border-y border-black/[0.04]">
           <div className="max-w-4xl mx-auto px-6 md:px-12">
             <motion.div {...fadeUp(0)} className="text-center mb-16">
-              <h2 className="text-[30px] md:text-[38px] font-semibold text-[#1d1d1f] mb-4 tracking-tight">
+              <h2 className="text-[30px] md:text-[38px] font-semibold text-[#1d1d1f] mb-4">
                 Bắt đầu chỉ trong 3 bước
               </h2>
               <p className="text-black/45 max-w-lg mx-auto text-[15px] font-medium">
@@ -295,7 +295,7 @@ export default function IntroScreen() {
                       {step.step}
                     </span>
                   </div>
-                  <h4 className="text-[17px] font-semibold text-[#1d1d1f] mb-2 tracking-tight">{step.title}</h4>
+                  <h4 className="text-[17px] font-semibold text-[#1d1d1f] mb-2">{step.title}</h4>
                   <p className="text-[13px] text-black/45 font-medium leading-relaxed max-w-[280px] mx-auto">{step.desc}</p>
                 </motion.div>
               ))}
@@ -307,7 +307,7 @@ export default function IntroScreen() {
         <section className="py-20 md:py-24 cta-gradient">
           <div className="max-w-3xl mx-auto px-6 md:px-12 text-center relative z-10">
             <motion.div {...fadeUp(0)}>
-              <h2 className="text-[30px] md:text-[40px] font-semibold text-white mb-4 tracking-tight leading-tight">
+              <h2 className="text-[30px] md:text-[40px] font-semibold text-white mb-4">
                 Sẵn sàng nâng cấp cách học?
               </h2>
               <p className="text-white/80 text-[15px] md:text-[16px] font-medium mb-8 max-w-lg mx-auto leading-relaxed">

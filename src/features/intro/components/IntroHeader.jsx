@@ -33,7 +33,7 @@ export default function IntroHeader() {
               <img src={logoImg} alt="Capy Study Logo" className="w-full h-full object-cover object-[center_2%] scale-[1.6]" />
             </div>
           </div>
-          <span className="text-[24px] font-extrabold tracking-tighter drop-shadow-sm mt-0.5 ml-1">
+          <span className="text-[24px] font-semibold drop-shadow-sm mt-0.5 ml-1">
             <span className="bg-clip-text text-transparent bg-gradient-to-br from-[#432c1a] to-[#734b2f]">Capy</span>
             <span className="bg-clip-text text-transparent bg-gradient-to-br from-[#ff5c00] to-[#ffaa00] ml-1">Study</span>
           </span>
@@ -81,7 +81,7 @@ export default function IntroHeader() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="fixed top-[68px] left-0 right-0 bg-white/95 backdrop-blur-3xl border-b border-black/[0.04] p-6 flex flex-col gap-6 z-40 shadow-2xl md:hidden"
+            className="fixed top-[68px] left-0 right-0 bg-white/95 backdrop-blur-3xl border-b border-black/[0.04] p-6 flex flex-col gap-6 z-40 shadow-md md:hidden"
           >
             <div className="flex flex-col gap-5 text-[15px] font-medium text-[#1d1d1f]/70">
               <button onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); navigate('/'); setIsMobileMenuOpen(false); }} className="text-left hover:text-[#ff5c00] transition-colors py-2 border-b border-black/[0.03]">Trang chủ</button>

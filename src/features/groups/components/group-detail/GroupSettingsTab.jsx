@@ -47,32 +47,32 @@ export default function GroupSettingsTab({ group, onRegenerateInvite, currentUse
   return (
     <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
       {/* General */}
-      <div className="bg-[var(--color-surface)] border border-black/[0.04] rounded-[24px] p-6 shadow-sm">
-        <h4 className="text-[14px] font-semibold text-[var(--color-on-surface)] tracking-tight mb-5 flex items-center gap-2">
+      <div className="bg-[var(--color-surface)] border border-black/[0.04] rounded-2xl p-6 shadow-sm">
+        <h4 className="text-[14px] font-semibold text-[var(--color-on-surface)] mb-5 flex items-center gap-2">
           <i className="bi bi-gear text-black/40" /> Thông tin chung
         </h4>
         <div className="space-y-4">
-          <div className="flex items-start gap-4 p-4 rounded-[16px] bg-[var(--color-surface-container-low)] border border-black/[0.03]">
-            <div className="text-[11px] font-semibold text-black/40 uppercase tracking-widest w-24 pt-0.5 shrink-0">Tên nhóm</div>
+          <div className="flex items-start gap-4 p-4 rounded-xl bg-[var(--color-surface-container-low)] border border-black/[0.03]">
+            <div className="text-[11px] font-semibold text-black/40 uppercase w-24 pt-0.5 shrink-0">Tên nhóm</div>
             <div className="text-[14px] font-medium text-[var(--color-on-surface)]">{group.name}</div>
           </div>
-          <div className="flex items-start gap-4 p-4 rounded-[16px] bg-[var(--color-surface-container-low)] border border-black/[0.03]">
-            <div className="text-[11px] font-semibold text-black/40 uppercase tracking-widest w-24 pt-0.5 shrink-0">Mô tả</div>
+          <div className="flex items-start gap-4 p-4 rounded-xl bg-[var(--color-surface-container-low)] border border-black/[0.03]">
+            <div className="text-[11px] font-semibold text-black/40 uppercase w-24 pt-0.5 shrink-0">Mô tả</div>
             <div className="text-[13px] font-medium text-black/60 leading-relaxed">{group.description || '—'}</div>
           </div>
-          <div className="flex items-start gap-4 p-4 rounded-[16px] bg-[var(--color-surface-container-low)] border border-black/[0.03]">
-            <div className="text-[11px] font-semibold text-black/40 uppercase tracking-widest w-24 pt-0.5 shrink-0">Chủ nhóm</div>
+          <div className="flex items-start gap-4 p-4 rounded-xl bg-[var(--color-surface-container-low)] border border-black/[0.03]">
+            <div className="text-[11px] font-semibold text-black/40 uppercase w-24 pt-0.5 shrink-0">Chủ nhóm</div>
             <div className="text-[14px] font-medium text-[var(--color-on-surface)]">{isOwner ? currentUser : (group.ownerName || group.owner || '—')}</div>
           </div>
         </div>
       </div>
 
       {/* Security */}
-      <div className="bg-[var(--color-surface)] border border-black/[0.04] rounded-[24px] p-6 shadow-sm">
-        <h4 className="text-[14px] font-semibold text-[var(--color-on-surface)] tracking-tight mb-5 flex items-center gap-2">
+      <div className="bg-[var(--color-surface)] border border-black/[0.04] rounded-2xl p-6 shadow-sm">
+        <h4 className="text-[14px] font-semibold text-[var(--color-on-surface)] mb-5 flex items-center gap-2">
           <i className="bi bi-shield-lock text-black/40" /> Bảo mật & Mật khẩu
         </h4>
-        <div className="p-4 rounded-[16px] bg-[var(--color-surface-container-low)] border border-black/[0.03] flex items-center gap-4 mb-4">
+        <div className="p-4 rounded-xl bg-[var(--color-surface-container-low)] border border-black/[0.03] flex items-center gap-4 mb-4">
           <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0">
             <i className="bi bi-shield-check text-green-500 text-[16px]" />
           </div>
@@ -83,7 +83,7 @@ export default function GroupSettingsTab({ group, onRegenerateInvite, currentUse
         </div>
 
         <div className="p-5 rounded-[18px] bg-[var(--color-surface-container-low)] border border-black/[0.03]">
-          <div className="text-[11px] font-semibold text-black/40 uppercase tracking-widest mb-3">Đổi mật khẩu nhóm</div>
+          <div className="text-[11px] font-semibold text-black/40 uppercase mb-3">Đổi mật khẩu nhóm</div>
           <div className="flex items-center gap-3">
             <Input.Password
               placeholder="Nhập mật khẩu mới..."
@@ -104,12 +104,12 @@ export default function GroupSettingsTab({ group, onRegenerateInvite, currentUse
       </div>
 
       {/* Invite Management */}
-      <div className="bg-[var(--color-surface)] border border-black/[0.04] rounded-[24px] p-6 shadow-sm">
-        <h4 className="text-[14px] font-semibold text-[var(--color-on-surface)] tracking-tight mb-5 flex items-center gap-2">
+      <div className="bg-[var(--color-surface)] border border-black/[0.04] rounded-2xl p-6 shadow-sm">
+        <h4 className="text-[14px] font-semibold text-[var(--color-on-surface)] mb-5 flex items-center gap-2">
           <i className="bi bi-link-45deg text-black/40" /> Quản lý lời mời
         </h4>
         <div className="p-5 rounded-[18px] bg-[var(--color-surface-container-low)] border border-black/[0.03] mb-4">
-          <div className="text-[11px] font-semibold text-black/40 uppercase tracking-widest mb-2">Link tham gia hiện tại</div>
+          <div className="text-[11px] font-semibold text-black/40 uppercase mb-2">Link tham gia hiện tại</div>
           <div className="flex items-center gap-3">
             <div className="flex-1 bg-[var(--color-surface)] rounded-xl p-3 border border-black/5 font-mono text-[12px] text-[#007aff] font-medium truncate select-all">
               {group.inviteLink || group.inviteToken || 'Chưa có link mời'}
@@ -130,8 +130,8 @@ export default function GroupSettingsTab({ group, onRegenerateInvite, currentUse
       </div>
 
       {/* Danger Zone */}
-      <div className="border border-red-200 rounded-[24px] p-6 bg-red-50/50">
-        <h4 className="text-[14px] font-semibold text-red-600 tracking-tight mb-3 flex items-center gap-2">
+      <div className="border border-red-200 rounded-2xl p-6 bg-red-50/50">
+        <h4 className="text-[14px] font-semibold text-red-600 mb-3 flex items-center gap-2">
           <i className="bi bi-exclamation-triangle-fill" /> Vùng nguy hiểm
         </h4>
         <p className="text-[12px] text-red-500/70 font-medium mb-4">Các hành động trong khu vực này không thể hoàn tác.</p>

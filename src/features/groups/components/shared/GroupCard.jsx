@@ -22,33 +22,33 @@ export default function GroupCard({ group, currentUser, onViewDetail, onRequestJ
   return (
     <motion.div
       whileHover={{ y: -4, scale: 1.01 }}
-      className="bg-[var(--color-surface)] border border-black/[0.04] rounded-[24px] p-6 shadow-sm hover:shadow-xl hover:shadow-black/[0.04] flex flex-col justify-between cursor-pointer relative transition-all duration-300 overflow-hidden group"
+      className="bg-[var(--color-surface)] border border-black/[0.04] rounded-2xl p-6 shadow-sm hover:shadow-sm hover:shadow-black/[0.04] flex flex-col justify-between cursor-pointer relative transition-all duration-300 overflow-hidden group"
     >
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[var(--color-primary)]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
       <div className="space-y-4">
         {/* Header */}
         <div className="flex justify-between items-start gap-3">
-          <div className="w-12 h-12 rounded-[20px] bg-[var(--color-surface-container-high)] flex items-center justify-center text-[var(--color-primary)] shrink-0 group-hover:bg-[var(--color-primary)]/5 transition-colors">
+          <div className="w-12 h-12 rounded-xl bg-[var(--color-surface-container-high)] flex items-center justify-center text-[var(--color-primary)] shrink-0 group-hover:bg-[var(--color-primary)]/5 transition-colors">
             <i className="bi bi-diagram-3-fill text-[20px]" />
           </div>
           <div className="flex items-center gap-1.5 flex-wrap justify-end">
             {/* Private badge */}
             <span className="flex items-center gap-1 bg-black/[0.03] text-black/40 px-2 py-0.5 rounded-full border border-black/[0.04]">
               <i className="bi bi-lock-fill text-[8px]" />
-              <span className="text-[9px] font-medium uppercase tracking-wider">Private</span>
+              <span className="text-[9px] font-medium uppercase">Private</span>
             </span>
             {/* Package badge */}
             {packageType === 'premium' && (
               <span className="flex items-center gap-1 bg-gradient-to-r from-amber-100 to-amber-200 text-amber-700 px-2 py-0.5 rounded-full border border-amber-300/30">
                 <i className="bi bi-gem text-[8px]" />
-                <span className="text-[9px] font-semibold uppercase tracking-wider">Premium</span>
+                <span className="text-[9px] font-semibold uppercase">Premium</span>
               </span>
             )}
             {packageType === 'starter' && (
               <span className="flex items-center gap-1 bg-blue-50 text-blue-500 px-2 py-0.5 rounded-full border border-blue-200/30">
                 <i className="bi bi-rocket-takeoff text-[8px]" />
-                <span className="text-[9px] font-semibold uppercase tracking-wider">Starter</span>
+                <span className="text-[9px] font-semibold uppercase">Starter</span>
               </span>
             )}
             {/* Active indicator */}
@@ -57,14 +57,14 @@ export default function GroupCard({ group, currentUser, onViewDetail, onRequestJ
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#34c759] opacity-75" />
                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#34c759]" />
               </span>
-              <span className="text-[9px] font-medium uppercase tracking-wider">Active</span>
+              <span className="text-[9px] font-medium uppercase">Active</span>
             </div>
           </div>
         </div>
 
         {/* Content */}
         <div>
-          <h4 className="text-[16px] font-semibold text-[var(--color-on-surface)] tracking-tight line-clamp-1 mb-1 group-hover:text-[var(--color-primary)] transition-colors">
+          <h4 className="text-[16px] font-semibold text-[var(--color-on-surface)] line-clamp-1 mb-1 group-hover:text-[var(--color-primary)] transition-colors">
             {group.name}
           </h4>
           <p className="text-[12.5px] text-black/50 font-medium leading-relaxed line-clamp-2 min-h-[36px]">
@@ -111,7 +111,7 @@ export default function GroupCard({ group, currentUser, onViewDetail, onRequestJ
             }
             return (
               <Button type="primary" onClick={() => onRequestJoin(group)}
-                className="font-medium text-[12px] rounded-xl h-9 px-5 shadow-sm shadow-[var(--color-primary)]/20 border-none bg-[var(--color-primary)]">
+                className="font-medium text-[12px] rounded-xl h-9 px-5 shadow-sm border-none bg-[var(--color-primary)]">
                 Tham gia
               </Button>
             );

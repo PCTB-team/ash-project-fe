@@ -23,20 +23,20 @@ export default function GroupOverviewTab({ group, isOwner }) {
   return (
     <motion.div key="overview" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
       {/* Hero Card */}
-      <div className="bg-gradient-to-br from-[var(--color-primary)] to-[#1a1a1a] rounded-[28px] p-8 text-white relative overflow-hidden shadow-xl shadow-[var(--color-primary)]/10">
+      <div className="bg-gradient-to-br from-[var(--color-primary)] to-[#1a1a1a] rounded-[28px] p-8 text-white relative overflow-hidden shadow-sm">
         <div className="absolute top-[-50%] right-[-10%] w-[80%] h-[200%] bg-white/5 rounded-full blur-[80px] pointer-events-none transform rotate-45" />
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-14 h-14 rounded-[20px] bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-lg">
+            <div className="w-14 h-14 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-lg">
               <i className="bi bi-diagram-3-fill text-[24px]" />
             </div>
             <div>
               {isOwner && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-gradient-to-r from-amber-300 to-amber-500 rounded-full text-[9px] font-semibold text-white uppercase tracking-widest shadow-md mb-1">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-gradient-to-r from-amber-300 to-amber-500 rounded-full text-[9px] font-semibold text-white uppercase shadow-md mb-1">
                   <i className="bi bi-star-fill text-[8px]" /> Leader
                 </span>
               )}
-              <h2 className="text-[22px] font-semibold tracking-tight leading-tight">{group.name}</h2>
+              <h2 className="text-xl font-semibold">{group.name}</h2>
             </div>
           </div>
           <p className="text-[14px] text-white/75 font-medium leading-relaxed max-w-xl mb-6">{group.description}</p>
@@ -65,25 +65,25 @@ export default function GroupOverviewTab({ group, isOwner }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {stats.map((s, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
-            className="bg-[var(--color-surface)] border border-black/[0.04] rounded-[20px] p-5 shadow-sm hover:shadow-md hover:border-black/[0.08] transition-all group">
+            className="bg-[var(--color-surface)] border border-black/[0.04] rounded-xl p-5 shadow-sm hover:shadow-md hover:border-black/[0.08] transition-all group">
             <div className={`w-10 h-10 ${s.bg} rounded-[14px] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
               <i className={`bi ${s.icon} ${s.color} text-[16px]`} />
             </div>
-            <div className="text-[22px] font-semibold text-[var(--color-on-surface)] tracking-tight leading-none mb-1">{s.value}</div>
-            <div className="text-[11px] font-medium text-black/40 uppercase tracking-wider">{s.label}</div>
+            <div className="text-xl font-semibold text-[var(--color-on-surface)] mb-1">{s.value}</div>
+            <div className="text-[11px] font-medium text-black/40 uppercase">{s.label}</div>
           </motion.div>
         ))}
       </div>
 
       {/* Recent Activities */}
-      <div className="bg-[var(--color-surface)] border border-black/[0.04] rounded-[24px] p-6 shadow-sm">
-        <h4 className="text-[14px] font-semibold text-[var(--color-on-surface)] tracking-tight mb-5 flex items-center gap-2">
+      <div className="bg-[var(--color-surface)] border border-black/[0.04] rounded-2xl p-6 shadow-sm">
+        <h4 className="text-[14px] font-semibold text-[var(--color-on-surface)] mb-5 flex items-center gap-2">
           <i className="bi bi-activity text-[var(--color-primary)]" /> Hoạt động gần đây
         </h4>
         <div className="space-y-4">
           {activities.map((act, i) => (
             <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}
-              className="flex items-center gap-4 p-3 rounded-[16px] hover:bg-[var(--color-surface-container-low)] transition-colors">
+              className="flex items-center gap-4 p-3 rounded-xl hover:bg-[var(--color-surface-container-low)] transition-colors">
               <div className={`w-9 h-9 ${act.bg} rounded-xl flex items-center justify-center shrink-0`}>
                 <i className={`bi ${act.icon} ${act.color} text-[14px]`} />
               </div>

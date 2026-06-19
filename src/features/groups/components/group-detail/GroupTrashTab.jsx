@@ -24,7 +24,7 @@ export default function GroupTrashTab({ group, trashFiles = [], fetchTrashFiles,
   if (trashFiles.length === 0) {
     return (
       <motion.div key="trash" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-        className="bg-[var(--color-surface)] border border-black/[0.04] rounded-[24px] shadow-sm">
+        className="bg-[var(--color-surface)] border border-black/[0.04] rounded-2xl shadow-sm">
         <EmptyState type="noTrash" title="Thùng rác trống" description="Không có tài liệu nào trong thùng rác." />
       </motion.div>
     );
@@ -32,8 +32,8 @@ export default function GroupTrashTab({ group, trashFiles = [], fetchTrashFiles,
 
   return (
     <motion.div key="trash" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-5">
-      <div className="bg-[var(--color-surface)] border border-black/[0.04] rounded-[20px] p-4 shadow-sm">
-        <h4 className="font-semibold text-[16px] text-[var(--color-on-surface)] tracking-tight flex items-center gap-2">
+      <div className="bg-[var(--color-surface)] border border-black/[0.04] rounded-xl p-4 shadow-sm">
+        <h4 className="font-semibold text-[16px] text-[var(--color-on-surface)] flex items-center gap-2">
           <i className="bi bi-trash3 text-black/40" /> Thùng rác
           <span className="text-[12px] font-normal text-black/40">({trashFiles.length} tài liệu)</span>
         </h4>

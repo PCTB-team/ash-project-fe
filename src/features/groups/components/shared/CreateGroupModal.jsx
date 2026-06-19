@@ -56,14 +56,14 @@ export default function CreateGroupModal({ open, onCancel, onCreate }) {
       {/* Header */}
       <div className="bg-gradient-to-br from-[#ff8a00] to-[#ff5c00] px-6 py-5 flex items-center gap-4 relative overflow-hidden rounded-t-2xl">
         <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="w-12 h-12 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center text-white backdrop-blur-md shadow-xl z-10">
+        <div className="w-12 h-12 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center text-white backdrop-blur-md shadow-sm z-10">
           <i className={`bi ${step === 3 ? 'bi-check2-circle' : 'bi-diagram-3-fill'} text-[24px]`} />
         </div>
         <div className="text-left text-white z-10">
-          <h3 className="text-[18px] font-semibold tracking-tight leading-tight">
+          <h3 className="text-[18px] font-semibold">
             {step === 1 ? 'Tạo Nhóm Thảo Luận' : step === 2 ? 'Xác Nhận Thông Tin' : 'Tạo Thành Công!'}
           </h3>
-          <p className="text-[10px] font-medium text-white/80 uppercase tracking-widest mt-0.5">
+          <p className="text-[10px] font-medium text-white/80 uppercase mt-0.5">
             Bước {step} / 3
           </p>
         </div>
@@ -82,17 +82,17 @@ export default function CreateGroupModal({ open, onCancel, onCreate }) {
           {step === 1 && (
             <motion.div key="step1" variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.25 }}>
               <Form form={form} layout="vertical" onFinish={handleStep1} requiredMark={false} className="space-y-4 pt-3">
-                <Form.Item label={<span className="text-[11px] font-semibold text-black/60 uppercase tracking-widest">Tên nhóm</span>}
+                <Form.Item label={<span className="text-[11px] font-semibold text-black/60 uppercase">Tên nhóm</span>}
                   name="name" rules={[{ required: true, message: 'Vui lòng điền tên nhóm!' }]} className="mb-0">
                   <Input placeholder="VD: Nhóm học Machine Learning K22"
                     className="h-11 rounded-xl bg-white border border-black/10 hover:border-[#ff5c00]/40 focus:border-[#ff5c00] focus:shadow-[0_0_0_2px_rgba(255,92,0,0.1)] text-[13px] font-semibold" />
                 </Form.Item>
-                <Form.Item label={<span className="text-[11px] font-semibold text-black/60 uppercase tracking-widest">Mật khẩu nhóm</span>}
+                <Form.Item label={<span className="text-[11px] font-semibold text-black/60 uppercase">Mật khẩu nhóm</span>}
                   name="password" rules={[{ required: true, message: 'Vui lòng đặt mật khẩu!' }, { min: 5, message: 'Mật khẩu >= 5 ký tự!' }]} className="mb-0">
                   <Input.Password placeholder="Tối thiểu 5 ký tự"
                     className="h-11 rounded-xl bg-white border border-black/10 hover:border-[#ff5c00]/40 focus:border-[#ff5c00] text-[13px] font-semibold" />
                 </Form.Item>
-                <Form.Item label={<span className="text-[11px] font-semibold text-black/60 uppercase tracking-widest">Mô tả</span>}
+                <Form.Item label={<span className="text-[11px] font-semibold text-black/60 uppercase">Mô tả</span>}
                   name="description" rules={[{ required: true, message: 'Vui lòng nhập mô tả!' }]} className="mb-0">
                   <Input.TextArea rows={3} placeholder="Mục đích của nhóm..."
                     className="rounded-xl bg-white border border-black/10 hover:border-[#ff5c00]/40 focus:border-[#ff5c00] text-[13px] font-semibold resize-none pt-3" />
@@ -117,7 +117,7 @@ export default function CreateGroupModal({ open, onCancel, onCreate }) {
                   { label: 'Giới hạn', value: '10 thành viên (Mặc định)' },
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-4 p-3.5 rounded-[14px] bg-white border border-black/[0.04]">
-                    <span className="text-[10px] font-semibold text-black/40 uppercase tracking-widest w-20 pt-0.5 shrink-0">{item.label}</span>
+                    <span className="text-[10px] font-semibold text-black/40 uppercase w-20 pt-0.5 shrink-0">{item.label}</span>
                     <span className="text-[13px] font-medium text-[var(--color-on-surface)]">{item.value}</span>
                   </div>
                 ))}
@@ -145,7 +145,7 @@ export default function CreateGroupModal({ open, onCancel, onCreate }) {
                   <p className="text-[12px] text-black/50 font-medium">Gửi Link mời cho bạn bè để tham gia nhóm.</p>
                 </div>
                 <div className="bg-black/[0.02] border border-black/5 rounded-2xl p-4 text-left">
-                  <div className="text-[10px] font-semibold text-black/40 uppercase tracking-widest mb-2">Link tham gia</div>
+                  <div className="text-[10px] font-semibold text-black/40 uppercase mb-2">Link tham gia</div>
                   <div className="bg-white p-3 rounded-xl border border-black/5 text-[12px] font-mono font-medium text-[#007aff] break-all select-all">
                     {createdGroup?.inviteLink || createdGroup?.inviteToken || 'Đang tạo link...'}
                   </div>
@@ -155,7 +155,7 @@ export default function CreateGroupModal({ open, onCancel, onCreate }) {
                     <i className="bi bi-copy mr-1.5" /> Copy Link
                   </Button>
                   <Button type="primary" onClick={handleClose}
-                    className="!rounded-full !font-medium !text-[12px] !h-10 !px-6 !bg-[#34c759] hover:!bg-[#2eb350] !border-none !shadow-lg !shadow-[#34c759]/20">
+                    className="!rounded-full !font-medium !text-[12px] !h-10 !px-6 !bg-[#34c759] hover:!bg-[#2eb350] !border-none !shadow-lg !">
                     Hoàn tất
                   </Button>
                 </div>

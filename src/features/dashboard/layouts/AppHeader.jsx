@@ -59,7 +59,7 @@ export default function AppHeader({
   const notificationContent = (
     <div className="w-[340px] p-1 font-sans flex flex-col transition-all duration-300">
       <div className="flex items-center justify-between px-3 py-2 border-b border-black/5 mb-2 shrink-0">
-        <h3 className="font-bold text-[14px] text-black tracking-tight">Thông báo</h3>
+        <h3 className="font-bold text-[14px] text-black">Thông báo</h3>
         <button 
           onClick={markAllAsRead}
           className="text-[11px] font-semibold text-[#ff5c00] hover:text-[#ff8a00] transition-colors cursor-pointer"
@@ -82,10 +82,10 @@ export default function AppHeader({
                 <i className={`bi ${noti.icon} text-[14px]`} />
               </div>
               <div className="flex-1">
-                <p className={`text-[12.5px] leading-snug ${noti.isRead ? 'text-black/60 font-medium' : 'text-black font-bold'}`}>
+                <p className={`text-[12.5px] ${noti.isRead ? 'text-black/60 font-medium' : 'text-black font-bold'}`}>
                   {noti.title}
                 </p>
-                <p className="text-[10px] font-bold text-black/30 uppercase tracking-widest mt-1">
+                <p className="text-[10px] font-bold text-black/30 uppercase mt-1">
                   {formatRelativeTime(noti.time)}
                 </p>
               </div>
@@ -183,7 +183,7 @@ export default function AppHeader({
                   initial={{ opacity: 0, scale: 0.85 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.85 }}
-                  className="px-2 py-0.5 rounded-md bg-black/[0.04] border border-black/[0.03] text-[9.5px] font-black text-black/30 tracking-tight flex items-center gap-0.5 select-none"
+                  className="px-2 py-0.5 rounded-md bg-black/[0.04] border border-black/[0.03] text-[9.5px] font-bold text-black/30 flex items-center gap-0.5 select-none"
                 >
                   <span>⌘</span>
                   <span>K</span>
