@@ -52,11 +52,12 @@ export const FILE_TYPE_LABELS = {
  * Used by classifyFileType() in helpers.js
  */
 export const TYPE_CLASSIFICATION = {
-  document: ['txt', 'pdf', 'docx', 'ppt', 'md'],
+  document: ['txt', 'pdf', 'docx', 'ppt'],
   audio: ['mp3'],
   video: ['mp4'],
   image: ['png', 'jpg', 'jpeg', 'webp', 'svg', 'gif'],
   folder: ['folder'],
+  other: ['zip', 'rar', 'md'],
 };
 
 /** Tabs for the Document Manager classification bar */

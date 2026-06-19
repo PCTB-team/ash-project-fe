@@ -52,11 +52,6 @@ export default function DocumentManager({
   const currentFolderId = currentFolder?.id || null;
 
   useEffect(() => {
-    fetchFolders(currentFolderId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentFolderId, refreshTrigger, fetchFolders]);
-
-  useEffect(() => {
     fetchDocuments(activeTab, currentPage, PAGE_SIZE, debouncedSearchTerm, currentFolderId, sortExt, onUpdateDocumentsCount);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, activeTab, sortExt, debouncedSearchTerm, currentFolderId, refreshTrigger, fetchDocuments]);
@@ -65,26 +60,9 @@ export default function DocumentManager({
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setCurrentPage(1); }, [activeTab, sortExt, debouncedSearchTerm, currentFolderId]);
 
-  // ── Folders for current view ──
-  const currentViewFolders = useMemo(() => {
-    // Only show folders if no search term, or if search term matches folder name
-    let base = folders.filter((f) => currentFolderId ? f.parentId === currentFolderId : !f.parentId);
-    if (searchTerm.trim()) {
-      const q = searchTerm.trim().toLowerCase();
-      base = base.filter((f) => f.name.toLowerCase().includes(q));
-    }
-    return base;
-  }, [folders, currentFolderId, searchTerm]);
-
   // ── All items for current view (folders + docs) ──
   const processedDocs = useMemo(() => {
-    let combined;
-
-    if (activeTab === 'folder') {
-      combined = [...currentViewFolders];
-    } else {
-      combined = [...paginatedDocs];
-    }
+    let combined = [...paginatedDocs];
 
     // Local Search Filter
     if (searchTerm.trim()) {
@@ -97,12 +75,11 @@ export default function DocumentManager({
       const foldersList = combined.filter(item => item.type === 'folder');
       const prioritizedDocs = combined.filter(item => item.type === sortExt);
       const otherDocs = combined.filter(item => item.type !== 'folder' && item.type !== sortExt);
-      // Ưu tiên đưa các file được sort lên trên cùng, thậm chí trên cả folder
       combined = [...prioritizedDocs, ...foldersList, ...otherDocs];
     }
 
     return combined;
-  }, [currentViewFolders, paginatedDocs, activeTab, searchTerm, sortExt]);
+  }, [paginatedDocs, searchTerm, sortExt]);
 
   const sortLabel = SORT_EXT_OPTIONS.find((o) => o.value === sortExt)?.label || 'Mặc định';
 
@@ -123,7 +100,7 @@ export default function DocumentManager({
     if (result.success) {
       setNewFolderName('');
       setShowNewFolderInput(false);
-      fetchFolders(currentFolderId);
+      onRefreshDocuments?.();
     } else {
       message.error(result.message);
     }

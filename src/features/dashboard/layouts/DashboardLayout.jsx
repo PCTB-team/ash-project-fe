@@ -4,6 +4,7 @@ import { message } from 'antd';
 import { LOGOUT_API_URL } from '../../auth/hooks/useAuth';
 import { axiosClient } from '../../../utils/apiClient.js';
 import MainLayout from './MainLayout.jsx';
+import { profileApi } from '../../profile/api/profile.api.js';
 import { useProfile } from '../../profile/hooks/useProfile.js';
 import { useTrash } from '../../trash/hooks/useTrash.js';
 
@@ -16,6 +17,7 @@ export default function DashboardLayout() {
   const [accentColor, setAccentColor] = useState('#ff5c00');
   const [documentsCount, setDocumentsCount] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [usedStorageBytes, setUsedStorageBytes] = useState(0);
   
   const { profileData, fullName, avatarUrl, fetchProfile, setAvatarUrl } = useProfile();
   const { trashDocuments, fetchTrashDocuments } = useTrash();
@@ -28,9 +30,21 @@ export default function DashboardLayout() {
   else if (path.includes('/dashboard/group')) currentView = 'community';
   else if (path.includes('/dashboard/ai')) currentView = 'ai';
 
+  const fetchStorageUsage = async () => {
+    try {
+      const data = await profileApi.getStorageUsage();
+      if (data && data.result) {
+        setUsedStorageBytes(data.result.usedStorage || 0);
+      }
+    } catch (e) {
+      console.error('Failed to fetch storage usage', e);
+    }
+  };
+
   const refreshAll = () => {
     setRefreshKey(prev => prev + 1);
     fetchProfile();
+    fetchStorageUsage();
     if (currentView === 'trash') {
       fetchTrashDocuments();
     }
@@ -47,8 +61,9 @@ export default function DashboardLayout() {
     }
   }, [currentView, trashDocuments.length, fetchTrashDocuments]);
 
-  const totalStorageMB = 0;
-  const storagePercentage = 0;
+  const MAX_STORAGE_MB = 500;
+  const totalStorageMB = Number((usedStorageBytes / (1024 * 1024)).toFixed(1));
+  const storagePercentage = Math.min(100, Math.round((totalStorageMB / MAX_STORAGE_MB) * 100));
 
   const handleLogoutClick = async () => {
     try {

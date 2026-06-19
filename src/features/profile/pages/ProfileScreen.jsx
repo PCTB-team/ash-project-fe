@@ -291,7 +291,7 @@ export default function ProfileScreen() {
                     <h3 className="text-[14px] font-semibold text-gray-900">Bộ nhớ đám mây</h3>
                     <i className="bi bi-cloud text-gray-400 text-[16px]" />
                   </div>
-                  <p className="text-[12px] text-gray-500 mb-6">Đã sử dụng {totalStorageMB < 1 ? `${(totalStorageMB * 1024).toFixed(1)} KB` : `${totalStorageMB.toFixed(1)} MB`} trong tổng số 1.0 GB</p>
+                  <p className="text-[12px] text-gray-500 mb-6">Đã sử dụng {totalStorageMB < 1 ? `${(totalStorageMB * 1024).toFixed(1)} KB` : `${totalStorageMB.toFixed(1)} MB`} trong tổng số 500 MB</p>
                 </div>
 
                 <div>

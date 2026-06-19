@@ -10,13 +10,16 @@ export default function UploadDocumentModal({ open, onCancel, onUpload }) {
     beforeUpload: (f) => { setFile(f); return false; },
     onRemove: () => setFile(null),
     maxCount: 1,
-    accept: '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.txt,.csv',
+    accept: '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.txt,.csv,.md',
   };
 
   const handleUpload = async () => {
     if (!file) return;
+
+    const fileToSend = file.originFileObj || file;
+
     setUploading(true);
-    try { await onUpload(file); setFile(null); }
+    try { await onUpload(fileToSend); setFile(null); }
     finally { setUploading(false); }
   };
 
