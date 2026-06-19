@@ -1,5 +1,6 @@
 import { axiosClient } from '../../../utils/apiClient.js';
 
+const DOCUMENTS_API = 'https://ash-project-be.onrender.com/api/v1/documents';
 const DOCUMENTS_ITEMS_API = 'https://ash-project-be.onrender.com/api/v1/documents/items';
 const DOCUMENTS_PAGE_API = 'https://ash-project-be.onrender.com/api/v1/documents/page';
 const DOCUMENTS_FILTER_API = 'https://ash-project-be.onrender.com/api/v1/documents/filter';
@@ -78,5 +79,10 @@ export const documentsApi = {
       responseType: 'blob'
     });
     return response;
+  },
+
+  getPreviewUrl: async (docId) => {
+    const response = await axiosClient.get(`${DOCUMENTS_API}/${docId}/preview`);
+    return response.data;
   }
 };

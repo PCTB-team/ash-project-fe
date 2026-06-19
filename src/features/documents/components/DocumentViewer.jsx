@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import FileIcon from './FileIcon.jsx';
 import { getFileTagColor, getFileTypeLabel } from "../../dashboard/utils/helpers.js";
 import { axiosClient } from '../../../utils/apiClient.js';
+import { documentsApi } from '../api/documents.api.js';
 
 /**
  * Premium Document Viewer Modal.
@@ -74,39 +75,60 @@ export default function DocumentViewer({
   };
 
   const handleView = async () => {
-    if (doc.viewUrl) {
-      window.open(doc.viewUrl.startsWith('http') ? doc.viewUrl : `https://ash-project-be.onrender.com${doc.viewUrl.startsWith('/') ? '' : '/'}${doc.viewUrl}`, '_blank');
-      return;
+    const type = doc.type?.toLowerCase() || doc.fileExtension?.toLowerCase() || '';
+    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'image'].includes(type);
+    const isPdf = type === 'pdf';
+    const isVideo = ['mp4', 'webm', 'ogg', 'video'].includes(type);
+    const isAudio = ['mp3', 'wav', 'ogg', 'audio'].includes(type);
+    const isOffice = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(type);
+
+    const getFullUrl = (path) => path?.startsWith('http') ? path : `https://ash-project-be.onrender.com${path?.startsWith('/') ? '' : '/'}${path}`;
+
+    // 1. Trình duyệt có thể tự mở ảnh, pdf, video, audio.
+    if ((isImage || isPdf || isVideo || isAudio) && doc.storageUrl) {
+       window.open(getFullUrl(doc.storageUrl), '_blank');
+       return;
     }
 
+    // 2. Với file Office, gọi API preview từ Backend
     try {
-      const response = await axiosClient.get(`https://ash-project-be.onrender.com/api/v1/documents/${doc.id}/view`, {
-        responseType: 'blob'
-      });
-      if (response.status === 200) {
-         const contentType = response.headers['content-type'] || '';
-         if (contentType.includes('application/json')) {
-            const text = await response.data.text();
-            const data = JSON.parse(text);
-            const url = data.result || data.viewUrl || data;
-            if (typeof url === 'string') {
-               window.open(url.startsWith('http') ? url : `https://ash-project-be.onrender.com${url.startsWith('/') ? '' : '/'}${url}`, '_blank');
-            }
-         } else if (contentType.includes('text/plain')) {
-            const textUrl = await response.data.text();
-            window.open(textUrl.startsWith('http') ? textUrl : `https://ash-project-be.onrender.com${textUrl.startsWith('/') ? '' : '/'}${textUrl}`, '_blank');
-         } else {
-             // If binary file is returned directly for viewing
-             const blob = response.data;
-             const url = window.URL.createObjectURL(blob);
-             window.open(url, '_blank');
-         }
+      const data = await documentsApi.getPreviewUrl(doc.id);
+      if (data.code === 0 || data.code === 1000) {
+        let url = data.result?.previewUrl;
+        if (!url && data.result) {
+            url = typeof data.result === 'string' ? data.result : data.result.url;
+        }
+        
+        if (url) {
+           // Nếu Backend trả về link của Microsoft Office Live và hay bị lỗi,
+           // ta sẽ ưu tiên thử dùng Google Docs Viewer vì nó tương thích tốt hơn với nhiều link.
+           if (isOffice && url.includes('officeapps.live.com') && doc.storageUrl) {
+               const fileUrl = getFullUrl(doc.storageUrl);
+               window.open(`https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}`, '_blank');
+           } else {
+               window.open(getFullUrl(url), '_blank');
+           }
+        } else if (doc.storageUrl) {
+           // Nếu Backend không có URL, dùng fallback Google Docs Viewer cho file office
+           if (isOffice) {
+               window.open(`https://docs.google.com/viewer?url=${encodeURIComponent(getFullUrl(doc.storageUrl))}`, '_blank');
+           } else {
+               window.open(getFullUrl(doc.storageUrl), '_blank');
+           }
+        } else {
+           message.warning("Tài liệu này không hỗ trợ xem trước!");
+        }
       } else {
-         message.error("Lỗi khi mở tài liệu!");
+        if (doc.storageUrl) window.open(getFullUrl(doc.storageUrl), '_blank');
+        else message.error(data.message || "Lỗi khi lấy link xem tài liệu!");
       }
     } catch (e) {
       console.error(e);
-      message.error("Lỗi kết nối khi mở tài liệu!");
+      if (doc.storageUrl) {
+         window.open(getFullUrl(doc.storageUrl), '_blank');
+      } else {
+         message.error("Lỗi kết nối khi mở tài liệu!");
+      }
     }
   };
 

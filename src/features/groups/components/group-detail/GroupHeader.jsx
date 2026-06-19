@@ -1,15 +1,28 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Tooltip, message } from 'antd';
+import { Tooltip, message, Modal } from 'antd';
 import { useNavigate } from 'react-router-dom';
 
-export default function GroupHeader({ group, isOwner, maxMembers }) {
+export default function GroupHeader({ group, isOwner, maxMembers, onLeaveGroup }) {
   const navigate = useNavigate();
 
   const copyInviteLink = () => {
     const link = group.inviteLink || group.inviteToken || `${window.location.origin}/join?token=${group.id}`;
     navigator.clipboard.writeText(link);
     message.success('Đã copy Link tham gia!');
+  };
+
+  const handleLeaveConfirm = () => {
+    Modal.confirm({
+      title: 'Rời khỏi nhóm',
+      content: 'Bạn có chắc chắn muốn rời khỏi nhóm này không? Bạn sẽ không thể xem tài liệu của nhóm nữa trừ khi được mời lại.',
+      okText: 'Rời nhóm',
+      cancelText: 'Hủy',
+      okButtonProps: { danger: true, className: '!rounded-xl' },
+      cancelButtonProps: { className: '!rounded-xl' },
+      centered: true,
+      onOk: () => onLeaveGroup && onLeaveGroup(),
+    });
   };
 
   return (
@@ -56,6 +69,14 @@ export default function GroupHeader({ group, isOwner, maxMembers }) {
                 </button>
               </Tooltip>
 
+              {/* Nut Roi Nhom cho Member */}
+              {!isOwner && onLeaveGroup && (
+                <button onClick={handleLeaveConfirm}
+                  className="flex items-center gap-2 bg-red-50 hover:bg-red-100 border border-red-100 rounded-xl px-3 py-2 transition-all cursor-pointer shadow-sm text-red-500 hover:text-red-600">
+                  <i className="bi bi-box-arrow-right text-[14px]" />
+                  <span className="text-[12px] font-medium truncate max-w-[100px]">Rời nhóm</span>
+                </button>
+              )}
             </div>
           </div>
 
