@@ -82,8 +82,6 @@ export default function DocumentManager({
 
     if (activeTab === 'folder') {
       combined = [...currentViewFolders];
-    } else if (activeTab === 'all') {
-      combined = [...currentViewFolders, ...paginatedDocs];
     } else {
       combined = [...paginatedDocs];
     }

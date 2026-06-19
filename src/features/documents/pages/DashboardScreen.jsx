@@ -283,7 +283,7 @@ export default function DashboardScreen() {
 
             {/* Form Column */}
             <div className="md:col-span-7 flex flex-col justify-between">
-              <Form form={form} layout="vertical" onFinish={handleUploadSubmit} initialValues={{ type: 'pdf', size: '1.5 MB' }} className="h-full flex flex-col">
+              <Form form={form} layout="vertical" onFinish={handleUploadSubmit} initialValues={{ name: '', content: '', type: 'pdf', size: '0 MB' }} className="h-full flex flex-col">
                 <div className="bg-white p-5 rounded-2xl border border-black/5 shadow-sm space-y-1 flex-1">
                   <Form.Item
                     label={<span className="text-[10.5px] font-medium text-black/55 uppercase flex items-center gap-1.5"><i className="bi bi-file-earmark-text text-[#ff5c00]" /> Tên tài liệu</span>}

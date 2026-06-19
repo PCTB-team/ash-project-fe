@@ -9,9 +9,7 @@ export const profileApi = {
   },
   
   updateProfile: async (formData) => {
-    const response = await axiosClient.put(USER_PROFILE_API_URL, formData, {
-      headers: { 'Accept': 'application/json' }
-    });
+    const response = await axiosClient.put(USER_PROFILE_API_URL, formData);
     return response.data;
   }
 };

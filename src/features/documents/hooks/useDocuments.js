@@ -72,20 +72,23 @@ export const useDocuments = () => {
         const totalElems = data.result.totalElements || data.result.total || content.length || 0;
         const tPages = data.result.totalPages || 1;
 
-        const mappedDocs = content.map(d => ({
-          id: d.documentId,
-          name: d.fileName || d.title || 'Untitled',
-          type: d.fileExtension?.replace('.', '') || 'unknown',
-          fileSizeBytes: d.fileSize || 0,
-          size: formatBytes(d.fileSize || 0),
-          uploadedAt: d.createdAt || new Date().toISOString(),
-          timeSinceUpload: d.timeSinceUpload,
-          status: d.status,
-          storageUrl: d.storageUrl,
-          viewUrl: d.viewUrl,
-          downloadUrl: d.downloadUrl,
-          parentId: d.folderId
-        }));
+        const mappedDocs = content.map(d => {
+          const isFolder = d.type === 'FOLDER' || d.type === 'folder';
+          return {
+            id: d.documentId || d.id || d.folderId,
+            name: d.fileName || d.title || d.name || 'Untitled',
+            type: isFolder ? 'folder' : (d.fileExtension?.replace('.', '') || d.type?.toLowerCase() || 'unknown'),
+            fileSizeBytes: d.fileSize || d.size || 0,
+            size: formatBytes(d.fileSize || d.size || 0),
+            uploadedAt: d.createdAt || new Date().toISOString(),
+            timeSinceUpload: d.timeSinceUpload || d.timeSinceCreated,
+            status: d.status,
+            storageUrl: d.storageUrl,
+            viewUrl: d.viewUrl,
+            downloadUrl: d.downloadUrl,
+            parentId: d.folderId || d.parentFolderId
+          };
+        });
         setPaginatedDocs(mappedDocs);
         setTotalPages(tPages);
         setTotalElements(totalElems);
