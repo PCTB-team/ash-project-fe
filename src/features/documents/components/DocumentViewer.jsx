@@ -1,8 +1,8 @@
 import { Modal, Button, Tag, message } from 'antd';
 import { motion } from 'framer-motion';
 import FileIcon from './FileIcon.jsx';
-import { getFileTagColor, getFileTypeLabel } from '../utils/helpers.js';
-import { fetchWithAuth } from '../../../utils/apiClient.js';
+import { getFileTagColor, getFileTypeLabel } from "../../dashboard/utils/helpers.js";
+import { axiosClient } from '../../../utils/apiClient.js';
 
 /**
  * Premium Document Viewer Modal.
@@ -19,12 +19,16 @@ export default function DocumentViewer({
 
   const handleDownload = async () => {
     try {
-      const response = await fetchWithAuth(`https://ash-project-be.onrender.com/api/v1/documents/${doc.id}/download`);
-      if (response.ok) {
-        const contentType = response.headers.get('content-type') || '';
+      const response = await axiosClient.get(`https://ash-project-be.onrender.com/api/v1/documents/${doc.id}/download`, {
+        responseType: 'blob'
+      });
+      if (response.status === 200) {
+        const contentType = response.headers['content-type'] || '';
         
         if (contentType.includes('application/json')) {
-          const data = await response.json();
+          // Because we requested blob, we need to read the blob as text and parse JSON
+          const text = await response.data.text();
+          const data = JSON.parse(text);
           const url = data.result || data.storageUrl || data;
           if (typeof url === 'string' && url.startsWith('http')) {
             window.open(url, '_blank');
@@ -32,7 +36,7 @@ export default function DocumentViewer({
             window.open(`https://ash-project-be.onrender.com${url.startsWith('/') ? '' : '/'}${url}`, '_blank');
           }
         } else if (contentType.includes('text/plain')) {
-          const textUrl = await response.text();
+          const textUrl = await response.data.text();
           if (textUrl.startsWith('http')) {
             window.open(textUrl, '_blank');
           } else {
@@ -40,7 +44,7 @@ export default function DocumentViewer({
           }
         } else {
           // Binary blob (PDF, image, docx, etc)
-          const blob = await response.blob();
+          const blob = response.data;
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
@@ -76,22 +80,24 @@ export default function DocumentViewer({
     }
 
     try {
-      const response = await fetchWithAuth(`https://ash-project-be.onrender.com/api/v1/documents/${doc.id}/view`);
-      if (response.ok) {
-         // The view API might return a URL in JSON, or text URL, or redirect.
-         const contentType = response.headers.get('content-type') || '';
+      const response = await axiosClient.get(`https://ash-project-be.onrender.com/api/v1/documents/${doc.id}/view`, {
+        responseType: 'blob'
+      });
+      if (response.status === 200) {
+         const contentType = response.headers['content-type'] || '';
          if (contentType.includes('application/json')) {
-            const data = await response.json();
+            const text = await response.data.text();
+            const data = JSON.parse(text);
             const url = data.result || data.viewUrl || data;
             if (typeof url === 'string') {
                window.open(url.startsWith('http') ? url : `https://ash-project-be.onrender.com${url.startsWith('/') ? '' : '/'}${url}`, '_blank');
             }
          } else if (contentType.includes('text/plain')) {
-            const textUrl = await response.text();
+            const textUrl = await response.data.text();
             window.open(textUrl.startsWith('http') ? textUrl : `https://ash-project-be.onrender.com${textUrl.startsWith('/') ? '' : '/'}${textUrl}`, '_blank');
          } else {
              // If binary file is returned directly for viewing
-             const blob = await response.blob();
+             const blob = response.data;
              const url = window.URL.createObjectURL(blob);
              window.open(url, '_blank');
          }
@@ -125,13 +131,13 @@ export default function DocumentViewer({
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-          className="w-12 h-12 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center backdrop-blur-md shadow-xl relative z-10"
+          className="w-12 h-12 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center backdrop-blur-md shadow-sm relative z-10"
         >
           <FileIcon type={doc.type} />
         </motion.div>
 
         <div className="text-left text-white z-10 flex-1 min-w-0">
-          <h3 className="text-[16px] font-extrabold tracking-tight truncate drop-shadow-md leading-tight">
+          <h3 className="text-[16px] font-semibold truncate drop-shadow-sm">
             {doc.name}
           </h3>
           <div className="flex items-center gap-2.5 mt-1.5 flex-wrap">
@@ -149,7 +155,7 @@ export default function DocumentViewer({
       <div className="p-6 bg-[#fcfcfd] max-h-[55vh] overflow-y-auto">
         <div className="flex items-center gap-2 mb-4">
           <i className="bi bi-file-earmark-text text-[14px] text-black/30" />
-          <span className="text-[10px] font-black text-black/35 uppercase tracking-widest">Nội dung tài liệu</span>
+          <span className="text-[10px] font-bold text-black/35 uppercase">Nội dung tài liệu</span>
         </div>
 
         {doc.content ? (
@@ -171,7 +177,7 @@ export default function DocumentViewer({
               <Button
                 type="primary"
                 onClick={handleView}
-                className="rounded-xl font-bold text-[12px] h-10 px-6 bg-blue-500 hover:bg-blue-600 border-none shadow-md shadow-blue-500/20"
+                className="rounded-xl font-bold text-[12px] h-10 px-6 bg-blue-500 hover:bg-blue-600 border-none shadow-md"
               >
                 <i className="bi bi-eye mr-1.5" /> Xem trực tuyến
               </Button>
@@ -209,7 +215,7 @@ export default function DocumentViewer({
           <Button
             type="primary"
             onClick={() => { onAskAI?.(doc); onClose(); }}
-            className="rounded-xl font-extrabold text-[12px] h-9 px-5 shadow-md shadow-[#ff5c00]/20"
+            className="rounded-xl font-semibold text-[12px] h-9 px-5 shadow-md"
           >
             <i className="bi bi-chat-dots mr-1.5" /> Hỏi AI về tài liệu
           </Button>

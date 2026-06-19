@@ -27,7 +27,7 @@ export default function EmptyState({ type = 'default', title, description, actio
         </div>
       </div>
 
-      <h4 className="text-[17px] font-semibold text-[var(--color-on-surface)] tracking-tight mb-2">
+      <h4 className="text-[17px] font-semibold text-[var(--color-on-surface)] mb-2">
         {title || 'Chưa có dữ liệu'}
       </h4>
       <p className="text-[13px] font-medium text-black/45 max-w-sm leading-relaxed mb-6">
@@ -39,7 +39,7 @@ export default function EmptyState({ type = 'default', title, description, actio
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           onClick={onAction}
-          className="bg-gradient-to-b from-[var(--color-primary)] to-[#e05000] text-white font-medium text-[13px] px-6 py-3 rounded-2xl shadow-lg shadow-[var(--color-primary)]/20 border-none cursor-pointer transition-all hover:shadow-xl hover:shadow-[var(--color-primary)]/30"
+          className="bg-gradient-to-b from-[var(--color-primary)] to-[#e05000] text-white font-medium text-[13px] px-6 py-3 rounded-2xl shadow-lg border-none cursor-pointer transition-all hover:shadow-sm hover:"
         >
           {actionText}
         </motion.button>

@@ -1,15 +1,14 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { Tag, Tooltip, message } from 'antd';
 import FileIcon from './FileIcon.jsx';
-import { fetchWithAuth } from '../../../utils/apiClient.js';
-import { getFileTagColor, getFileTypeLabel, formatBytes } from '../utils/helpers.js';
-import { formatRelativeTime } from '../utils/dateUtils.js';
-import { MANAGER_TAB_OPTIONS, SORT_EXT_OPTIONS } from '../utils/fileConfig.js';
-import useDragScroll from '../hooks/useDragScroll.js';
+import useDebounce from '../../../hooks/useDebounce.js';
+import { getFileTagColor, getFileTypeLabel } from '../../dashboard/utils/helpers.js';
+import { formatRelativeTime } from '../../dashboard/utils/dateUtils.js';
+import { MANAGER_TAB_OPTIONS, SORT_EXT_OPTIONS } from '../../dashboard/utils/fileConfig.js';
+import useDragScroll from '../../dashboard/hooks/useDragScroll.js';
+import { useDocuments } from '../hooks/useDocuments.js';
 
 const PAGE_SIZE = 8;
-const DOCUMENTS_PAGE_API = 'https://ash-project-be.onrender.com/api/v1/documents/page';
-const FOLDERS_API = 'https://ash-project-be.onrender.com/api/v1/folders';
 
 /**
  * DocumentManager — Classification Tabs + Extension Sort + Server Paginated Vertical List + Folder Navigation.
@@ -33,11 +32,18 @@ export default function DocumentManager({
   const [currentPage, setCurrentPage] = useState(1);
   const [showNewFolderInput, setShowNewFolderInput] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
-  const [folders, setFolders] = useState([]);
-  const [paginatedDocs, setPaginatedDocs] = useState([]);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalElements, setTotalElements] = useState(0);
-  const [prefetchedTabs, setPrefetchedTabs] = useState({});
+  const {
+    folders,
+    paginatedDocs,
+    totalPages,
+    totalElements,
+    fetchFolders,
+    createFolder,
+    fetchDocuments,
+    downloadDocument,
+  } = useDocuments();
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const tabsRef = useDragScroll();
   const listRef = useRef(null);
@@ -45,177 +51,19 @@ export default function DocumentManager({
   const currentFolder = folderPath.length > 0 ? folderPath[folderPath.length - 1] : null;
   const currentFolderId = currentFolder?.id || null;
 
-  // ── Fetch Folders ──
-  const fetchFolders = async () => {
-    try {
-      const params = new URLSearchParams();
-      if (currentFolderId) {
-        params.append('parentId', currentFolderId);
-        params.append('parentFolderId', currentFolderId);
-      }
-
-      const response = await fetchWithAuth(`${FOLDERS_API}${currentFolderId ? '?' + params.toString() : ''}`);
-      if (response.ok) {
-        const data = await response.json();
-        if ((data.code === 0 || data.code === 1000) && data.result) {
-          const mappedFolders = data.result.map(f => ({
-            id: f.folderId,
-            name: f.name,
-            type: 'folder',
-            parentId: f.parentFolderId,
-            size: formatBytes(f.size || 0),
-            uploadedAt: f.createdAt || new Date().toISOString()
-          }));
-          setFolders(mappedFolders);
-        }
-      }
-    } catch (e) {
-      console.error("Lỗi lấy danh sách thư mục:", e);
-    }
-  };
-
-  const DOCUMENTS_FILTER_API = 'https://ash-project-be.onrender.com/api/v1/documents/filter';
-
-  // ── Prefetch Filters for Tabs ──
-  const prefetchFilters = async () => {
-    try {
-      const types = ['document', 'audio', 'video', 'image', 'other'];
-      const promises = types.map(async (type) => {
-        if (type === 'other') {
-          return { type: 'other', total: 0, docs: [] };
-        }
-
-        const params = new URLSearchParams();
-        if (currentFolderId) params.append('folderId', currentFolderId);
-
-        if (type !== 'document') {
-          let fileType = type.toUpperCase();
-          params.append('fileType', fileType);
-        }
-        const url = type === 'document'
-          ? `${DOCUMENTS_FILTER_API}/documents${params.toString() ? '?' + params.toString() : ''}`
-          : `${DOCUMENTS_FILTER_API}?${params.toString()}`;
-
-        try {
-          const response = await fetchWithAuth(url);
-          if (response.ok) {
-            const data = await response.json();
-            if ((data.code === 0 || data.code === 1000) && data.result) {
-              return { type, total: data.result.total || 0, docs: data.result.documents || [] };
-            }
-          } else {
-            console.warn(`[Prefetch Lỗi] URL: ${url} - Status: ${response.status}`);
-          }
-        } catch (err) {
-          console.error(`[Prefetch Lỗi Network] ${type}:`, err);
-        }
-        return { type, total: 0, docs: [] };
-      });
-
-      const results = await Promise.all(promises);
-      const newPrefetched = {};
-      results.forEach(res => {
-        newPrefetched[res.type] = {
-          total: res.total,
-          docs: res.docs.map(d => ({
-            id: d.documentId,
-            name: d.fileName || d.title || 'Untitled',
-            type: d.fileExtension?.replace('.', '') || 'unknown',
-            fileSizeBytes: d.fileSize || 0,
-            size: formatBytes(d.fileSize || 0),
-            uploadedAt: new Date().toISOString(),
-            timeSinceUpload: d.timeSinceUpload,
-            status: d.status,
-            storageUrl: d.storageUrl,
-            viewUrl: d.viewUrl,
-            downloadUrl: d.downloadUrl,
-            parentId: d.folderId
-          }))
-        };
-      });
-      setPrefetchedTabs(newPrefetched);
-    } catch (e) {
-      console.error("Lỗi gọi API prefetch:", e);
-    }
-  };
-
-  // ── Fetch Documents (Paginated or Filtered) ──
-  const fetchDocuments = async () => {
-    try {
-      if (activeTab === 'folder') {
-        setPaginatedDocs([]);
-        setTotalPages(1);
-        setTotalElements(0);
-        return;
-      }
-
-      if (activeTab !== 'all') {
-        const cached = prefetchedTabs[activeTab] || { docs: [], total: 0 };
-        setPaginatedDocs(cached.docs);
-        setTotalPages(1);
-        setTotalElements(cached.total);
-        if (onUpdateDocumentsCount) onUpdateDocumentsCount(cached.total);
-        return;
-      }
-
-      const params = new URLSearchParams({
-        page: currentPage - 1,
-        size: PAGE_SIZE,
-      });
-      if (searchTerm) params.append('search', searchTerm);
-      if (currentFolderId) params.append('folderId', currentFolderId);
-      if (sortExt) params.append('sortBy', sortExt);
-
-      const response = await fetchWithAuth(`${DOCUMENTS_PAGE_API}?${params.toString()}`);
-
-      if (response.ok) {
-        const data = await response.json();
-        if ((data.code === 0 || data.code === 1000) && data.result) {
-          const content = data.result.content || [];
-          const totalElems = data.result.totalElements || 0;
-          const tPages = data.result.totalPages || 1;
-
-          const mappedDocs = content.map(d => ({
-            id: d.documentId,
-            name: d.fileName || d.title || 'Untitled',
-            type: d.fileExtension?.replace('.', '') || 'unknown',
-            fileSizeBytes: d.fileSize || 0,
-            size: formatBytes(d.fileSize || 0),
-            uploadedAt: new Date().toISOString(),
-            timeSinceUpload: d.timeSinceUpload,
-            status: d.status,
-            storageUrl: d.storageUrl,
-            viewUrl: d.viewUrl,
-            downloadUrl: d.downloadUrl,
-            parentId: d.folderId
-          }));
-          setPaginatedDocs(mappedDocs);
-          setTotalPages(tPages);
-          setTotalElements(totalElems);
-          if (onUpdateDocumentsCount) onUpdateDocumentsCount(totalElems);
-        }
-      }
-    } catch (e) {
-      console.error("Lỗi lấy danh sách tài liệu:", e);
-    }
-  };
+  useEffect(() => {
+    fetchFolders(currentFolderId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentFolderId, refreshTrigger, fetchFolders]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchFolders();
-    prefetchFilters();
+    fetchDocuments(activeTab, currentPage, PAGE_SIZE, debouncedSearchTerm, currentFolderId, sortExt, onUpdateDocumentsCount);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentFolderId, refreshTrigger]);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchDocuments();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, activeTab, sortExt, searchTerm, currentFolderId, refreshTrigger, prefetchedTabs]);
+  }, [currentPage, activeTab, sortExt, debouncedSearchTerm, currentFolderId, refreshTrigger, fetchDocuments]);
 
   // Reset page when filters change
   // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { setCurrentPage(1); }, [activeTab, sortExt, searchTerm, currentFolderId]);
+  useEffect(() => { setCurrentPage(1); }, [activeTab, sortExt, debouncedSearchTerm, currentFolderId]);
 
   // ── Folders for current view ──
   const currentViewFolders = useMemo(() => {
@@ -273,34 +121,13 @@ export default function DocumentManager({
   // ── Handle create folder ──
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) return;
-
-    try {
-      const response = await fetchWithAuth(FOLDERS_API, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: newFolderName,
-          parentFolderId: currentFolderId
-        })
-      });
-
-      if (response.ok) {
-        setNewFolderName('');
-        setShowNewFolderInput(false);
-        fetchFolders();
-      } else {
-        let errorMsg = 'Tạo thư mục thất bại!';
-        try {
-          const errorData = await response.json();
-          if (errorData.message) errorMsg = `${errorData.message}`;
-        } catch { /* ignore parse error */ }
-        message.error(errorMsg);
-      }
-    } catch (e) {
-      console.error(e);
-      message.error('Lỗi kết nối khi tạo thư mục!');
+    const result = await createFolder(newFolderName, currentFolderId);
+    if (result.success) {
+      setNewFolderName('');
+      setShowNewFolderInput(false);
+      fetchFolders(currentFolderId);
+    } else {
+      message.error(result.message);
     }
   };
 
@@ -313,12 +140,12 @@ export default function DocumentManager({
   // ── Tab color palette ──
   const palette = {
     all: { on: 'bg-[#1d1d1f] text-white shadow-sm', off: 'bg-black/[0.02] text-black/55 hover:bg-black/[0.05]' },
-    document: { on: 'bg-blue-500 text-white shadow-md shadow-blue-500/15', off: 'bg-blue-50/50 text-blue-500 hover:bg-blue-50' },
-    audio: { on: 'bg-amber-500 text-white shadow-md shadow-amber-500/15', off: 'bg-amber-50/50 text-amber-600 hover:bg-amber-50' },
-    video: { on: 'bg-pink-500 text-white shadow-md shadow-pink-500/15', off: 'bg-pink-50/50 text-pink-500 hover:bg-pink-50' },
-    image: { on: 'bg-purple-500 text-white shadow-md shadow-purple-500/15', off: 'bg-purple-50/50 text-purple-500 hover:bg-purple-50' },
-    folder: { on: 'bg-orange-500 text-white shadow-md shadow-orange-500/15', off: 'bg-orange-50/50 text-orange-500 hover:bg-orange-50' },
-    other: { on: 'bg-gray-500 text-white shadow-md shadow-gray-500/15', off: 'bg-gray-100/50 text-gray-500 hover:bg-gray-100' },
+    document: { on: 'bg-blue-500 text-white shadow-md ', off: 'bg-blue-50/50 text-blue-500 hover:bg-blue-50' },
+    audio: { on: 'bg-amber-500 text-white shadow-md ', off: 'bg-amber-50/50 text-amber-600 hover:bg-amber-50' },
+    video: { on: 'bg-pink-500 text-white shadow-md ', off: 'bg-pink-50/50 text-pink-500 hover:bg-pink-50' },
+    image: { on: 'bg-purple-500 text-white shadow-md ', off: 'bg-purple-50/50 text-purple-500 hover:bg-purple-50' },
+    folder: { on: 'bg-orange-500 text-white shadow-md ', off: 'bg-orange-50/50 text-orange-500 hover:bg-orange-50' },
+    other: { on: 'bg-gray-500 text-white shadow-md ', off: 'bg-gray-100/50 text-gray-500 hover:bg-gray-100' },
   };
 
   return (
@@ -344,10 +171,7 @@ export default function DocumentManager({
                       onBreadcrumbClick?.(index);
                     }
                   }}
-                  className={`flex items-center gap-1.5 transition-colors ${index === folderPath.length - 1
-                      ? 'text-black/60 cursor-default'
-                      : 'text-black/45 hover:text-black/80 cursor-pointer'
-                    }`}
+                  className={`flex items-center gap-1.5 transition-colors ${index === folderPath.length - 1 ? 'text-black/60 cursor-default' : 'text-black/45 hover:text-black/80 cursor-pointer' }`}
                 >
                   <i className={`bi bi-folder-fill ${index === folderPath.length - 1 ? 'text-[#ff9500]' : 'text-black/25'} text-[12px]`} />
                   <span className="max-w-[120px] sm:max-w-[180px] truncate">{folder.name}</span>
@@ -393,10 +217,7 @@ export default function DocumentManager({
             <div className="relative flex-1 md:flex-none">
               <button
                 onClick={() => setSortDropdownOpen((v) => !v)}
-                className={`w-full flex items-center justify-center gap-1.5 px-3 py-[7px] rounded-xl text-[11px] sm:text-[11.5px] font-medium border transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.97] ${sortExt
-                    ? 'bg-[#ff5c00]/10 text-[#ff5c00] border-[#ff5c00]/20'
-                    : 'bg-black/[0.015] text-black/45 border-black/[0.05] hover:border-black/10'
-                  }`}
+                className={`w-full flex items-center justify-center gap-1.5 px-3 py-[7px] rounded-xl text-[11px] sm:text-[11.5px] font-medium border transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.97] ${sortExt ? 'bg-[#ff5c00]/10 text-[#ff5c00] border-[#ff5c00]/20' : 'bg-black/[0.015] text-black/45 border-black/[0.05] hover:border-black/10' }`}
               >
                 <i className="bi bi-sort-down text-[12px]" />
                 <span className="max-w-[90px] truncate">{sortLabel}</span>
@@ -406,15 +227,12 @@ export default function DocumentManager({
               {sortDropdownOpen && (
                 <>
                   <div className="fixed inset-0 z-[60]" onClick={() => setSortDropdownOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1.5 z-[70] bg-white rounded-xl border border-black/[0.06] shadow-xl shadow-black/8 py-1 min-w-[170px] max-h-[280px] overflow-y-auto animate-scale-up">
+                  <div className="absolute right-0 top-full mt-1.5 z-[70] bg-white rounded-xl border border-black/[0.06] shadow-sm shadow-black/8 py-1 min-w-[170px] max-h-[280px] overflow-y-auto animate-scale-up">
                     {SORT_EXT_OPTIONS.map((opt) => (
                       <button
                         key={opt.value}
                         onClick={() => { setSortExt(opt.value); setSortDropdownOpen(false); }}
-                        className={`w-full text-left px-3.5 py-[7px] text-[11.5px] font-semibold transition-colors cursor-pointer flex items-center justify-between ${sortExt === opt.value
-                            ? 'text-[#ff5c00] bg-[#ff5c00]/5 font-medium'
-                            : 'text-black/55 hover:bg-black/[0.03] hover:text-black'
-                          }`}
+                        className={`w-full text-left px-3.5 py-[7px] text-[11.5px] font-semibold transition-colors cursor-pointer flex items-center justify-between ${sortExt === opt.value ? 'text-[#ff5c00] bg-[#ff5c00]/5 font-medium' : 'text-black/55 hover:bg-black/[0.03] hover:text-black' }`}
                       >
                         {opt.label}
                         {sortExt === opt.value && <i className="bi bi-check2 text-[12px]" />}
@@ -487,7 +305,7 @@ export default function DocumentManager({
         ) : (
           <>
             {/* Column Headers (hidden on mobile) */}
-            <div className="hidden sm:flex items-center gap-3 px-4 sm:px-5 py-2 border-b border-black/[0.03] text-[10px] font-medium text-black/30 uppercase tracking-wider select-none">
+            <div className="hidden sm:flex items-center gap-3 px-4 sm:px-5 py-2 border-b border-black/[0.03] text-[10px] font-medium text-black/30 uppercase select-none">
               <div className="w-10 flex-shrink-0" /> {/* Khớp với kích thước icon */}
               <span className="flex-1 min-w-0">Tên tài liệu</span>
               <span className="w-[72px] text-center">Định dạng</span>
@@ -499,7 +317,7 @@ export default function DocumentManager({
             {/* Rows */}
             <div className="divide-y divide-black/[0.025]">
               {processedDocs.map((doc) => (
-                <DocumentRow
+                  <DocumentRow
                   key={doc.id}
                   doc={doc}
                   isPriority={!!(sortExt && doc.type === sortExt)}
@@ -507,6 +325,7 @@ export default function DocumentManager({
                   onAskAI={() => onAskAI?.(doc)}
                   onRemove={() => onRemoveDocument?.(doc.id)}
                   onRename={(newName) => onRenameDocument?.(doc.id, newName)}
+                  downloadDocument={downloadDocument}
                 />
               ))}
             </div>
@@ -540,10 +359,7 @@ export default function DocumentManager({
                   <button
                     key={p}
                     onClick={() => goToPage(p)}
-                    className={`w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-medium cursor-pointer transition-all ${p === currentPage
-                        ? 'bg-[#ff5c00] text-white shadow-sm shadow-[#ff5c00]/20'
-                        : 'text-black/45 hover:bg-black/[0.04] hover:text-black'
-                      }`}
+                    className={`w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-medium cursor-pointer transition-all ${p === currentPage ? 'bg-[#ff5c00] text-white shadow-sm ' : 'text-black/45 hover:bg-black/[0.04] hover:text-black' }`}
                   >
                     {p}
                   </button>
@@ -585,7 +401,7 @@ function generatePageNumbers(current, total) {
 /* ═══════════════════════════════════════
    DocumentRow — Single file row
    ═══════════════════════════════════════ */
-function DocumentRow({ doc, isPriority, onClick, onAskAI, onRemove, onRename }) {
+function DocumentRow({ doc, isPriority, onClick, onAskAI, onRemove, onRename, downloadDocument }) {
   const isFolder = doc.type === 'folder';
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(doc.name);
@@ -598,70 +414,16 @@ function DocumentRow({ doc, isPriority, onClick, onAskAI, onRemove, onRename }) 
   };
 
   const handleDownload = async () => {
-    try {
-      const response = await fetchWithAuth(`https://ash-project-be.onrender.com/api/v1/documents/${doc.id}/download`);
-      if (response.ok) {
-        const contentType = response.headers.get('content-type') || '';
-
-        if (contentType.includes('application/json')) {
-          const data = await response.json();
-          const url = data.result || data.storageUrl || data;
-          if (typeof url === 'string' && url.startsWith('http')) {
-            window.open(url, '_blank');
-          } else if (typeof url === 'string') {
-            window.open(`https://ash-project-be.onrender.com${url.startsWith('/') ? '' : '/'}${url}`, '_blank');
-          }
-        } else if (contentType.includes('text/plain')) {
-          const textUrl = await response.text();
-          if (textUrl.startsWith('http')) {
-            window.open(textUrl, '_blank');
-          } else {
-            window.open(`https://ash-project-be.onrender.com${textUrl.startsWith('/') ? '' : '/'}${textUrl}`, '_blank');
-          }
-        } else {
-          // Binary blob (PDF, image, docx, etc)
-          const blob = await response.blob();
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = doc.name;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          setTimeout(() => window.URL.revokeObjectURL(url), 1000);
-        }
-      } else {
-        // Fallback to storageUrl if API fails
-        if (doc.storageUrl) {
-          const fallbackUrl = doc.storageUrl.startsWith('http') ? doc.storageUrl : `https://ash-project-be.onrender.com${doc.storageUrl.startsWith('/') ? '' : '/'}${doc.storageUrl}`;
-          window.open(fallbackUrl, '_blank');
-        } else {
-          console.error("Lỗi download:", response.status);
-        }
-      }
-    } catch (e) {
-      console.error(e);
-      // Fallback
-      if (doc.storageUrl) {
-        const fallbackUrl = doc.storageUrl.startsWith('http') ? doc.storageUrl : `https://ash-project-be.onrender.com${doc.storageUrl.startsWith('/') ? '' : '/'}${doc.storageUrl}`;
-        window.open(fallbackUrl, '_blank');
-      }
-    }
+    await downloadDocument(doc);
   };
 
   return (
     <div
       onClick={!isEditing ? onClick : undefined}
-      className={`group flex items-center gap-3 px-4 sm:px-5 py-3 sm:py-3.5 transition-all duration-200 ${isEditing ? 'bg-black/[0.02]' : isPriority ? 'bg-[#ff5c00]/[0.03] hover:bg-[#ff5c00]/[0.06] cursor-pointer' : 'hover:bg-black/[0.015] cursor-pointer'
-        }`}
+      className={`group flex items-center gap-3 px-4 sm:px-5 py-3 sm:py-3.5 transition-all duration-200 ${isEditing ? 'bg-black/[0.02]' : isPriority ? 'bg-[#ff5c00]/[0.03] hover:bg-[#ff5c00]/[0.06] cursor-pointer' : 'hover:bg-black/[0.015] cursor-pointer' }`}
     >
       {/* Icon */}
-      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors duration-200 ${isFolder
-          ? 'bg-[#ff9500]/10 border border-[#ff9500]/15'
-          : isPriority
-            ? 'bg-[#ff5c00]/10 border border-[#ff5c00]/15'
-            : 'bg-black/[0.02] border border-black/[0.04] group-hover:border-black/[0.08]'
-        }`}>
+      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors duration-200 ${isFolder ? 'bg-[#ff9500]/10 border border-[#ff9500]/15' : isPriority ? 'bg-[#ff5c00]/10 border border-[#ff5c00]/15' : 'bg-black/[0.02] border border-black/[0.04] group-hover:border-black/[0.08]' }`}>
         <FileIcon type={doc.type} style={{ fontSize: 16 }} />
       </div>
 
@@ -683,8 +445,7 @@ function DocumentRow({ doc, isPriority, onClick, onAskAI, onRemove, onRename }) 
               className="text-[12.5px] sm:text-[13px] font-semibold text-black bg-white border border-black/10 rounded-md px-2 py-0.5 outline-none focus:border-[#ff5c00]/40 focus:ring-2 focus:ring-[#ff5c00]/10 w-full max-w-[250px]"
             />
           ) : (
-            <h4 className={`text-[12.5px] sm:text-[13px] font-semibold truncate transition-colors leading-tight ${isFolder ? 'text-black group-hover:text-[#ff9500]' : 'text-black group-hover:text-[#ff5c00]'
-              }`}>
+            <h4 className={`text-[12.5px] sm:text-[13px] font-semibold truncate transition-colors ${isFolder ? 'text-black group-hover:text-[#ff9500]' : 'text-black group-hover:text-[#ff5c00]' }`}>
               {doc.name}
             </h4>
           )}
@@ -692,14 +453,14 @@ function DocumentRow({ doc, isPriority, onClick, onAskAI, onRemove, onRename }) 
             <i className="bi bi-chevron-right text-[10px] text-black/20 group-hover:text-[#ff9500] transition-colors" />
           )}
           {isPriority && !isFolder && (
-            <span className="hidden sm:inline-flex items-center px-1.5 py-[1px] rounded text-[8px] font-semibold uppercase tracking-wider bg-gradient-to-r from-[#ff8a00] to-[#ff5c00] text-white flex-shrink-0">
+            <span className="hidden sm:inline-flex items-center px-1.5 py-[1px] rounded text-[8px] font-semibold uppercase bg-gradient-to-r from-[#ff8a00] to-[#ff5c00] text-white flex-shrink-0">
               Ưu tiên
             </span>
           )}
         </div>
         {/* Mobile-only secondary info */}
         <div className="flex items-center gap-2 mt-0.5 sm:hidden">
-          <Tag color={getFileTagColor(doc.type)} className="font-medium text-[8px] uppercase rounded-full border-none px-1.5 py-0 m-0 leading-tight">
+          <Tag color={getFileTagColor(doc.type)} className="font-medium text-[8px] uppercase rounded-full border-none px-1.5 py-0 m-0">
             {getFileTypeLabel(doc.type)}
           </Tag>
           <span className="text-[10px] text-black/35 font-medium">{doc.timeSinceUpload || formatRelativeTime(doc.uploadedAt)}</span>

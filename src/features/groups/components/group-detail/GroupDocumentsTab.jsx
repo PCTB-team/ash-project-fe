@@ -37,7 +37,7 @@ export default function GroupDocumentsTab({ group, files = [], currentUser, isOw
       {canUpload && (
         <div className="flex justify-end mb-4">
           <Button type="primary" icon={<i className="bi bi-cloud-arrow-up text-[15px]" />} onClick={onUpload}
-            className="font-medium rounded-xl px-5 h-10 shadow-lg shadow-[var(--color-primary)]/20 border-none bg-[var(--color-primary)] hover:-translate-y-0.5 transition-transform">
+            className="font-medium rounded-xl px-5 h-10 shadow-lg border-none bg-[var(--color-primary)] hover:-translate-y-0.5 transition-transform">
             Upload tài liệu
           </Button>
         </div>
@@ -45,7 +45,7 @@ export default function GroupDocumentsTab({ group, files = [], currentUser, isOw
 
       {/* File Grid */}
       {sorted.length === 0 ? (
-        <div className="bg-[var(--color-surface)] border border-black/[0.04] rounded-[24px] shadow-sm">
+        <div className="bg-[var(--color-surface)] border border-black/[0.04] rounded-2xl shadow-sm">
           <EmptyState type="noDocuments" title="Chưa có tài liệu" description="Chưa có tài liệu nào được chia sẻ. Hãy upload tài liệu đầu tiên!" actionText={canUpload ? 'Upload ngay' : undefined} onAction={canUpload ? onUpload : undefined} />
         </div>
       ) : (
@@ -63,7 +63,7 @@ export default function GroupDocumentsTab({ group, files = [], currentUser, isOw
                 <motion.div key={doc.id || doc.documentId || idx}
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: idx * 0.04 }}
-                  className="border border-black/[0.04] rounded-[20px] p-5 hover:border-[var(--color-primary)]/20 transition-all bg-[var(--color-surface)] hover:shadow-md hover:shadow-black/5 flex flex-col justify-between group">
+                  className="border border-black/[0.04] rounded-xl p-5 hover:border-[var(--color-primary)]/20 transition-all bg-[var(--color-surface)] hover:shadow-md hover:shadow-black/5 flex flex-col justify-between group">
                   <div className="flex items-start gap-4 mb-4">
                     <div className={`w-12 h-12 rounded-[14px] ${fi.bg} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}>
                       <i className={`bi ${fi.icon} ${fi.color} text-[20px]`} />

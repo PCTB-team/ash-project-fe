@@ -61,14 +61,14 @@ export default function JoinGroupModal({ open, onCancel, onJoinSuccess }) {
       {/* Header */}
       <div className="bg-gradient-to-br from-[#ff8a00] to-[#ff5c00] px-6 py-5 flex items-center gap-4 relative overflow-hidden rounded-t-2xl">
         <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="w-12 h-12 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center text-white backdrop-blur-md shadow-xl z-10">
+        <div className="w-12 h-12 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center text-white backdrop-blur-md shadow-sm z-10">
           <i className={`bi ${step === 3 ? 'bi-hourglass-split' : 'bi-box-arrow-in-right'} text-[24px]`} />
         </div>
         <div className="text-left text-white z-10">
-          <h3 className="text-[18px] font-semibold tracking-tight leading-tight">
+          <h3 className="text-[18px] font-semibold">
             {step === 1 ? 'Tham gia Nhóm' : step === 2 ? 'Nhập mật khẩu' : 'Đang chờ duyệt'}
           </h3>
-          <p className="text-[10px] font-medium text-white/80 uppercase tracking-widest mt-0.5">
+          <p className="text-[10px] font-medium text-white/80 uppercase mt-0.5">
             {step === 3 ? 'Yêu cầu đã gửi' : `Bước ${step} / 2`}
           </p>
         </div>
@@ -81,7 +81,7 @@ export default function JoinGroupModal({ open, onCancel, onJoinSuccess }) {
             <motion.div key="step1" variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.25 }}>
               <div className="pt-5 space-y-4">
                 <div>
-                  <label className="text-[11px] font-semibold text-black/60 uppercase tracking-widest block mb-2">Link mời hoặc Token</label>
+                  <label className="text-[11px] font-semibold text-black/60 uppercase block mb-2">Link mời hoặc Token</label>
                   <Input value={inviteToken} onChange={e => setInviteToken(e.target.value)} onPressEnter={handlePreview}
                     placeholder="Dán link mời hoặc nhập mã token"
                     className="h-12 rounded-xl bg-white border border-black/10 hover:border-[#ff5c00]/40 focus:border-[#ff5c00] focus:shadow-[0_0_0_2px_rgba(255,92,0,0.1)] text-[13px] font-semibold" />
@@ -119,7 +119,7 @@ export default function JoinGroupModal({ open, onCancel, onJoinSuccess }) {
                 )}
 
                 <Form layout="vertical" onFinish={handleJoin} requiredMark={false}>
-                  <Form.Item label={<span className="text-[11px] font-semibold text-black/60 uppercase tracking-widest">Mật khẩu nhóm</span>}
+                  <Form.Item label={<span className="text-[11px] font-semibold text-black/60 uppercase">Mật khẩu nhóm</span>}
                     name="password" rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }]} className="mb-0">
                     <Input.Password placeholder="Nhập mật khẩu do Leader cung cấp"
                       className="h-12 rounded-xl bg-white border border-black/10 hover:border-[#ff5c00]/40 focus:border-[#ff5c00] text-[13px] font-semibold" />

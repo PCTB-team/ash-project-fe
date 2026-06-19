@@ -1,12 +1,9 @@
 import { useState } from 'react';
 import { message, Tooltip, Modal } from 'antd';
-import FileIcon from '../components/FileIcon.jsx';
-import { formatRelativeTime } from '../utils/dateUtils.js';
-import { fetchWithAuth } from '../../../utils/apiClient.js';
-
+import FileIcon from '../../documents/components/FileIcon.jsx';
+import { formatRelativeTime } from '../../dashboard/utils/dateUtils.js';
 import { useOutletContext } from 'react-router-dom';
-
-const DOCUMENTS_API_URL = 'https://ash-project-be.onrender.com/api/v1/documents';
+import { useTrash } from '../hooks/useTrash.js';
 
 export default function TrashScreen() {
   const {
@@ -14,6 +11,7 @@ export default function TrashScreen() {
     searchTerm,
     refreshAll: onRefreshDocuments,
   } = useOutletContext();
+  const { restoreDocument, deleteDocumentPermanent } = useTrash();
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Lọc theo tìm kiếm
@@ -22,23 +20,15 @@ export default function TrashScreen() {
   );
 
   const handleRestore = async (docId) => {
-    try {
-      setIsProcessing(true);
-      const response = await fetchWithAuth(`${DOCUMENTS_API_URL}/${docId}/restore`, {
-        method: 'PUT'
-      });
-      if (response.ok) {
-        message.success('Đã khôi phục tài liệu thành công!');
-        if (onRefreshDocuments) onRefreshDocuments();
-      } else {
-        message.error('Khôi phục thất bại!');
-      }
-    } catch (e) {
-      console.error(e);
-      message.error('Lỗi kết nối server!');
-    } finally {
-      setIsProcessing(false);
+    setIsProcessing(true);
+    const result = await restoreDocument(docId);
+    if (result.success) {
+      message.success('Đã khôi phục tài liệu thành công!');
+      if (onRefreshDocuments) onRefreshDocuments();
+    } else {
+      message.error(result.message || 'Khôi phục thất bại!');
     }
+    setIsProcessing(false);
   };
 
   const handlePermanentDelete = (doc) => {
@@ -49,33 +39,25 @@ export default function TrashScreen() {
       okType: 'danger',
       cancelText: 'Hủy',
       onOk: async () => {
-        try {
-          setIsProcessing(true);
-          const response = await fetchWithAuth(`${DOCUMENTS_API_URL}/${doc.id}/permanent`, {
-            method: 'DELETE'
-          });
-          if (response.ok) {
-            message.success('Đã xóa vĩnh viễn!');
-            if (onRefreshDocuments) onRefreshDocuments();
-          } else {
-            message.error('Xóa thất bại!');
-          }
-        } catch (e) {
-          console.error(e);
-          message.error('Lỗi kết nối server!');
-        } finally {
-          setIsProcessing(false);
+        setIsProcessing(true);
+        const result = await deleteDocumentPermanent(doc.id);
+        if (result.success) {
+          message.success('Đã xóa vĩnh viễn!');
+          if (onRefreshDocuments) onRefreshDocuments();
+        } else {
+          message.error(result.message || 'Xóa thất bại!');
         }
+        setIsProcessing(false);
       }
     });
   };
 
   return (
-    <div className="flex-1 w-full h-full overflow-y-auto px-4 md:px-8 pb-10 pt-5 text-left select-none relative max-w-[1400px] mx-auto">
+    <div className="flex-1 w-full h-full overflow-y-auto px-4 md:px-6 pb-10 pt-5 text-left select-none relative max-w-[1100px] mx-auto">
       {/* Title + Action bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-5 sm:mb-6">
         <div>
-          <h1 className="text-[22px] font-semibold text-[#1d1d1f] tracking-tight text-red-500">Thùng rác</h1>
+          <h1 className="text-xl font-semibold text-[#1d1d1f] text-red-500">Thùng rác</h1>
           <p className="text-[12px] text-black/55 font-medium mt-0.5">Quản lý các tài liệu đã bị xóa tạm thời</p>
         </div>
       </div>
@@ -91,7 +73,7 @@ export default function TrashScreen() {
           </div>
         ) : (
           <>
-            <div className="hidden sm:flex items-center gap-3 px-4 sm:px-5 py-3 border-b border-black/[0.03] text-[10px] font-medium text-black/30 uppercase tracking-wider select-none bg-black/[0.01]">
+            <div className="hidden sm:flex items-center gap-3 px-4 sm:px-5 py-3 border-b border-black/[0.03] text-[10px] font-medium text-black/30 uppercase select-none bg-black/[0.01]">
               <div className="w-10 flex-shrink-0" />
               <span className="flex-1 min-w-0">Tên tài liệu</span>
               <span className="w-[120px] text-center hidden md:block">Ngày xóa</span>

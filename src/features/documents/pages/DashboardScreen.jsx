@@ -8,9 +8,9 @@ import { Button, Modal, Form, Select, Upload, message } from 'antd';
 import { motion } from 'framer-motion';
 import DocumentViewer from '../components/DocumentViewer.jsx';
 import DocumentManager from '../components/DocumentManager.jsx';
-import { detectFileType } from '../utils/helpers.js';
-import { UPLOAD_TYPE_OPTIONS } from '../utils/fileConfig.js';
-import { fetchWithAuth } from '../../../utils/apiClient.js';
+import { detectFileType } from "../../dashboard/utils/helpers.js";
+import { UPLOAD_TYPE_OPTIONS } from "../../dashboard/utils/fileConfig.js";
+import { axiosClient } from '../../../utils/apiClient.js';
 
 
 import { useNavigate, useOutletContext } from 'react-router-dom';
@@ -65,21 +65,10 @@ export default function DashboardScreen() {
       try {
         const uploadUrl = `${UPLOAD_DOCUMENT_API_URL}${params.toString() ? '?' + params.toString() : ''}`;
         
-        const response = await fetchWithAuth(uploadUrl, {
-          method: 'POST',
-          body: formData
-        });
+        const response = await axiosClient.post(uploadUrl, formData);
+        const data = response.data;
 
-        if (response.ok) {
-          let data = {};
-          try { data = await response.json(); } catch { /* ignore */ }
-
-          if ((data.code === 0 || data.code === 1000) && data.result) {
-            // Success
-          } else {
-            message.error("Tải lên thành công nhưng lỗi phân tích dữ liệu trả về!");
-          }
-
+        if (response.status === 200 || data.code === 0 || data.code === 1000) {
           if (onRefreshDocuments) onRefreshDocuments();
           form.resetFields();
           setSelectedFile(null);
@@ -87,8 +76,7 @@ export default function DashboardScreen() {
           const uploadedName = (data.result && data.result.fileName) || finalName;
           message.success(`Đã tải lên "${uploadedName}" thành công!`);
         } else {
-          const errorData = await response.json();
-          const errMsg = errorData.message || "";
+          const errMsg = data.message || "";
           
           if (errMsg.toLowerCase().includes('tồn tại') || errMsg.toLowerCase().includes('exist')) {
             Modal.confirm({
@@ -107,7 +95,21 @@ export default function DashboardScreen() {
         }
       } catch (error) {
         console.error("Upload error:", error);
-        message.error("Lỗi kết nối máy chủ khi tải lên!");
+        const errMsg = error.response?.data?.message || "";
+        if (errMsg.toLowerCase().includes('tồn tại') || errMsg.toLowerCase().includes('exist')) {
+            Modal.confirm({
+              title: 'Tài liệu đã tồn tại',
+              content: 'Một tài liệu với tên này đã tồn tại trong thư mục. Bạn có muốn ghi đè lên tài liệu cũ không?',
+              okText: 'Ghi đè',
+              cancelText: 'Hủy',
+              centered: true,
+              onOk: () => {
+                executeUpload(true);
+              }
+            });
+        } else {
+            message.error("Lỗi kết nối máy chủ khi tải lên!");
+        }
       }
     };
 
@@ -116,43 +118,35 @@ export default function DashboardScreen() {
 
   const handleRenameDocument = async (docId, newName) => {
     try {
-      const response = await fetchWithAuth(`${DOCUMENTS_API_URL}/${docId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ fileName: newName })
-      });
-      if (response.ok) {
+      const response = await axiosClient.put(`${DOCUMENTS_API_URL}/${docId}`, { fileName: newName });
+      const data = response.data;
+      if (data.code === 0 || data.code === 1000 || response.status === 200) {
         message.success('Đổi tên thành công!');
-        if (onRenameDocument) onRenameDocument(docId, newName);
         if (onRefreshDocuments) onRefreshDocuments();
       } else {
         // Không được phép đổi tên cục bộ ở đây
-        message.error('Đổi tên thất bại từ server!');
+        message.error(data.message || 'Đổi tên thất bại từ server!');
       }
     } catch (e) {
       console.error(e);
-      message.error('Lỗi kết nối server, không thể đổi tên!');
+      message.error(e.response?.data?.message || 'Lỗi kết nối server, không thể đổi tên!');
     }
   };
 
   const handleRemoveDocument = async (docId) => {
     try {
-      const response = await fetchWithAuth(`${DOCUMENTS_API_URL}/${docId}`, {
-        method: 'DELETE'
-      });
-      if (response.ok) {
+      const response = await axiosClient.delete(`${DOCUMENTS_API_URL}/${docId}`);
+      const data = response.data;
+      if (data.code === 0 || data.code === 1000 || response.status === 200) {
         message.success('Đã chuyển tài liệu vào Thùng rác.');
-        if (onRemoveDocument) onRemoveDocument(docId);
         if (onRefreshDocuments) onRefreshDocuments();
       } else {
         // Không được phép xóa cục bộ ở đây
-        message.error('Xóa thất bại từ server!');
+        message.error(data.message || 'Xóa thất bại từ server!');
       }
     } catch (e) {
       console.error(e);
-      message.error('Lỗi kết nối server, không thể xóa!');
+      message.error(e.response?.data?.message || 'Lỗi kết nối server, không thể xóa!');
     }
   };
 
@@ -162,13 +156,13 @@ export default function DashboardScreen() {
   };
 
   return (
-    <div className="flex-1 w-full h-full overflow-y-auto px-4 md:px-8 pb-10 pt-5 text-left select-none relative max-w-[1400px] mx-auto">
+    <div className="flex-1 w-full h-full overflow-y-auto px-4 md:px-6 pb-10 pt-5 text-left select-none relative max-w-[1100px] mx-auto">
       <div>
 
         {/* Title + Action bar */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-5 sm:mb-6">
           <div>
-            <h1 className="text-[22px] font-semibold text-[#1d1d1f] tracking-tight">Thư viện của tôi</h1>
+            <h1 className="text-xl font-semibold text-[#1d1d1f]">Thư viện của tôi</h1>
             <p className="text-[12px] text-black/55 font-medium mt-0.5">Quản lý và số hóa học phần học thuật cùng Trợ lý AI</p>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
@@ -240,13 +234,13 @@ export default function DashboardScreen() {
             initial={{ scale: 0.8, opacity: 0, rotate: -15 }}
             animate={{ scale: 1, opacity: 1, rotate: 0 }}
             transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-            className="w-12 h-12 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center text-white backdrop-blur-md shadow-xl relative z-10"
+            className="w-12 h-12 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center text-white backdrop-blur-md shadow-sm relative z-10"
           >
             <i className="bi bi-cloud-arrow-up-fill text-[24px]" />
           </motion.div>
           <div className="text-left text-white z-10">
-            <h3 className="text-[18px] font-semibold tracking-tight drop-shadow-md leading-tight">Tải tài liệu lên</h3>
-            <p className="text-[10.5px] font-medium text-white/90 uppercase tracking-widest mt-0.5">Đồng bộ & phân tích bằng AI</p>
+            <h3 className="text-[18px] font-semibold drop-shadow-sm">Tải tài liệu lên</h3>
+            <p className="text-[10.5px] font-medium text-white/90 uppercase mt-0.5">Đồng bộ & phân tích bằng AI</p>
           </div>
         </div>
 
@@ -270,17 +264,17 @@ export default function DashboardScreen() {
                 style={{ height: '100%' }}
               >
                 <div className="relative z-10 flex flex-col items-center justify-center px-2">
-                  <div className="w-14 h-14 bg-white shadow-md shadow-[#ff5c00]/10 rounded-full flex items-center justify-center mb-3 group-hover:-translate-y-1 transition-transform duration-500 border border-black/5">
+                  <div className="w-14 h-14 bg-white shadow-md rounded-full flex items-center justify-center mb-3 group-hover:-translate-y-1 transition-transform duration-500 border border-black/5">
                     <i className="bi bi-cloud-upload text-[#ff5c00] text-[26px] group-hover:scale-110 group-hover:text-[#ff8a00] transition-all duration-500" />
                   </div>
-                  <h4 className="text-[14px] font-semibold text-black mb-1 leading-tight px-1">Kéo thả tài liệu học tập</h4>
-                  <p className="text-[11.5px] text-black/55 font-medium mb-4 leading-tight">
+                  <h4 className="text-[14px] font-semibold text-black mb-1 px-1">Kéo thả tài liệu học tập</h4>
+                  <p className="text-[11.5px] text-black/55 font-medium mb-4">
                     hoặc <span className="text-[#ff5c00] underline decoration-[#ff5c00]/30 underline-offset-4 hover:decoration-[#ff5c00] transition-colors">chọn từ máy tính</span>
                   </p>
 
                   <div className="flex gap-1.5 flex-wrap justify-center px-2">
                     {['PDF', 'DOCX', 'XLSX'].map(ext => (
-                      <span key={ext} className="text-[9px] font-semibold text-black/55 bg-white border border-black/5 shadow-sm rounded-md px-1.5 py-0.5 tracking-wide">{ext}</span>
+                      <span key={ext} className="text-[9px] font-semibold text-black/55 bg-white border border-black/5 shadow-sm rounded-md px-1.5 py-0.5">{ext}</span>
                     ))}
                   </div>
                 </div>
@@ -292,7 +286,7 @@ export default function DashboardScreen() {
               <Form form={form} layout="vertical" onFinish={handleUploadSubmit} initialValues={{ type: 'pdf', size: '1.5 MB' }} className="h-full flex flex-col">
                 <div className="bg-white p-5 rounded-2xl border border-black/5 shadow-sm space-y-1 flex-1">
                   <Form.Item
-                    label={<span className="text-[10.5px] font-medium text-black/55 uppercase tracking-widest flex items-center gap-1.5"><i className="bi bi-file-earmark-text text-[#ff5c00]" /> Tên tài liệu</span>}
+                    label={<span className="text-[10.5px] font-medium text-black/55 uppercase flex items-center gap-1.5"><i className="bi bi-file-earmark-text text-[#ff5c00]" /> Tên tài liệu</span>}
                     name="name"
                     rules={[{ required: true, message: 'Vui lòng điền tên tệp!' }]}
                     className="mb-3.5"
@@ -305,11 +299,11 @@ export default function DashboardScreen() {
                   </Form.Item>
 
                   <div className="grid grid-cols-2 gap-4 mb-3.5">
-                    <Form.Item label={<span className="text-[10.5px] font-medium text-black/55 uppercase tracking-widest flex items-center gap-1.5"><i className="bi bi-tags text-[#ff5c00]" /> Định dạng</span>} name="type" className="mb-0">
+                    <Form.Item label={<span className="text-[10.5px] font-medium text-black/55 uppercase flex items-center gap-1.5"><i className="bi bi-tags text-[#ff5c00]" /> Định dạng</span>} name="type" className="mb-0">
                       <Select className="font-semibold text-[12.5px] h-[34px]" classNames={{ popup: "rounded-xl font-semibold" }} options={UPLOAD_TYPE_OPTIONS} />
                     </Form.Item>
 
-                    <Form.Item label={<span className="text-[10.5px] font-medium text-black/55 uppercase tracking-widest flex items-center gap-1.5"><i className="bi bi-hdd text-[#ff5c00]" /> Dung lượng</span>} name="size" className="mb-0">
+                    <Form.Item label={<span className="text-[10.5px] font-medium text-black/55 uppercase flex items-center gap-1.5"><i className="bi bi-hdd text-[#ff5c00]" /> Dung lượng</span>} name="size" className="mb-0">
                       <input
                         type="text"
                         readOnly
@@ -318,7 +312,7 @@ export default function DashboardScreen() {
                     </Form.Item>
                   </div>
 
-                  <Form.Item label={<span className="text-[10.5px] font-medium text-black/55 uppercase tracking-widest flex items-center gap-1.5"><i className="bi bi-body-text text-[#ff5c00]" /> Nội dung tóm tắt</span>} name="content" className="mb-0">
+                  <Form.Item label={<span className="text-[10.5px] font-medium text-black/55 uppercase flex items-center gap-1.5"><i className="bi bi-body-text text-[#ff5c00]" /> Nội dung tóm tắt</span>} name="content" className="mb-0">
                     <textarea
                       rows={2}
                       placeholder="Ghi chú nhanh để AI có thêm ngữ cảnh phân tích..."

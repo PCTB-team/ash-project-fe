@@ -9,7 +9,7 @@ import logoImg from "../../../assets/logo.png";
 export default function AuthCard({ children, isRegister, errorMsg, onToggleMode, title, subtitle, hideToggle, hideFooter }) {
   const navigate = useNavigate();
   return (
-    <div className="bg-white/80 backdrop-blur-2xl border border-black/[0.06] rounded-[24px] shadow-[0_8px_40px_rgba(0,0,0,0.06)] px-8 py-8 sm:px-10 sm:py-9">
+    <div className="bg-white/80 backdrop-blur-2xl border border-black/[0.06] rounded-2xl shadow-md px-8 py-8 sm:px-10 sm:py-9">
 
       {/* ── Brand ── */}
       <div className="flex flex-col items-center text-center mb-7">
@@ -26,9 +26,9 @@ export default function AuthCard({ children, isRegister, errorMsg, onToggleMode,
             </div>
           </div>
           {title && title !== 'AI Study Hub' ? (
-             <span className="text-[24px] font-semibold text-[#1d1d1f] tracking-tight">{title}</span>
+             <span className="text-[24px] font-semibold text-[#1d1d1f]">{title}</span>
           ) : (
-             <span className="text-[26px] font-extrabold tracking-tighter drop-shadow-sm mt-0.5">
+             <span className="text-[26px] font-semibold drop-shadow-sm mt-0.5">
                <span className="bg-clip-text text-transparent bg-gradient-to-br from-[#432c1a] to-[#734b2f]">Capy</span>
                <span className="bg-clip-text text-transparent bg-gradient-to-br from-[#ff5c00] to-[#ffaa00] ml-1">Study</span>
              </span>
@@ -47,7 +47,7 @@ export default function AuthCard({ children, isRegister, errorMsg, onToggleMode,
             className="rounded-[12px] py-2.5 px-3.5 bg-[#ff3b30]/[0.06] text-[#ff3b30] flex items-center gap-2.5 mb-5"
           >
             <i className="bi bi-exclamation-circle-fill text-[13px] shrink-0" />
-            <span className="text-[12px] font-medium leading-snug">{errorMsg}</span>
+            <span className="text-[12px] font-medium">{errorMsg}</span>
           </motion.div>
         )}
       </AnimatePresence>
@@ -70,7 +70,7 @@ export default function AuthCard({ children, isRegister, errorMsg, onToggleMode,
 
       {/* ── Footer ── */}
       {!hideFooter && (
-        <div className="mt-5 flex items-center justify-center gap-3 text-[10.5px] text-black/40 font-semibold tracking-wide">
+        <div className="mt-5 flex items-center justify-center gap-3 text-[10.5px] text-black/40 font-semibold">
           <button onClick={() => navigate('/')} className="hover:text-black/70 cursor-pointer transition-colors">Trang chủ</button>
           <span className="w-[3px] h-[3px] rounded-full bg-black/10" />
           <button className="hover:text-black/70 cursor-pointer transition-colors">Điều khoản</button>

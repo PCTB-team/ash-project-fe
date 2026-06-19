@@ -2,32 +2,10 @@ import { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { message } from 'antd';
 import { LOGOUT_API_URL } from '../../auth/hooks/useAuth';
-import { fetchWithAuth } from '../../../utils/apiClient.js';
+import { axiosClient } from '../../../utils/apiClient.js';
 import MainLayout from './MainLayout.jsx';
-import logoAvatarDefault from '../../../assets/logo_avatar_default.jpg';
-
-const TRASH_API_URL = 'https://ash-project-be.onrender.com/api/v1/documents/trash';
-const USER_PROFILE_API_URL = 'https://ash-project-be.onrender.com/api/v1/user/profile';
-const DEFAULT_AVATAR = logoAvatarDefault;
-
-const getInitialFullName = () => {
-  const token = localStorage.getItem('accessToken');
-  if (token) {
-    try {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
-      const payload = JSON.parse(jsonPayload);
-      const name = payload.fullname || payload.fullName || payload.name || payload.sub;
-      if (name) return name;
-    } catch (e) {
-      console.error("Lỗi giải mã token:", e);
-    }
-  }
-  return 'User';
-};
+import { useProfile } from '../../profile/hooks/useProfile.js';
+import { useTrash } from '../../trash/hooks/useTrash.js';
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
@@ -36,12 +14,11 @@ export default function DashboardLayout() {
   // ── State ──
   const [searchTerm, setSearchTerm] = useState('');
   const [accentColor, setAccentColor] = useState('#ff5c00');
-  const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATAR);
   const [documentsCount, setDocumentsCount] = useState(0);
-  const [trashDocuments, setTrashDocuments] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [fullName, setFullName] = useState(getInitialFullName);
-  const [profileData, setProfileData] = useState(null);
+  
+  const { profileData, fullName, avatarUrl, fetchProfile, setAvatarUrl } = useProfile();
+  const { trashDocuments, fetchTrashDocuments } = useTrash();
 
   // Determine currentView based on pathname to highlight Sidebar correctly
   const path = location.pathname;
@@ -51,63 +28,11 @@ export default function DashboardLayout() {
   else if (path.includes('/dashboard/group')) currentView = 'community';
   else if (path.includes('/dashboard/ai')) currentView = 'ai';
 
-  // ── Data Fetching ──
-  const fetchTrashDocuments = async () => {
-    try {
-      const response = await fetchWithAuth(TRASH_API_URL);
-      if (response.ok) {
-        const data = await response.json();
-        if ((data.code === 0 || data.code === 1000) && data.result) {
-          const mappedDocs = data.result.map(d => ({
-            id: d.documentId,
-            name: d.fileName || 'Untitled',
-            type: d.fileExtension?.replace('.', '') || 'unknown',
-            fileSizeBytes: d.fileSize || 0,
-            size: d.fileSize ? `${(d.fileSize / (1024 * 1024)).toFixed(2)} MB` : '0 MB',
-            uploadedAt: d.deletedAt || new Date().toISOString(),
-            timeSinceUpload: d.timeSinceUpload,
-            status: d.status,
-            storageUrl: d.storageUrl
-          }));
-          setTrashDocuments(mappedDocs);
-        }
-      }
-    } catch (e) {
-      console.error("Lỗi lấy danh sách thùng rác:", e);
-    }
-  };
-
   const refreshAll = () => {
     setRefreshKey(prev => prev + 1);
-    fetchTrashDocuments();
     fetchProfile();
-  };
-
-  const fetchProfile = async () => {
-    try {
-      const response = await fetchWithAuth(USER_PROFILE_API_URL, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        const resultData = data.result || (data.email ? data : null);
-
-        if ((data.code === 0 || data.code === 1000 || !data.code) && resultData) {
-          const mappedData = {
-            ...resultData,
-            avatarUrl: resultData.avatarUrl || resultData.avatar || ''
-          };
-          setProfileData(mappedData);
-          if (mappedData.fullname) setFullName(mappedData.fullname);
-          if (mappedData.avatarUrl) setAvatarUrl(mappedData.avatarUrl);
-        }
-      }
-    } catch (error) {
-      console.error("Lỗi lấy thông tin hồ sơ:", error);
+    if (currentView === 'trash') {
+      fetchTrashDocuments();
     }
   };
 
@@ -116,29 +41,28 @@ export default function DashboardLayout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (currentView === 'trash' && trashDocuments.length === 0) {
+      fetchTrashDocuments();
+    }
+  }, [currentView, trashDocuments.length, fetchTrashDocuments]);
+
   const totalStorageMB = 0;
   const storagePercentage = 0;
 
   const handleLogoutClick = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
       const refreshToken = localStorage.getItem('refreshToken');
-      const response = await fetch(LOGOUT_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({ refreshToken })
-      });
+      const response = await axiosClient.post(LOGOUT_API_URL, { refreshToken });
 
-      if (response.ok) {
+      if (response.status === 200 || response.data?.code === 0 || response.data?.code === 1000) {
         message.success('Đã đăng xuất thành công khỏi hệ thống!');
       } else {
         message.warning('Phiên đăng nhập đã hết hạn, tự động thoát!');
       }
     } catch (error) {
       console.error("Logout Error:", error);
+      message.warning('Tự động thoát!');
     } finally {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');

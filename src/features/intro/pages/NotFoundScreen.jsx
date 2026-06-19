@@ -20,12 +20,12 @@ export default function NotFoundScreen() {
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.1, type: "spring", bounce: 0.5 }}
-          className="text-[120px] md:text-[150px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#1d1d1f] to-black/30 leading-none tracking-tighter mb-4"
+          className="text-[120px] md:text-[150px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#1d1d1f] to-black/30 mb-4"
         >
           404
         </motion.div>
 
-        <h1 className="text-[24px] md:text-[32px] font-semibold text-[#1d1d1f] tracking-tight mb-3">
+        <h1 className="text-[24px] md:text-[32px] font-semibold text-[#1d1d1f] mb-3">
           Không tìm thấy trang
         </h1>
         <p className="text-[15px] text-black/50 font-medium mb-10 leading-relaxed">
@@ -36,7 +36,7 @@ export default function NotFoundScreen() {
           <Button
             type="primary"
             onClick={() => navigate('/')}
-            className="h-12 px-8 rounded-full font-semibold text-[15px] bg-[var(--color-primary)] shadow-lg shadow-[var(--color-primary)]/20 border-none transition-all hover:brightness-110"
+            className="h-12 px-8 rounded-full font-semibold text-[15px] bg-[var(--color-primary)] shadow-lg border-none transition-all hover:brightness-110"
           >
             Trở về Trang chủ
           </Button>

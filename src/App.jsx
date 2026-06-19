@@ -21,9 +21,10 @@ import ForgotPasswordScreen from './features/auth/pages/ForgotPasswordScreen.jsx
 
 // ── Dashboard Pages ──
 import DashboardLayout from './features/dashboard/layouts/DashboardLayout.jsx';
-import DashboardScreen from './features/dashboard/pages/DashboardScreen.jsx';
-import ProfileScreen from './features/dashboard/pages/ProfileScreen.jsx';
-import TrashScreen from './features/dashboard/pages/TrashScreen.jsx';
+import DashboardScreen from './features/documents/pages/DashboardScreen.jsx';
+import ProfileScreen from './features/profile/pages/ProfileScreen.jsx';
+import TrashScreen from './features/trash/pages/TrashScreen.jsx';
+import AIScreen from './features/ai/pages/AIScreen.jsx';
 
 // ── Groups Pages ──
 import CommunityScreen from './features/groups/pages/CommunityScreen.jsx';
@@ -56,7 +57,7 @@ function App() {
           <Route path="trash" element={<TrashScreen />} />
           <Route path="group" element={<CommunityScreen />} />
           <Route path="group/:groupId" element={<GroupDetailScreen />} />
-          <Route path="ai" element={<div className="p-8 text-center">Trang AI (Đang phát triển)</div>} />
+          <Route path="ai" element={<AIScreen />} />
         </Route>
       </Route>
 

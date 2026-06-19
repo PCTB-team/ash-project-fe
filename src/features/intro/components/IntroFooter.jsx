@@ -16,7 +16,7 @@ export default function IntroFooter() {
 
           {/* Brand */}
           <div className="col-span-2 md:col-span-1 space-y-4">
-            <span className="text-[16px] font-semibold text-black block tracking-tight">Capy Study</span>
+            <span className="text-[16px] font-semibold text-black block">Capy Study</span>
             <p className="text-[12.5px] text-black/50 leading-relaxed font-medium">
               Nền tảng quản lý tài liệu và học tập thông minh dành cho sinh viên Việt Nam — được hỗ trợ bởi AI.
             </p>

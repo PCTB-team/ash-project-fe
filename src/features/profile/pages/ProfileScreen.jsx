@@ -2,10 +2,8 @@ import { useState, useEffect } from 'react';
 import { Button, message, Tooltip } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
 import logoAvatarDefault from '../../../assets/logo_avatar_default.jpg';
-import { fetchWithAuth } from '../../../utils/apiClient.js';
 import { useOutletContext } from 'react-router-dom';
-
-const USER_PROFILE_API_URL = 'https://ash-project-be.onrender.com/api/v1/user/profile';
+import { useProfile } from '../hooks/useProfile.js';
 
 export default function ProfileScreen() {
   const {
@@ -19,6 +17,8 @@ export default function ProfileScreen() {
     accentColor,
     setAccentColor: onAccentColorChange,
   } = useOutletContext();
+
+  const { updateProfile } = useProfile();
 
   const [profileData, setProfileData] = useState(initialProfileData || { id: '', username: '', email: '', fullname: '', avatarUrl: avatarUrl || '', school: '' });
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -47,46 +47,23 @@ export default function ProfileScreen() {
       message.error("Họ và Tên không được để trống!");
       return;
     }
-    try {
-      const formData = new FormData();
-      formData.append('fullname', profileData.fullname || '');
-      formData.append('school', profileData.school || '');
-      formData.append('username', profileData.username || '');
-      if (avatarFile) {
-        formData.append('file', avatarFile);
-      }
+    
+    const formData = new FormData();
+    formData.append('fullname', profileData.fullname || '');
+    formData.append('school', profileData.school || '');
+    formData.append('username', profileData.username || '');
+    if (avatarFile) {
+      formData.append('file', avatarFile);
+    }
 
-      const response = await fetchWithAuth(USER_PROFILE_API_URL, {
-        method: 'PUT',
-        headers: { 'Accept': 'application/json' },
-        body: formData
-      });
-
-      let data = {};
-      try { data = await response.json(); } catch { console.warn('Cannot parse JSON'); }
-
-      if (response.ok || data.code === 0 || data.code === 1000) {
-        if ((data.code === 0 || data.code === 1000) && data.result) {
-          const mappedData = {
-            ...data.result,
-            avatarUrl: data.result.avatarUrl || data.result.avatar || ''
-          };
-          setProfileData(mappedData);
-          if (mappedData.avatarUrl && onAvatarChange) onAvatarChange(mappedData.avatarUrl);
-          setIsEditingProfile(false);
-          message.success('Đã lưu thông tin hồ sơ thành công!');
-        } else if (response.ok && !data.code) {
-          setIsEditingProfile(false);
-          message.success('Đã lưu thông tin hồ sơ thành công!');
-        } else {
-          message.error(data.message || 'Cập nhật thất bại');
-        }
-      } else {
-        message.error(data.message || `Lỗi từ server: ${response.status}`);
-      }
-    } catch (error) {
-      console.error("Lỗi lưu hồ sơ:", error);
-      message.error(`Lỗi kết nối: ${error.message}`);
+    const result = await updateProfile(formData);
+    if (result.success) {
+      setProfileData(result.data);
+      if (result.data.avatarUrl && onAvatarChange) onAvatarChange(result.data.avatarUrl);
+      setIsEditingProfile(false);
+      message.success('Đã lưu thông tin hồ sơ thành công!');
+    } else {
+      message.error(result.message || 'Cập nhật thất bại');
     }
   };
 
@@ -108,37 +85,20 @@ export default function ProfileScreen() {
       reader.readAsDataURL(file);
 
       message.loading({ content: 'Đang đồng bộ ảnh đại diện...', key: 'avatar-upload' });
-      try {
-        const formData = new FormData();
-        formData.append('fullname', profileData.fullname || '');
-        formData.append('school', profileData.school || '');
-        formData.append('username', profileData.username || '');
-        formData.append('file', file);
+      
+      const formData = new FormData();
+      formData.append('fullname', profileData.fullname || '');
+      formData.append('school', profileData.school || '');
+      formData.append('username', profileData.username || '');
+      formData.append('file', file);
 
-        const response = await fetchWithAuth(USER_PROFILE_API_URL, {
-          method: 'PUT',
-          headers: { 'Accept': 'application/json' },
-          body: formData
-        });
-
-        let data = {};
-        try { data = await response.json(); } catch { /* ignore */ }
-
-        if (response.ok || data.code === 0 || data.code === 1000) {
-          message.success({ content: 'Đã lưu ảnh đại diện thành công!', key: 'avatar-upload' });
-          if ((data.code === 0 || data.code === 1000) && data.result) {
-            const mappedData = {
-              ...data.result,
-              avatarUrl: data.result.avatarUrl || data.result.avatar || ''
-            };
-            setProfileData(mappedData);
-            if (mappedData.avatarUrl && onAvatarChange) onAvatarChange(mappedData.avatarUrl);
-          }
-        } else {
-          message.error({ content: data.message || 'Lỗi lưu ảnh', key: 'avatar-upload' });
-        }
-      } catch {
-        message.error({ content: 'Lỗi kết nối khi lưu ảnh', key: 'avatar-upload' });
+      const result = await updateProfile(formData);
+      if (result.success) {
+        message.success({ content: 'Đã lưu ảnh đại diện thành công!', key: 'avatar-upload' });
+        setProfileData(result.data);
+        if (result.data.avatarUrl && onAvatarChange) onAvatarChange(result.data.avatarUrl);
+      } else {
+        message.error({ content: result.message || 'Lỗi lưu ảnh', key: 'avatar-upload' });
       }
     }
   };
@@ -151,13 +111,13 @@ export default function ProfileScreen() {
   return (
     <div className="flex-1 w-full h-full overflow-y-auto bg-[#fafafb] relative pb-20">
 
-      <div className="max-w-[1100px] mx-auto px-4 md:px-8 py-6 md:py-12">
+      <div className="max-w-[900px] mx-auto px-4 md:px-6 py-6 md:py-8">
 
         {/* ── Profile Header ── */}
-        <div className="flex flex-col md:flex-row items-center justify-between mb-8 md:mb-12 gap-6 text-center md:text-left">
+        <div className="flex flex-col md:flex-row items-center justify-between mb-6 md:mb-8 gap-6 text-center md:text-left">
           <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6">
             <div className="relative group shrink-0 w-max mx-auto md:mx-0">
-              <div className="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden shadow-sm bg-white border border-black/5">
+              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden shadow-sm bg-white border border-black/5">
                 <img
                   alt="Avatar"
                   className="w-full h-full object-cover"
@@ -171,14 +131,14 @@ export default function ProfileScreen() {
               </label>
             </div>
             <div className="flex flex-col items-center md:items-start">
-              <h1 className="text-[24px] md:text-[32px] font-bold text-gray-900 tracking-tight leading-none mb-3 flex flex-col sm:flex-row items-center gap-3">
+              <h1 className="text-[24px] md:text-[32px] font-bold text-gray-900 mb-3 flex flex-col sm:flex-row items-center gap-3">
                 <span>{profileData.fullname || currentUser || 'Người dùng'}</span>
 
                 {/* TikTok-style Fire Streak */}
                 <Tooltip title="Chuỗi ngày học tập liên tiếp">
                   <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 shadow-[0_0_15px_rgba(239,68,68,0.3)] cursor-pointer hover:scale-105 transition-transform">
-                    <i className="bi bi-fire text-yellow-300 text-[18px] animate-pulse drop-shadow-md" />
-                    <span className="text-white font-black text-[16px] tracking-wider italic drop-shadow-md">14</span>
+                    <i className="bi bi-fire text-yellow-300 text-[18px] animate-pulse drop-shadow-sm" />
+                    <span className="text-white font-bold text-[16px] italic drop-shadow-sm">14</span>
                   </div>
                 </Tooltip>
               </h1>
@@ -199,7 +159,7 @@ export default function ProfileScreen() {
         </div>
 
         {/* ── Main Layout Grid ── */}
-        <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+        <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6">
 
           {/* ── Left Column: Overview & Security (1/2) ── */}
           <div className="lg:col-span-1 flex flex-col gap-6 lg:h-full lg:justify-between">
@@ -336,7 +296,7 @@ export default function ProfileScreen() {
 
                 <div>
                   <div className="flex items-end justify-between mb-2">
-                    <span className="text-[24px] font-bold text-gray-900 leading-none">{storagePercentage.toFixed(1)}%</span>
+                    <span className="text-[24px] font-bold text-gray-900">{storagePercentage.toFixed(1)}%</span>
                   </div>
                   <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
                     <motion.div
@@ -358,7 +318,7 @@ export default function ProfileScreen() {
                   <span className="text-[12px] font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">Tổng cộng</span>
                 </div>
                 <div>
-                  <span className="text-[36px] font-bold text-gray-900 leading-none block mb-1">{documentsCount}</span>
+                  <span className="text-[36px] font-bold text-gray-900 block mb-1">{documentsCount}</span>
                   <span className="block text-[13px] font-medium text-gray-500">Tài liệu đã đóng góp lên hệ thống</span>
                 </div>
               </div>

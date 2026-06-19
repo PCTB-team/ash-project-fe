@@ -56,16 +56,16 @@ export default function GroupDetailScreen() {
   // Non-member view
   if (!isMember && !isOwner) {
     return (
-      <div className="flex-1 w-full h-full overflow-y-auto px-4 md:px-8 pb-12 pt-4 max-w-[1400px] mx-auto">
+      <div className="flex-1 w-full h-full overflow-y-auto px-4 md:px-6 pb-12 pt-4 max-w-[1100px] mx-auto">
         <GroupHeader group={group} isOwner={false} maxMembers={maxMembers} />
-        <div className="bg-[var(--color-surface)] border border-black/[0.04] rounded-[32px] p-12 text-center shadow-sm max-w-2xl mx-auto mt-8">
-          <div className="w-24 h-24 bg-[var(--color-primary)]/5 rounded-[24px] flex items-center justify-center mx-auto mb-6 text-[var(--color-primary)] border border-[var(--color-primary)]/10">
-            <i className="bi bi-shield-lock-fill text-[40px]" />
+        <div className="bg-[var(--color-surface)] border border-black/[0.04] rounded-2xl p-8 text-center shadow-sm max-w-2xl mx-auto mt-8">
+          <div className="w-16 h-16 bg-[var(--color-primary)]/5 rounded-2xl flex items-center justify-center mx-auto mb-6 text-[var(--color-primary)] border border-[var(--color-primary)]/10">
+            <i className="bi bi-shield-lock-fill text-3xl" />
           </div>
-          <h3 className="text-[18px] font-semibold text-[var(--color-on-surface)] mb-2 tracking-tight">Khu vực riêng tư</h3>
+          <h3 className="text-[18px] font-semibold text-[var(--color-on-surface)] mb-2">Khu vực riêng tư</h3>
           <p className="text-[14px] text-black/50 font-medium max-w-md mx-auto mb-8">Nội dung của nhóm chỉ dành cho thành viên chính thức.</p>
           <button onClick={() => navigate('/dashboard/group')}
-            className="bg-[var(--color-primary)] text-white font-medium rounded-xl h-12 px-8 shadow-lg shadow-[var(--color-primary)]/20 border-none cursor-pointer hover:opacity-90 transition-all">
+            className="bg-[var(--color-primary)] text-white font-medium rounded-xl h-11 px-6 shadow-sm border-none cursor-pointer hover:opacity-90 transition-all">
             Trở về cộng đồng
           </button>
         </div>
@@ -96,13 +96,13 @@ export default function GroupDetailScreen() {
   };
 
   return (
-    <div className="flex-1 w-full h-full overflow-y-auto px-4 md:px-8 pb-12 pt-4 text-left select-none bg-transparent max-w-[1400px] mx-auto">
+    <div className="flex-1 w-full h-full overflow-y-auto px-4 md:px-6 pb-12 pt-4 text-left select-none bg-transparent max-w-[1100px] mx-auto">
       <GroupHeader group={group} isOwner={isOwner} maxMembers={maxMembers} />
 
       {/* Discord-style Layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Sidebar */}
-        <div className="xl:col-span-3">
+        <div className="lg:col-span-3">
           <GroupDetailSidebar
             activeTab={activeTab}
             onTabChange={setActiveTab}
@@ -112,7 +112,7 @@ export default function GroupDetailScreen() {
         </div>
 
         {/* Content */}
-        <div className="xl:col-span-9">
+        <div className="lg:col-span-9">
           <AnimatePresence mode="wait">
             {renderTab()}
           </AnimatePresence>
