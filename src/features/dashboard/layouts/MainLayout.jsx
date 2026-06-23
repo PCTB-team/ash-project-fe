@@ -13,6 +13,7 @@ export default function MainLayout({
   currentUser,
   storagePercentage,
   totalStorageMB,
+  maxStorageMB,
   documentsCount,
   deletedDocsCount = 0,
   searchTerm,
@@ -48,6 +49,7 @@ export default function MainLayout({
         currentUser={currentUser}
         storagePercentage={storagePercentage}
         totalStorageMB={totalStorageMB}
+        maxStorageMB={maxStorageMB}
         documentsCount={documentsCount}
         deletedDocsCount={deletedDocsCount}
         avatarUrl={avatarUrl}

@@ -16,6 +16,7 @@ export default function Sidebar({
   currentUser,
   storagePercentage,
   totalStorageMB = 0,
+  maxStorageMB = 500,
   deletedDocsCount = 0,
   accentColor,
   isMobileMenuOpen,
@@ -191,7 +192,7 @@ export default function Sidebar({
                 className="mb-2"
               />
               <p className="text-[10px] font-medium text-black/55">
-                {totalStorageMB < 1 ? `${(totalStorageMB * 1024).toFixed(1)} KB` : `${totalStorageMB.toFixed(1)} MB`} / 500 MB
+                {totalStorageMB < 1 ? `${(totalStorageMB * 1024).toFixed(1)} KB` : `${totalStorageMB.toFixed(1)} MB`} / {maxStorageMB >= 1024 ? `${(maxStorageMB / 1024).toFixed(1)} GB` : `${maxStorageMB} MB`}
               </p>
 
               {/* Upgrade CTA */}
