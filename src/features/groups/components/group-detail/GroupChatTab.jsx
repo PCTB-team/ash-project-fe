@@ -61,8 +61,9 @@ export default function GroupChatTab({ group, currentUser, profileData }) {
         onMessage: (newMessage) => {
           if (active) {
             setMessages((prev) => {
-              // Prevent duplicates
-              if (prev.some((m) => m.messageId === newMessage.messageId)) return prev;
+              // Prevent duplicates (check both messageId and id safely)
+              const newId = newMessage.messageId || newMessage.id;
+              if (newId && prev.some((m) => (m.messageId || m.id) === newId)) return prev;
               return [...prev, newMessage];
             });
           }
@@ -89,7 +90,8 @@ export default function GroupChatTab({ group, currentUser, profileData }) {
     try {
       const sentMessage = await sendGroupMessage(group.id, content);
       setMessages((prev) => {
-        if (prev.some((m) => m.messageId === sentMessage.messageId)) return prev;
+        const sentId = sentMessage.messageId || sentMessage.id;
+        if (sentId && prev.some((m) => (m.messageId || m.id) === sentId)) return prev;
         return [...prev, sentMessage];
       });
     } catch (error) {
@@ -123,9 +125,19 @@ export default function GroupChatTab({ group, currentUser, profileData }) {
         <h3 className="font-semibold text-[16px] text-[var(--color-on-surface)] flex items-center gap-2">
           <i className="bi bi-chat-dots text-[var(--color-primary)]"></i> Trò chuyện nhóm
         </h3>
-        {connecting && !loading && (
+        {socketStatus === 'CONNECTING' && !loading && (
           <span className="text-[12px] text-amber-500 font-medium flex items-center gap-1.5 bg-amber-50 px-2 py-0.5 rounded-full">
             <Spin size="small" /> Đang kết nối...
+          </span>
+        )}
+        {socketStatus === 'ERROR' && !loading && (
+          <span className="text-[12px] text-red-500 font-medium flex items-center gap-1.5 bg-red-50 px-2 py-0.5 rounded-full">
+            <i className="bi bi-exclamation-triangle"></i> Lỗi kết nối
+          </span>
+        )}
+        {socketStatus === 'DISCONNECTED' && !loading && (
+          <span className="text-[12px] text-gray-500 font-medium flex items-center gap-1.5 bg-gray-50 px-2 py-0.5 rounded-full">
+            <i className="bi bi-wifi-off"></i> Mất kết nối
           </span>
         )}
       </div>
@@ -178,7 +190,7 @@ export default function GroupChatTab({ group, currentUser, profileData }) {
             }
 
             return (
-              <div key={msg.messageId || idx} className={`flex ${isMine ? 'justify-end' : 'justify-start'} ${isLastInGroup ? 'mb-4' : 'mb-[2px]'}`}>
+              <div key={msg.id || msg.messageId || idx} className={`flex ${isMine ? 'justify-end' : 'justify-start'} ${isLastInGroup ? 'mb-4' : 'mb-[2px]'}`}>
                 {!isMine && (
                   <div className="w-[32px] shrink-0 mr-2.5 flex flex-col items-center justify-end">
                     {showAvatar ? (
