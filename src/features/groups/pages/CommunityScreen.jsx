@@ -14,13 +14,16 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 export default function CommunityScreen() {
   const navigate = useNavigate();
   const { searchTerm = '', fullName: currentUser } = useOutletContext();
-  const { groups, isLoading, fetchMyGroups, createGroup } = useGroups();
+  const { groups, totalGroups, isLoading, fetchMyGroups, createGroup } = useGroups();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 6;
 
-  useEffect(() => { fetchMyGroups(); }, [fetchMyGroups]);
+  // Refetch when page or searchTerm changes
+  useEffect(() => { 
+    fetchMyGroups(currentPage - 1, pageSize, searchTerm); 
+  }, [fetchMyGroups, currentPage, searchTerm]);
 
   // Reset pagination to page 1 when global search changes
   useEffect(() => {
@@ -29,20 +32,12 @@ export default function CommunityScreen() {
 
   const handleCreateGroup = async (values) => {
     const res = await createGroup({ name: values.name, description: values.description, password: values.password });
-    await fetchMyGroups();
+    setCurrentPage(1); // will trigger useEffect to fetch page 1
     return res;
   };
 
   const onViewDetail = (groupId, groupData) => navigate(`/dashboard/group/${groupId}`, { state: { groupData } });
   const onRequestJoin = () => setShowJoinModal(true);
-
-  const query = searchTerm || '';
-  const filteredGroups = groups.filter((grp) => {
-    const matchesSearch = grp.name?.toLowerCase().includes(query.toLowerCase());
-    return matchesSearch;
-  });
-
-  const paginatedGroups = filteredGroups.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   // Loading skeleton
   const SkeletonCard = () => (
@@ -85,25 +80,25 @@ export default function CommunityScreen() {
         <div className="lg:col-span-8 space-y-5">
           <div className="flex justify-between items-center">
             <h4 className="text-[14px] font-semibold text-[var(--color-on-surface)]">Danh sách nhóm</h4>
-            <span className="text-[12px] font-medium text-black/35">{filteredGroups.length} nhóm</span>
+            <span className="text-[12px] font-medium text-black/35">{totalGroups || 0} nhóm</span>
           </div>
 
           {isLoading ? (
             <div className="flex flex-col gap-4">
               {[1, 2, 3, 4].map(i => <SkeletonCard key={i} />)}
             </div>
-          ) : paginatedGroups.length > 0 ? (
+          ) : groups.length > 0 ? (
             <>
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-3">
                 <AnimatePresence>
-                  {paginatedGroups.map(grp => (
+                  {groups.map(grp => (
                     <GroupCard key={grp.id} group={grp} currentUser={currentUser} onViewDetail={onViewDetail} onRequestJoin={onRequestJoin} />
                   ))}
                 </AnimatePresence>
               </motion.div>
-              {filteredGroups.length > pageSize && (
+              {totalGroups > pageSize && (
                 <div className="flex justify-center pt-4">
-                  <Pagination current={currentPage} total={filteredGroups.length} pageSize={pageSize} onChange={setCurrentPage} className="custom-modern-pagination" />
+                  <Pagination current={currentPage} total={totalGroups} pageSize={pageSize} onChange={setCurrentPage} className="custom-modern-pagination" />
                 </div>
               )}
             </>
@@ -144,7 +139,7 @@ export default function CommunityScreen() {
       </div>
 
       <CreateGroupModal open={showCreateModal} onCancel={() => setShowCreateModal(false)} onCreate={handleCreateGroup} />
-      <JoinGroupModal open={showJoinModal} onCancel={() => setShowJoinModal(false)} onJoinSuccess={fetchMyGroups} />
+      <JoinGroupModal open={showJoinModal} onCancel={() => setShowJoinModal(false)} onJoinSuccess={() => setCurrentPage(1)} />
     </div>
   );
 }
