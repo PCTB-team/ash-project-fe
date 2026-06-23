@@ -14,10 +14,25 @@ export default function PaymentScreen() {
 
   // Fallback defaults
   const usagePercent = storageData?.usagePercent ?? 0;
-  const usedStorageMB = (storageData?.usedStorage || 0) / (1024 * 1024);
-  const maxStorageMB = (storageData?.maxStorage || 500 * 1024 * 1024) / (1024 * 1024);
+  const usedStorageBytes = storageData?.usedStorage || 0;
+  const maxStorageBytes = storageData?.maxStorage || 500 * 1024 * 1024;
+  const remainingStorageBytes = storageData?.remainingStorage || Math.max(0, maxStorageBytes - usedStorageBytes);
 
   // Helper formats
+  const formatBytes = (bytes) => {
+    if (!bytes || bytes === 0) return "0 MB";
+    const units = ["B", "KB", "MB", "GB", "TB"];
+    let value = bytes;
+    let unitIndex = 0;
+
+    while (value >= 1024 && unitIndex < units.length - 1) {
+      value /= 1024;
+      unitIndex += 1;
+    }
+
+    return `${value.toFixed(value >= 10 ? 0 : 1)} ${units[unitIndex]}`;
+  };
+
   const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
   };
@@ -36,50 +51,58 @@ export default function PaymentScreen() {
   const showToggle = plans.length > 0; 
 
   return (
-    <div className="h-full w-full flex flex-col bg-[#fdfbf9] p-4 lg:p-6 overflow-hidden relative">
+    <div className="h-full w-full flex flex-col bg-[#fcfcfd] px-4 md:px-6 pb-6 pt-5 overflow-hidden relative select-none">
       
       {/* Background Decor (Nhẹ nhàng, màu cam) */}
-      <div className="absolute top-[-10%] left-[-5%] w-[400px] h-[400px] bg-[#ff8a00]/10 blur-[100px] pointer-events-none rounded-full" />
-      <div className="absolute bottom-[-10%] right-[-5%] w-[300px] h-[300px] bg-[#ff5c00]/10 blur-[100px] pointer-events-none rounded-full" />
+      <div className="absolute top-[-10%] left-[-5%] w-[400px] h-[400px] bg-[#ff8a00]/5 blur-[100px] pointer-events-none rounded-full" />
+      <div className="absolute bottom-[-10%] right-[-5%] w-[300px] h-[300px] bg-[#ff5c00]/5 blur-[100px] pointer-events-none rounded-full" />
 
-      {/* Top Header Row */}
-      <div className="flex justify-between items-start mb-4 z-10 shrink-0">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-2xl lg:text-3xl font-bold text-[#1a1a1a]">
+      {/* Top Header Row - Giống hệt Dashboard (Thư viện của tôi) */}
+      <div className="flex justify-between items-start mb-5 sm:mb-6 z-10 shrink-0">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-xl font-semibold text-[#1d1d1f]">
             Nâng cấp không gian học tập
           </h1>
-          
-          {/* Storage Mini-Indicator (Nhiều màu sắc hơn, gọn gàng) */}
-          <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-[#ff5c00]/20 shadow-sm text-xs font-medium text-gray-700 w-fit">
-            <div className="w-6 h-6 rounded-full bg-[#ff5c00]/10 flex items-center justify-center">
-              <i className="bi bi-cloud-check-fill text-[#ff5c00]" />
-            </div>
-            <span>Đã dùng <b>{usedStorageMB.toFixed(1)} MB</b> / {maxStorageMB >= 1024 ? `${(maxStorageMB/1024).toFixed(1)} GB` : `${maxStorageMB.toFixed(0)} MB`}</span>
-            <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden ml-1">
+          <p className="text-[12px] text-black/55 font-medium mt-0.5 flex items-center gap-2">
+            Mở rộng lưu trữ và trải nghiệm các tính năng cao cấp cùng AI
+          </p>
+        </div>
+
+        <button 
+          onClick={() => navigate('/dashboard')}
+          className="w-8 h-8 flex items-center justify-center rounded-full bg-black/[0.02] border border-black/5 hover:bg-black/[0.06] hover:text-black transition-colors text-black/55 shadow-sm mt-1 cursor-pointer"
+        >
+          <i className="bi bi-x-lg text-[14px]" />
+        </button>
+      </div>
+
+      {/* Storage & Toggle Row */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 z-10 shrink-0 gap-4">
+        {/* Storage Mini-Indicator (Pro UI) */}
+        <div className="inline-flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-black/5 shadow-sm text-[12px] font-medium text-black/60 w-fit">
+          <div className="flex items-center gap-1.5 border-r border-black/5 pr-3">
+            <i className="bi bi-cloud-check-fill text-[#ff5c00] text-[15px]" />
+            <span className="text-[#1d1d1f] font-semibold">{formatBytes(usedStorageBytes)}</span>
+            <span className="text-black/40">/ {formatBytes(maxStorageBytes)}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] uppercase tracking-wider font-bold text-[#ff5c00]">Còn trống {formatBytes(remainingStorageBytes)}</span>
+            <div className="w-20 h-1.5 bg-black/[0.04] rounded-full overflow-hidden ml-1 relative">
               <div 
-                className={`h-full rounded-full transition-all duration-500 ${usagePercent > 90 ? 'bg-red-500' : 'bg-gradient-to-r from-[#ff8a00] to-[#ff5c00]'}`} 
+                className={`absolute top-0 left-0 h-full rounded-full transition-all duration-700 ease-out ${usagePercent > 90 ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-gradient-to-r from-[#ff8a00] to-[#ff5c00] shadow-[0_0_8px_rgba(255,92,0,0.4)]'}`} 
                 style={{ width: `${Math.min(100, usagePercent)}%` }} 
               />
             </div>
           </div>
         </div>
 
-        <button 
-          onClick={() => navigate('/dashboard')}
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-gray-200 hover:bg-red-50 hover:text-red-500 transition-colors text-gray-400 shadow-sm"
-        >
-          <i className="bi bi-x-lg text-sm" />
-        </button>
-      </div>
-
-      {/* Toggle Row */}
-      {showToggle && (
-        <div className="flex justify-center mb-6 z-10 shrink-0">
-          <div className="inline-flex items-center bg-white/60 backdrop-blur-md p-1 rounded-xl shadow-sm border border-gray-100">
+        {/* Toggle */}
+        {showToggle && (
+          <div className="inline-flex items-center bg-black/[0.03] p-1 rounded-xl border border-black/5">
             <button
               onClick={() => setBillingCycle('monthly')}
-              className={`relative px-5 py-1.5 text-sm font-semibold rounded-lg transition-all duration-200 ${
-                billingCycle === 'monthly' ? 'text-white' : 'text-gray-500 hover:text-gray-800'
+              className={`relative px-5 py-1.5 text-[12px] font-medium rounded-lg transition-all duration-200 cursor-pointer ${
+                billingCycle === 'monthly' ? 'text-white' : 'text-black/55 hover:text-black'
               }`}
             >
               {billingCycle === 'monthly' && (
@@ -94,8 +117,8 @@ export default function PaymentScreen() {
 
             <button
               onClick={() => setBillingCycle('yearly')}
-              className={`relative px-5 py-1.5 text-sm font-semibold rounded-lg transition-all duration-200 ${
-                billingCycle === 'yearly' ? 'text-white' : 'text-gray-500 hover:text-gray-800'
+              className={`relative px-5 py-1.5 text-[12px] font-medium rounded-lg transition-all duration-200 cursor-pointer ${
+                billingCycle === 'yearly' ? 'text-white' : 'text-black/55 hover:text-black'
               }`}
             >
               {billingCycle === 'yearly' && (
@@ -108,41 +131,41 @@ export default function PaymentScreen() {
               <span className="relative z-10">Gói Năm (Tiết kiệm)</span>
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Pricing Plans Grid (Flexible space to prevent scroll) */}
+      {/* Pricing Plans Grid */}
       <div className="flex-1 min-h-0 z-10 pb-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5 max-w-5xl mx-auto h-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5 max-w-[1100px] h-full">
           {loading && plans.length === 0 ? (
             // Skeletons
             [...Array(3)].map((_, i) => (
-              <div key={i} className="bg-white border border-gray-100 rounded-2xl p-5 h-full animate-pulse flex flex-col shadow-sm">
-                <div className="h-5 bg-gray-100 rounded w-1/3 mb-3" />
-                <div className="h-8 bg-gray-100 rounded w-1/2 mb-6" />
+              <div key={i} className="bg-white border border-black/5 rounded-2xl p-5 h-full animate-pulse flex flex-col shadow-sm">
+                <div className="h-5 bg-black/[0.03] rounded w-1/3 mb-3" />
+                <div className="h-8 bg-black/[0.03] rounded w-1/2 mb-6" />
                 <div className="space-y-3 flex-1">
-                  <div className="h-3 bg-gray-100 rounded w-full" />
-                  <div className="h-3 bg-gray-100 rounded w-5/6" />
-                  <div className="h-3 bg-gray-100 rounded w-4/6" />
+                  <div className="h-3 bg-black/[0.03] rounded w-full" />
+                  <div className="h-3 bg-black/[0.03] rounded w-5/6" />
+                  <div className="h-3 bg-black/[0.03] rounded w-4/6" />
                 </div>
-                <div className="h-10 bg-gray-100 rounded-xl w-full mt-4" />
+                <div className="h-10 bg-black/[0.03] rounded-xl w-full mt-4" />
               </div>
             ))
           ) : plans.length === 0 ? (
-             <div className="col-span-full flex flex-col items-center justify-center h-full text-center bg-white/50 rounded-3xl border border-dashed border-gray-200">
-              <div className="w-16 h-16 bg-[#ff5c00]/10 rounded-full flex items-center justify-center mb-3">
-                <i className="bi bi-star-fill text-2xl text-[#ff5c00]" />
+             <div className="col-span-full flex flex-col items-center justify-center h-full text-center bg-white/40 rounded-2xl border border-dashed border-black/10">
+              <div className="w-14 h-14 bg-[#ff5c00]/10 rounded-full flex items-center justify-center mb-3">
+                <i className="bi bi-star-fill text-[24px] text-[#ff5c00]" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">Bạn đang dùng gói cao nhất!</h3>
-              <p className="text-sm text-gray-500">Hiện tại hệ thống không có gói nào lớn hơn.</p>
+              <h3 className="text-[16px] font-semibold text-[#1d1d1f] mb-1">Bạn đang dùng gói cao nhất!</h3>
+              <p className="text-[12px] text-black/55 font-medium">Hiện tại hệ thống không có gói nào lớn hơn.</p>
             </div>
           ) : filteredPlans.length === 0 ? (
-            <div className="col-span-full flex flex-col items-center justify-center h-full text-center bg-white/50 rounded-3xl border border-dashed border-gray-200">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                <i className="bi bi-inbox text-2xl text-gray-400" />
+            <div className="col-span-full flex flex-col items-center justify-center h-full text-center bg-white/40 rounded-2xl border border-dashed border-black/10">
+              <div className="w-14 h-14 bg-black/[0.03] rounded-full flex items-center justify-center mb-3">
+                <i className="bi bi-inbox text-[24px] text-black/30" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">Không có gói phù hợp</h3>
-              <p className="text-sm text-gray-500">Chưa có gói {billingCycle === 'monthly' ? 'tháng' : 'năm'} nào để hiển thị.</p>
+              <h3 className="text-[16px] font-semibold text-[#1d1d1f] mb-1">Không có gói phù hợp</h3>
+              <p className="text-[12px] text-black/55 font-medium">Chưa có gói {billingCycle === 'monthly' ? 'tháng' : 'năm'} nào để hiển thị.</p>
             </div>
           ) : (
             <AnimatePresence mode="popLayout">
@@ -157,51 +180,62 @@ export default function PaymentScreen() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className={`bg-white rounded-2xl p-5 flex flex-col relative overflow-hidden transition-all h-full ${
+                    className={`bg-white rounded-2xl p-5 md:p-6 flex flex-col relative overflow-hidden transition-all h-full ${
                       isPremium 
-                      ? 'border-2 border-[#ff5c00] shadow-lg shadow-[#ff5c00]/5' 
-                      : 'border border-gray-100 shadow-sm hover:border-[#ff5c00]/30 hover:shadow-md'
+                      ? 'border-2 border-[#ff5c00] shadow-[0_4px_20px_rgba(255,92,0,0.08)]' 
+                      : 'border border-black/[0.04] shadow-sm hover:border-black/10 hover:shadow-md'
                     }`}
                   >
                     {isPremium && (
-                      <div className="absolute top-0 right-0 bg-[#ff5c00] text-white text-[10px] font-bold uppercase tracking-wider py-1 px-3 rounded-bl-xl">
+                      <div className="absolute top-0 right-0 bg-[#ff5c00] text-white text-[10px] font-semibold uppercase py-1 px-3 rounded-bl-xl shadow-sm">
                         Phổ biến
                       </div>
                     )}
 
                     <div className="mb-4 mt-1">
-                      <h3 className={`text-base font-bold mb-1 ${isPremium ? 'text-[#ff5c00]' : 'text-gray-800'}`}>
+                      <h3 className={`text-[16px] font-semibold mb-1 ${isPremium ? 'text-[#ff5c00]' : 'text-[#1d1d1f]'}`}>
                         {plan.planName}
                       </h3>
+                      
+                      {/* Giá ảo gạch ngang */}
+                      <div className="text-[12px] text-black/40 line-through mb-0.5 font-medium">
+                        {formatPrice(plan.price * 1.5)}
+                      </div>
+
                       <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-extrabold text-gray-900 tracking-tight">{formatPrice(plan.price)}</span>
-                        <span className="text-xs text-gray-500 font-medium">/{plan.durationMonths}T</span>
+                        <span className="text-[24px] font-semibold text-[#ff5c00]">{formatPrice(plan.price)}</span>
+                        <span className="text-[12.5px] text-black/55 font-medium">/{plan.durationMonths}T</span>
+                        
+                        {/* Huy hiệu giảm giá ảo */}
+                        <span className="ml-2 text-[10px] font-semibold text-[#ff5c00] bg-[#ff5c00]/10 px-1.5 py-0.5 rounded-md border border-[#ff5c00]/20">
+                          -33%
+                        </span>
                       </div>
                     </div>
 
                     {/* Features List */}
-                    <div className="space-y-2.5 flex-1 text-[13px] text-gray-600">
+                    <div className="space-y-3 flex-1 text-[12.5px] text-black/60 font-medium mt-2">
                       <div className="flex items-start gap-2.5">
-                        <div className={`mt-0.5 w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${isPremium ? 'bg-[#ff5c00]/10 text-[#ff5c00]' : 'bg-gray-100 text-gray-500'}`}>
-                          <i className="bi bi-check2 text-[10px] font-bold" />
+                        <div className={`mt-[3px] w-[14px] h-[14px] rounded-full flex items-center justify-center shrink-0 ${isPremium ? 'bg-[#ff5c00]/10 text-[#ff5c00]' : 'bg-black/[0.04] text-black/50'}`}>
+                          <i className="bi bi-check2 text-[10px]" />
                         </div>
-                        <span>Lưu trữ lên đến <b className="text-gray-900">{formatGB(plan.quotaSize)} GB</b></span>
+                        <span>Lưu trữ lên đến <b className="text-[#1d1d1f]">{formatGB(plan.quotaSize)} GB</b></span>
                       </div>
                       <div className="flex items-start gap-2.5">
-                        <div className={`mt-0.5 w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${isPremium ? 'bg-[#ff5c00]/10 text-[#ff5c00]' : 'bg-gray-100 text-gray-500'}`}>
-                          <i className="bi bi-check2 text-[10px] font-bold" />
+                        <div className={`mt-[3px] w-[14px] h-[14px] rounded-full flex items-center justify-center shrink-0 ${isPremium ? 'bg-[#ff5c00]/10 text-[#ff5c00]' : 'bg-black/[0.04] text-black/50'}`}>
+                          <i className="bi bi-check2 text-[10px]" />
                         </div>
                         <span>Quản lý tài liệu học tập không giới hạn</span>
                       </div>
                       <div className="flex items-start gap-2.5">
-                        <div className={`mt-0.5 w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${isPremium ? 'bg-[#ff5c00]/10 text-[#ff5c00]' : 'bg-gray-100 text-gray-500'}`}>
-                          <i className="bi bi-check2 text-[10px] font-bold" />
+                        <div className={`mt-[3px] w-[14px] h-[14px] rounded-full flex items-center justify-center shrink-0 ${isPremium ? 'bg-[#ff5c00]/10 text-[#ff5c00]' : 'bg-black/[0.04] text-black/50'}`}>
+                          <i className="bi bi-check2 text-[10px]" />
                         </div>
                         <span>Sử dụng AI phân tích tài liệu cao cấp</span>
                       </div>
                       <div className="flex items-start gap-2.5">
-                        <div className={`mt-0.5 w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${isPremium ? 'bg-[#ff5c00]/10 text-[#ff5c00]' : 'bg-gray-100 text-gray-500'}`}>
-                          <i className="bi bi-check2 text-[10px] font-bold" />
+                        <div className={`mt-[3px] w-[14px] h-[14px] rounded-full flex items-center justify-center shrink-0 ${isPremium ? 'bg-[#ff5c00]/10 text-[#ff5c00]' : 'bg-black/[0.04] text-black/50'}`}>
+                          <i className="bi bi-check2 text-[10px]" />
                         </div>
                         <span>Tốc độ Upload/Download cực nhanh</span>
                       </div>
@@ -210,16 +244,16 @@ export default function PaymentScreen() {
                     <button
                       onClick={() => handleCheckout(plan.id)}
                       disabled={loading}
-                      className={`w-full py-2.5 mt-4 rounded-xl font-semibold text-sm transition-all active:scale-[0.98] ${
+                      className={`w-full h-10 mt-5 rounded-full font-medium text-[13px] transition-all duration-300 cursor-pointer flex items-center justify-center ${
                         isPremium
-                        ? 'bg-gradient-to-r from-[#ff8a00] to-[#ff5c00] text-white hover:shadow-lg hover:shadow-[#ff5c00]/30'
-                        : 'bg-gray-50 text-gray-800 hover:bg-gray-100 border border-gray-200'
-                      } ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        ? 'bg-gradient-to-b from-[#ff7a00] to-[#ff5c00] text-white shadow-[0_1px_3px_rgba(255,92,0,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] hover:brightness-110 hover:shadow-[0_8px_24px_rgba(255,92,0,0.4)]'
+                        : 'border border-black/10 bg-black/[0.02] hover:bg-black/[0.06] text-black/60 hover:text-black'
+                      } ${loading ? 'opacity-70 !cursor-not-allowed' : ''}`}
                     >
                       {loading ? (
-                        <i className="bi bi-arrow-repeat animate-spin text-base" />
+                        <i className="bi bi-hourglass-split animate-[spin_2s_linear_infinite]" />
                       ) : (
-                        isPremium ? 'Mua gói này' : 'Nâng cấp'
+                        isPremium ? 'Đăng ký ngay' : 'Nâng cấp'
                       )}
                     </button>
                   </motion.div>

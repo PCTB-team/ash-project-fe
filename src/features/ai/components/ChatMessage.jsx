@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import logoAI from '../../../assets/logo_AI.png';
 
 export default function ChatMessage({ message }) {
   const isUser = message.role === 'user';
@@ -13,25 +14,29 @@ export default function ChatMessage({ message }) {
       className={`flex gap-2.5 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
     >
       {/* Avatar */}
-      <div className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center mt-0.5 ${isUser
+      <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center mt-0.5 overflow-hidden shadow-sm ${isUser
         ? 'bg-gradient-to-br from-[#ff8a00] to-[#ff5c00]'
-        : 'bg-gradient-to-br from-[#ff8a00] to-[#ff5c00] shadow-sm shadow-[#ff5c00]/10'
+        : 'bg-white border border-black/5 shadow-[#ff5c00]/10'
         }`}>
-        <i className={`bi ${isUser ? 'bi-person-fill' : 'bi-stars'} text-white text-[11px]`} />
+        {isUser ? (
+          <i className="bi bi-person-fill text-white text-[13px]" />
+        ) : (
+          <img src={logoAI} alt="AI" className="w-full h-full object-cover" />
+        )}
       </div>
 
       {/* Content */}
-      <div className={`max-w-[75%] min-w-0 flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
+      <div className={`max-w-[80%] min-w-0 flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
         {/* Name + time */}
-        <div className={`flex items-center gap-1.5 mb-0.5 ${isUser ? 'flex-row-reverse' : ''}`}>
-          <span className="text-[10px] font-bold text-black/25">{isUser ? 'Bạn' : 'CapyAI'}</span>
-          <span className="text-[9px] text-black/15 font-medium">
+        <div className={`flex items-center gap-2 mb-1 ${isUser ? 'flex-row-reverse' : ''}`}>
+          <span className="text-[12px] font-semibold text-black/40">{isUser ? 'Bạn' : 'CapyAI'}</span>
+          <span className="text-[11px] text-black/30 font-medium">
             {new Date(message.timestamp).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
 
         {/* Bubble */}
-        <div className={`rounded-2xl px-3.5 py-2.5 ${isUser
+        <div className={`rounded-2xl px-4 py-3 ${isUser
           ? 'bg-gradient-to-br from-[#ff8a00] to-[#ff5c00] text-white rounded-tr-md'
           : isError
             ? 'bg-red-50 border border-red-100 text-red-600 rounded-tl-md'
@@ -49,11 +54,11 @@ export default function ChatMessage({ message }) {
                   />
                 ))}
               </div>
-              <span className="text-[11px] text-black/20 font-medium">Đang phân tích...</span>
+              <span className="text-[12px] text-black/30 font-medium">Đang phân tích...</span>
             </div>
           ) : (
-            <div className="text-[13px] leading-[1.6] whitespace-pre-wrap break-words" style={{ fontWeight: isUser ? 500 : 420 }}>
-              {isError && <i className="bi bi-exclamation-triangle-fill text-[10px] mr-1.5" />}
+            <div className={`text-[14px] leading-relaxed whitespace-pre-wrap break-words ${isUser ? 'font-medium' : ''}`}>
+              {isError && <i className="bi bi-exclamation-triangle-fill text-[12px] mr-1.5" />}
               {message.content}
             </div>
           )}
@@ -61,11 +66,11 @@ export default function ChatMessage({ message }) {
 
         {/* Sources */}
         {!isUser && message.sources && message.sources.length > 0 && (
-          <div className="mt-1.5 flex items-center flex-wrap gap-1">
-            <span className="text-[8px] font-bold text-black/15 uppercase">Nguồn:</span>
+          <div className="mt-2 flex items-center flex-wrap gap-1.5">
+            <span className="text-[10px] font-semibold text-black/40 uppercase">Nguồn:</span>
             {message.sources.map((src, i) => (
-              <span key={i} className="inline-flex items-center gap-1 text-[9px] font-semibold text-[#ff5c00] bg-[#ff5c00]/[0.05] px-1.5 py-[2px] rounded border border-[#ff5c00]/10">
-                <i className="bi bi-file-earmark-text text-[8px]" />
+              <span key={i} className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#ff5c00] bg-[#ff5c00]/[0.06] px-2 py-0.5 rounded-md border border-[#ff5c00]/10">
+                <i className="bi bi-file-earmark-text text-[10px]" />
                 {src.name || src.fileName || `Tài liệu ${i + 1}`}
               </span>
             ))}
