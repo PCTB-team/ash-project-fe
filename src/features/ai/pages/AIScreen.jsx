@@ -5,6 +5,7 @@ import { useAIChat } from '../hooks/useAIChat.js';
 import MessageList from '../components/MessageList.jsx';
 import ChatInput from '../components/ChatInput.jsx';
 import ConversationSidebar from '../components/ConversationSidebar.jsx';
+import logoAI from '../../../assets/logo_AI.png';
 
 const SCOPES = [
   { key: 'all', icon: 'bi-collection', label: 'Tất cả tài liệu', desc: 'Tìm kiếm toàn bộ kho tài liệu' },
@@ -76,7 +77,7 @@ export default function AIScreen() {
       <div className="flex-1 flex flex-col min-w-0 relative bg-[#fafafa]">
 
         {/* ═══ Header ═══ */}
-        <div className="flex items-center justify-between px-4 sm:px-5 h-[54px] border-b border-black/[0.04] bg-white flex-shrink-0 relative z-20">
+        <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-black/[0.04] bg-white flex-shrink-0 relative z-20 min-h-[64px]">
           <div className="flex items-center gap-3">
             {/* Mobile hamburger */}
             <button
@@ -87,20 +88,20 @@ export default function AIScreen() {
             </button>
 
             {/* CapyAI Identity */}
-            <div className="flex items-center gap-2.5">
-              <div className="relative">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#ff8a00] to-[#ff5c00] flex items-center justify-center shadow-sm shadow-[#ff5c00]/15">
-                  <i className="bi bi-stars text-white text-[14px]" />
+            <div className="flex items-center gap-3">
+              <div className="relative shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-sm shadow-[#ff5c00]/15 overflow-hidden border border-black/5">
+                  <img src={logoAI} alt="CapyAI" className="w-full h-full object-cover" />
                 </div>
-                <div className="absolute -bottom-px -right-px w-[9px] h-[9px] bg-emerald-400 rounded-full border-[1.5px] border-white" />
+                <div className="absolute -bottom-px -right-px w-[10px] h-[10px] bg-emerald-400 rounded-full border-[1.5px] border-white z-10" />
               </div>
-              <div className="leading-tight">
-                <h2 className="text-[13px] font-bold text-[#1d1d1f] tracking-[-0.01em] flex items-center gap-1.5">
+              <div className="flex flex-col justify-center">
+                <h2 className="text-xl font-semibold text-[#1d1d1f] flex items-center gap-2 leading-none mb-1">
                   CapyAI
-                  <span className="text-[8px] font-bold text-[#ff5c00] bg-[#ff5c00]/[0.08] px-1.5 py-[1px] rounded-md uppercase tracking-wide">Beta</span>
+                  <span className="text-[10px] font-semibold text-[#ff5c00] bg-[#ff5c00]/10 px-1.5 py-0.5 rounded-md uppercase border border-[#ff5c00]/20">Beta</span>
                 </h2>
-                <p className="text-[10px] text-black/30 font-medium flex items-center gap-1">
-                  <span className="w-[5px] h-[5px] bg-emerald-400 rounded-full" />
+                <p className="text-[12px] text-black/55 font-medium flex items-center gap-1.5 leading-none">
+                  <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
                   Trợ lý học tập thông minh
                 </p>
               </div>
@@ -113,15 +114,15 @@ export default function AIScreen() {
             <div ref={scopeRef} className="relative">
               <button
                 onClick={() => setShowScopeDropdown(!showScopeDropdown)}
-                className={`h-8 px-2.5 rounded-lg flex items-center gap-1.5 text-[11px] font-semibold transition-all duration-200 cursor-pointer
+                className={`h-9 px-3 rounded-lg flex items-center gap-1.5 text-[13px] font-medium transition-all duration-200 cursor-pointer
                   ${showScopeDropdown
-                    ? 'bg-[#ff5c00]/[0.06] text-[#ff5c00]'
-                    : 'text-black/40 hover:bg-black/[0.03] hover:text-black/60'
+                    ? 'bg-[#ff5c00]/10 text-[#ff5c00]'
+                    : 'text-black/55 hover:bg-black/[0.03] hover:text-black'
                   }`}
               >
-                <i className="bi bi-sliders2 text-[11px]" />
+                <i className="bi bi-sliders2 text-[13px]" />
                 <span className="hidden sm:inline">{activeScope.label}</span>
-                <i className={`bi bi-chevron-down text-[8px] transition-transform duration-200 ${showScopeDropdown ? 'rotate-180' : ''}`} />
+                <i className={`bi bi-chevron-down text-[10px] transition-transform duration-200 ${showScopeDropdown ? 'rotate-180' : ''}`} />
               </button>
 
               {/* Dropdown (opens downward, z-50) */}
@@ -132,9 +133,9 @@ export default function AIScreen() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -4, scale: 0.98 }}
                     transition={{ duration: 0.12 }}
-                    className="absolute top-full right-0 mt-1.5 w-[260px] bg-white border border-black/[0.06] rounded-xl shadow-xl shadow-black/[0.08] py-1.5 px-1.5 z-50"
+                    className="absolute top-full right-0 mt-1.5 w-[260px] bg-white border border-black/5 rounded-xl shadow-lg py-1.5 px-1.5 z-50"
                   >
-                    <p className="text-[9px] font-bold text-black/25 uppercase tracking-wider px-2.5 pt-1 pb-1.5">Phạm vi tìm kiếm</p>
+                    <p className="text-[10px] font-semibold text-black/40 uppercase px-2.5 pt-1 pb-1.5">Phạm vi tìm kiếm</p>
                     {SCOPES.map((scope) => {
                       const isActive = chatContext.scope === scope.key;
                       return (
@@ -148,17 +149,17 @@ export default function AIScreen() {
                             setShowScopeDropdown(false);
                           }}
                           className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left cursor-pointer transition-all duration-150 mb-0.5
-                            ${isActive ? 'bg-[#ff5c00]/[0.05]' : 'hover:bg-black/[0.02]'}`}
+                            ${isActive ? 'bg-[#ff5c00]/10' : 'hover:bg-black/[0.03]'}`}
                         >
-                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${isActive ? 'bg-[#ff5c00]/10 text-[#ff5c00]' : 'bg-black/[0.03] text-black/30'
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${isActive ? 'bg-[#ff5c00]/10 text-[#ff5c00]' : 'bg-black/[0.03] text-black/55'
                             }`}>
-                            <i className={`bi ${scope.icon} text-[12px]`} />
+                            <i className={`bi ${scope.icon} text-[13px]`} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className={`text-[11.5px] font-semibold leading-tight ${isActive ? 'text-[#ff5c00]' : 'text-black/55'}`}>{scope.label}</p>
-                            <p className="text-[9.5px] text-black/25 font-medium leading-tight">{scope.desc}</p>
+                            <p className={`text-[12px] font-medium leading-tight mb-0.5 ${isActive ? 'text-[#ff5c00]' : 'text-[#1d1d1f]'}`}>{scope.label}</p>
+                            <p className="text-[11px] text-black/55 font-medium leading-tight">{scope.desc}</p>
                           </div>
-                          {isActive && <i className="bi bi-check2 text-[13px] text-[#ff5c00] flex-shrink-0" />}
+                          {isActive && <i className="bi bi-check2 text-[14px] text-[#ff5c00] flex-shrink-0" />}
                         </button>
                       );
                     })}
@@ -167,14 +168,14 @@ export default function AIScreen() {
               </AnimatePresence>
             </div>
 
-            <div className="w-px h-4 bg-black/[0.06] mx-0.5 hidden sm:block" />
+            <div className="w-px h-5 bg-black/5 mx-1 hidden sm:block" />
 
             <button
               onClick={createNewConversation}
-              className="h-8 px-2.5 rounded-lg hover:bg-black/[0.03] text-black/40 hover:text-black/60 flex items-center gap-1.5 text-[11px] font-semibold transition-all duration-200 cursor-pointer"
+              className="h-9 px-3 rounded-lg hover:bg-black/[0.03] text-black/55 hover:text-black flex items-center gap-1.5 text-[13px] font-medium transition-all duration-200 cursor-pointer"
             >
-              <i className="bi bi-plus-circle text-[13px]" />
-              <span className="hidden sm:inline">Mới</span>
+              <i className="bi bi-plus-circle text-[14px]" />
+              <span className="hidden sm:inline">Trò chuyện mới</span>
             </button>
           </div>
         </div>

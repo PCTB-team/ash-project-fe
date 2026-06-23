@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import logoAI from '../../../assets/logo_AI.png';
 
 const SUGGESTIONS = [
   {
@@ -48,15 +49,15 @@ export default function WelcomePrompts({ onSelectPrompt }) {
             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
             className="absolute w-20 h-20 rounded-full bg-[#ff5c00]/20 blur-xl"
           />
-          <div className="relative w-[60px] h-[60px] rounded-2xl bg-gradient-to-br from-[#ff8a00] to-[#ff5c00] flex items-center justify-center shadow-lg shadow-[#ff5c00]/20 ring-4 ring-white">
-            <i className="bi bi-stars text-white text-[26px]" />
+          <div className="relative w-[60px] h-[60px] rounded-2xl bg-white flex items-center justify-center shadow-lg shadow-[#ff5c00]/20 ring-4 ring-white overflow-hidden border border-black/5">
+            <img src={logoAI} alt="CapyAI" className="w-full h-full object-cover" />
           </div>
         </div>
 
-        <h2 className="text-[22px] font-extrabold text-[#1d1d1f] tracking-[-0.02em] mb-1 flex items-center justify-center gap-2">
-          Xin chào! Tôi là CapyAI <i className="bi bi-robot text-[#ff5c00] text-[20px]" />
+        <h2 className="text-2xl font-semibold text-[#1d1d1f] mb-2 flex items-center justify-center gap-2">
+          Xin chào! Tôi là CapyAI <i className="bi bi-robot text-[#ff5c00] text-[22px]" />
         </h2>
-        <p className="text-[13px] text-black/40 font-medium max-w-[380px] leading-relaxed mx-auto">
+        <p className="text-[13px] text-black/55 font-medium max-w-[420px] leading-relaxed mx-auto">
           Trợ lý học tập thông minh của Capy Study — hỏi đáp, tóm tắt, và hỗ trợ bạn mọi lúc.
         </p>
       </motion.div>
@@ -86,10 +87,10 @@ export default function WelcomePrompts({ onSelectPrompt }) {
                   <i className={`bi ${item.icon} text-[14px]`} />
                 </div>
                 <div className="min-w-0 flex-1 pt-0.5">
-                  <h4 className="text-[12px] font-bold text-[#1d1d1f] mb-px group-hover:text-[#ff5c00] transition-colors">
+                  <h4 className="text-[14px] font-semibold text-[#1d1d1f] mb-0.5 group-hover:text-[#ff5c00] transition-colors">
                     {item.title}
                   </h4>
-                  <p className="text-[10.5px] text-black/30 font-medium leading-snug">
+                  <p className="text-[12px] text-black/55 font-medium leading-snug">
                     {item.description}
                   </p>
                 </div>
@@ -104,10 +105,10 @@ export default function WelcomePrompts({ onSelectPrompt }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="mt-7 flex items-center gap-1.5"
+        className="mt-8 flex items-center gap-2"
       >
-        <i className="bi bi-shield-lock text-[10px] text-black/15" />
-        <span className="text-[9.5px] text-black/20 font-medium">
+        <i className="bi bi-shield-lock text-[13px] text-black/30" />
+        <span className="text-[12px] text-black/40 font-medium">
           CapyAI chỉ truy cập tài liệu bạn có quyền
         </span>
       </motion.div>

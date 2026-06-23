@@ -14,14 +14,36 @@ export default function PaymentSuccessScreen() {
       if (pollingStarted.current) return;
       pollingStarted.current = true;
 
+      const urlParams = new URLSearchParams(window.location.search);
+      const payosCode = urlParams.get('code');
+      const payosStatus = urlParams.get('status');
+      
       const txId = localStorage.getItem('latestPaymentTransactionId');
+      
+      // Nếu mất txId do chuyển trình duyệt/tab ẩn danh, fallback dùng params từ PayOS
       if (!txId) {
-        setStatus('FAILED');
+        if (payosCode === '00' || payosStatus === 'PAID') {
+          setStatus('SUCCESS');
+        } else {
+          setStatus('FAILED');
+        }
         return;
       }
 
       const finalStatus = await pollStatus(txId);
-      setStatus(finalStatus);
+      
+      if (finalStatus === 'SUCCESS') {
+        setStatus('SUCCESS');
+      } else if (finalStatus === 'FAILED') {
+        setStatus('FAILED');
+      } else {
+        // Nếu PENDING (timeout polling) nhưng PayOS báo thành công, ta cứ show Success cho mượt
+        if (payosCode === '00' || payosStatus === 'PAID') {
+          setStatus('SUCCESS');
+        } else {
+          setStatus('FAILED');
+        }
+      }
     };
 
     checkStatus();

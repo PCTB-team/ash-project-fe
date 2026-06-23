@@ -5,7 +5,7 @@ import { axiosClient } from '../../../utils/apiClient';
  * Các gói trả về có dung lượng lớn hơn dung lượng hiện tại của user.
  */
 export const getAvailablePlans = async () => {
-  const response = await axiosClient.get('/api/v1/payment/available-plans');
+  const response = await axiosClient.get('/api/v1/user/available-plans');
   return response.data;
 };
 
@@ -14,7 +14,7 @@ export const getAvailablePlans = async () => {
  * Trả về usedStorage, maxStorage, remainingStorage, usagePercent.
  */
 export const getMyStorage = async () => {
-  const response = await axiosClient.get('/api/v1/payment/my-storage');
+  const response = await axiosClient.get('/api/v1/user/storage');
   return response.data;
 };
 
