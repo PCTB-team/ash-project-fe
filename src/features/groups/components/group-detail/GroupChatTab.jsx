@@ -1,17 +1,25 @@
 import { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Input, Button, Spin, message as antMessage } from 'antd';
-import { Client } from '@stomp/stompjs';
+import { connectGroupChatSocket } from '../../services/groupChatSocket.service';
 import { getGroupMessages, sendGroupMessage } from '../../api/groups.api';
+import { axiosClient } from '../../../../utils/apiClient';
+
+const getAvatarUrl = (url) => {
+  if (!url) return null;
+  if (url.startsWith('http') || url.startsWith('data:')) return url;
+  const baseUrl = axiosClient.defaults.baseURL || 'https://ash-project-be.onrender.com';
+  return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+};
 
 export default function GroupChatTab({ group, currentUser, profileData }) {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(true);
+  const [socketStatus, setSocketStatus] = useState('DISCONNECTED');
   
   const messagesEndRef = useRef(null);
-  const stompClientRef = useRef(null);
 
   const currentUserId = profileData?.id || profileData?.userId;
 
@@ -39,38 +47,32 @@ export default function GroupChatTab({ group, currentUser, profileData }) {
     fetchHistory();
 
     const token = localStorage.getItem('accessToken');
+    let disconnect;
     if (token) {
-      const client = new Client({
-        brokerURL: 'wss://ash-project-be.onrender.com/api/v1/ws',
-        connectHeaders: {
-          Authorization: `Bearer ${token}`,
+      disconnect = connectGroupChatSocket({
+        groupId: group.id,
+        accessToken: token,
+        onStatusChange: (status) => {
+          if (active) {
+            setSocketStatus(status);
+            setConnecting(status !== 'CONNECTED');
+          }
         },
-        reconnectDelay: 5000,
-        onConnect: () => {
-          if (active) setConnecting(false);
-          client.subscribe(`/topic/groups/${group.id}/messages`, (frame) => {
-            const newMessage = JSON.parse(frame.body);
+        onMessage: (newMessage) => {
+          if (active) {
             setMessages((prev) => {
               // Prevent duplicates
               if (prev.some((m) => m.messageId === newMessage.messageId)) return prev;
               return [...prev, newMessage];
             });
-          });
-        },
-        onDisconnect: () => {
-          if (active) setConnecting(true);
-        },
+          }
+        }
       });
-
-      stompClientRef.current = client;
-      client.activate();
     }
 
     return () => {
       active = false;
-      if (stompClientRef.current) {
-        stompClientRef.current.deactivate();
-      }
+      if (disconnect) disconnect();
     };
   }, [group.id]);
 
@@ -145,8 +147,12 @@ export default function GroupChatTab({ group, currentUser, profileData }) {
             // Check if isMine by currentUserId if available, else fallback to email check (currentUser is email)
             const isMine = currentUserId ? msg.senderId === currentUserId : (msg.senderEmail === currentUser || msg.senderName === profileData?.fullName);
             
-            const isNextSameSender = idx < messages.length - 1 && messages[idx + 1].senderId === msg.senderId;
-            const isPrevSameSender = idx > 0 && messages[idx - 1].senderId === msg.senderId;
+            const currentSender = msg.senderId || msg.senderEmail || msg.senderName || 'unknown';
+            const nextSender = idx < messages.length - 1 ? (messages[idx + 1].senderId || messages[idx + 1].senderEmail || messages[idx + 1].senderName || 'unknown') : null;
+            const prevSender = idx > 0 ? (messages[idx - 1].senderId || messages[idx - 1].senderEmail || messages[idx - 1].senderName || 'unknown') : null;
+            
+            const isNextSameSender = nextSender === currentSender;
+            const isPrevSameSender = prevSender === currentSender;
 
             // Show avatar for both left and right sides on the last message of the block
             const showAvatar = !isNextSameSender;
@@ -177,7 +183,7 @@ export default function GroupChatTab({ group, currentUser, profileData }) {
                   <div className="w-[32px] shrink-0 mr-2.5 flex flex-col items-center justify-end">
                     {showAvatar ? (
                       msg.senderAvatarUrl ? (
-                        <img src={msg.senderAvatarUrl} alt={msg.senderName} className="w-[32px] h-[32px] rounded-full object-cover border border-black/5" />
+                        <img src={getAvatarUrl(msg.senderAvatarUrl)} alt={msg.senderName} className="w-[32px] h-[32px] rounded-full object-cover border border-black/5" />
                       ) : (
                         <div className="w-[32px] h-[32px] rounded-full bg-gradient-to-br from-blue-100 to-blue-200 text-blue-600 flex items-center justify-center font-bold text-[13px] border border-black/5">
                           {(msg.senderName || 'U').charAt(0).toUpperCase()}
@@ -200,7 +206,7 @@ export default function GroupChatTab({ group, currentUser, profileData }) {
                   <div className="w-[32px] shrink-0 ml-2.5 flex flex-col items-center justify-end">
                     {showAvatar ? (
                       msg.senderAvatarUrl ? (
-                        <img src={msg.senderAvatarUrl} alt={msg.senderName} className="w-[32px] h-[32px] rounded-full object-cover border border-black/5" />
+                        <img src={getAvatarUrl(msg.senderAvatarUrl)} alt={msg.senderName} className="w-[32px] h-[32px] rounded-full object-cover border border-black/5" />
                       ) : (
                         <div className="w-[32px] h-[32px] rounded-full bg-gradient-to-br from-orange-100 to-orange-200 text-orange-600 flex items-center justify-center font-bold text-[13px] border border-black/5">
                           {(msg.senderName || 'U').charAt(0).toUpperCase()}

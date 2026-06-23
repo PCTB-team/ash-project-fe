@@ -85,6 +85,44 @@ axiosClient.interceptors.response.use(
       });
     }
 
+    // --- GLOBAL ERROR HANDLING ---
+    // Ignore global errors if the request explicitly asks to skip them (e.g., config.skipGlobalError = true)
+    if (!originalRequest.skipGlobalError && error.response && error.response.data) {
+      const code = error.response.data.code;
+      const errorMsg = error.response.data.message;
+
+      // Handle specific business logic error codes
+      switch (code) {
+        case 1219:
+        case 1238:
+          message.error("Bạn không có quyền thực hiện hành động này.");
+          break;
+        case 1239:
+          message.error("Bạn đã bị tắt quyền tương tác trong nhóm này.");
+          break;
+        case 1306:
+          message.error("Dung lượng không đủ. Vui lòng nâng cấp gói lưu trữ.");
+          break;
+        case 1304:
+          message.error("Loại file không được hỗ trợ.");
+          break;
+        case 1404:
+          // Often for 404 items like file not found or group not found, we don't always show a global message, 
+          // but if we want to:
+          // message.error("Không tìm thấy dữ liệu yêu cầu.");
+          break;
+        case 1307:
+          // We usually handle FILE_ALREADY_EXISTS at the component level to ask for overwrite
+          break;
+        default:
+          // If status is 5xx
+          if (error.response.status >= 500) {
+            message.error("Lỗi hệ thống máy chủ. Vui lòng thử lại sau.");
+          }
+          break;
+      }
+    }
+
     return Promise.reject(error);
   }
 );
