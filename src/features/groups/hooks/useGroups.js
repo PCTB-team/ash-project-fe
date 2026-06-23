@@ -158,6 +158,11 @@ export const useGroups = () => {
     catch (err) { message.error('Lỗi khi cập nhật quyền.'); throw err; }
   };
 
+  const toggleChatPermission = async (groupId, memberId, canChat) => {
+    try { const data = await groupApi.updateChatPermission(groupId, memberId, canChat); message.success('Đã cập nhật quyền chat.'); await fetchMembers(groupId); return data; }
+    catch (err) { message.error('Lỗi khi cập nhật quyền chat.'); throw err; }
+  };
+
   const kickMember = async (groupId, memberId) => {
     try { const data = await groupApi.kickMember(groupId, memberId); message.success('Đã xóa thành viên.'); await fetchGroupById(groupId); return data; }
     catch (err) { message.error('Lỗi khi xóa thành viên.'); throw err; }
@@ -182,7 +187,7 @@ export const useGroups = () => {
     groups, currentGroup, groupPreview, members, memberCount, files, trashFiles, statistics, isLoading, error,
     totalGroups, currentPage, totalPages,
     fetchMyGroups, fetchGroupById, createGroup, previewGroup, joinViaInvite,
-    fetchMembers, toggleUploadPermission, kickMember,
+    fetchMembers, toggleUploadPermission, toggleChatPermission, kickMember,
     fetchFiles, uploadFile, deleteFile, fetchTrashFiles, restoreFile,
     regenerateInvite, leaveGroup, updateGroupPassword,
   };

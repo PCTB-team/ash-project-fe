@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 
 const tabs = [
   { key: 'overview', icon: 'bi-grid-1x2', label: 'Tổng quan' },
+  { key: 'chat', icon: 'bi-chat-dots', label: 'Trò chuyện' },
   { key: 'documents', icon: 'bi-folder2-open', label: 'Tài liệu' },
   { key: 'members', icon: 'bi-people', label: 'Thành viên' },
   { key: 'trash', icon: 'bi-trash3', label: 'Thùng rác' },

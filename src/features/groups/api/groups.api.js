@@ -108,6 +108,31 @@ export const leaveGroup = async (groupId) => {
   return response.data;
 };
 
+// ─── 19. Get Group Messages ─── GET /groups/{groupId}/messages
+export const getGroupMessages = async (groupId, page = 0, size = 30) => {
+  const response = await axiosClient.get(`${BASE_URL}/${groupId}/messages`, {
+    params: { page, size },
+  });
+  return response.data.result;
+};
+
+// ─── 20. Send Group Message ─── POST /groups/{groupId}/messages
+export const sendGroupMessage = async (groupId, content) => {
+  const response = await axiosClient.post(`${BASE_URL}/${groupId}/messages`, {
+    content,
+  });
+  return response.data.result;
+};
+
+// ─── 21. Update Chat Permission ─── PUT /groups/{groupId}/members/{memberId}/chat-permission
+export const updateChatPermission = async (groupId, memberId, canChat) => {
+  const response = await axiosClient.put(
+    `${BASE_URL}/${groupId}/members/${memberId}/chat-permission`,
+    { canChat }
+  );
+  return response.data.result;
+};
+
 // ─── 18. Update Group Password ─── PUT /groups/{groupId}/password
 export const updateGroupPassword = async (groupId, newPassword, confirmPassword) => {
   const response = await axiosClient.put(`${BASE_URL}/${groupId}/password`, { newPassword, confirmPassword });
