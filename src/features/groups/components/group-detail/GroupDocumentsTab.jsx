@@ -17,7 +17,7 @@ const fileTypeIcons = {
 
 const getFileIcon = (type) => fileTypeIcons[type?.toLowerCase()] || { icon: 'bi-file-earmark-fill', color: 'text-[var(--color-primary)]', bg: 'bg-[var(--color-primary-container)]' };
 
-export default function GroupDocumentsTab({ group, files = [], currentUser, isOwner, canUpload, onUpload, onDelete }) {
+export default function GroupDocumentsTab({ group, files = [], currentUser, isOwner, canUpload, onUpload, onDelete, onSaveToDashboard }) {
   const docs = files.length > 0 ? files : (group.documents || []);
 
   const sorted = [...docs].sort((a, b) => {
@@ -42,6 +42,25 @@ export default function GroupDocumentsTab({ group, files = [], currentUser, isOw
       centered: true,
       onOk: () => onDelete(group.id, docId),
     });
+  };
+
+  const handleSaveToDashboard = async (docId, name) => {
+    try {
+      await onSaveToDashboard(group.id, docId, false);
+    } catch (err) {
+      if (err.message === 'FILE_ALREADY_EXISTS') {
+        Modal.confirm({
+          title: 'Tài liệu đã tồn tại',
+          content: `Tài liệu "${name}" đã tồn tại trong kho cá nhân của bạn. Bạn có muốn ghi đè (thay thế) nó không?`,
+          okText: 'Ghi đè',
+          cancelText: 'Hủy',
+          okButtonProps: { danger: true, className: '!rounded-xl' },
+          cancelButtonProps: { className: '!rounded-xl' },
+          centered: true,
+          onOk: () => onSaveToDashboard(group.id, docId, true).catch(() => {}), // catch inner to prevent unhandled promise
+        });
+      }
+    }
   };
 
   return (
@@ -95,6 +114,13 @@ export default function GroupDocumentsTab({ group, files = [], currentUser, isOw
                       <i className="bi bi-person mr-1" />{uploader === currentUser ? 'Bạn' : (uploader?.split('@')[0] || 'N/A')}
                     </span>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={() => handleSaveToDashboard(doc.id || doc.documentId, name)}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-black/40 hover:text-blue-500 hover:bg-blue-50 transition-all cursor-pointer" 
+                        title="Lưu về Kho cá nhân"
+                      >
+                        <i className="bi bi-cloud-arrow-down text-[14px]" />
+                      </button>
                       <button 
                         onClick={() => window.open(doc.url || doc.storageUrl, '_blank')}
                         className="w-8 h-8 rounded-lg flex items-center justify-center text-black/40 hover:text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-all cursor-pointer" 
