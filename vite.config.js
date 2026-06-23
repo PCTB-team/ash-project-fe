@@ -9,6 +9,11 @@ export default defineConfig({
     headers: {
       "Cross-Origin-Opener-Policy": "same-origin-allow-popups"
     }
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/setupTests.js',
   }
 })
 
