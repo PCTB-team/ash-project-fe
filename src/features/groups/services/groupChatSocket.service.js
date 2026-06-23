@@ -1,44 +1,58 @@
 import { Client } from "@stomp/stompjs";
-import { axiosClient } from "../../../utils/apiClient";
 
-const getWebSocketUrl = () => {
-  // Extract baseURL from axiosClient, e.g. "https://ash-project-be.onrender.com"
-  const baseUrl = axiosClient.defaults.baseURL || "https://ash-project-be.onrender.com";
-  // The backend websocket endpoint is /api/v1/ws
-  return baseUrl.replace(/^http/, "ws") + "/api/v1/ws";
-};
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://ash-project-be.onrender.com/api/v1';
+
+function buildWebSocketUrl() {
+  const apiBaseUrl = API_BASE_URL.replace(/\/$/, '');
+  return `${apiBaseUrl.replace(/^http/i, 'ws')}/ws`;
+}
 
 export const connectGroupChatSocket = ({ groupId, accessToken, onMessage, onStatusChange }) => {
   const client = new Client({
-    brokerURL: getWebSocketUrl(),
-    connectHeaders: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    reconnectDelay: 5000,
+    brokerURL: buildWebSocketUrl(),
+    connectHeaders: accessToken
+      ? { Authorization: `Bearer ${accessToken}` }
+      : {},
     heartbeatIncoming: 10000,
     heartbeatOutgoing: 10000,
+    reconnectDelay: 5000,
+    debug: (value) => console.log('[GroupChatSocket]', value),
+
     onConnect: () => {
-      onStatusChange?.("CONNECTED");
+      onStatusChange?.('CONNECTED');
 
       client.subscribe(`/topic/groups/${groupId}/messages`, (frame) => {
-        const message = JSON.parse(frame.body);
-        onMessage(message);
+        try {
+          if (!frame.body) return;
+          const payload = JSON.parse(frame.body);
+          // Backend may wrap the message in an ApiResponse { code, message, result }
+          const message = payload.result || payload.data || payload;
+          onMessage(message);
+        } catch (error) {
+          console.error("Failed to parse STOMP message:", frame.body, error);
+        }
       });
     },
+
     onDisconnect: () => {
-      onStatusChange?.("DISCONNECTED");
+      onStatusChange?.('DISCONNECTED');
     },
+
     onStompError: (frame) => {
-      console.error("STOMP error:", frame.headers, frame.body);
-      onStatusChange?.("ERROR");
+      console.error('[GroupChatSocket] stomp error', {
+        message: frame.headers.message,
+        body: frame.body,
+      });
+      onStatusChange?.('ERROR');
     },
+
     onWebSocketError: (error) => {
-      console.error("WebSocket error:", error);
-      onStatusChange?.("ERROR");
+      console.error('[GroupChatSocket] websocket error', error);
+      onStatusChange?.('ERROR');
     },
   });
 
-  onStatusChange?.("CONNECTING");
+  onStatusChange?.('CONNECTING');
   client.activate();
 
   return () => {
