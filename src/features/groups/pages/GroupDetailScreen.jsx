@@ -10,6 +10,7 @@ import GroupDocumentsTab from '../components/group-detail/GroupDocumentsTab';
 import GroupMembersTab from '../components/group-detail/GroupMembersTab';
 import GroupTrashTab from '../components/group-detail/GroupTrashTab';
 import GroupSettingsTab from '../components/group-detail/GroupSettingsTab';
+import GroupChatTab from '../components/group-detail/GroupChatTab';
 import UploadDocumentModal from '../components/group-detail/UploadDocumentModal';
 
 import { useParams, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
@@ -19,7 +20,7 @@ export default function GroupDetailScreen() {
   const activeTab = tab || 'overview';
   const location = useLocation();
   const navigate = useNavigate();
-  const { fullName: currentUser } = useOutletContext();
+  const { fullName: currentUser, profileData } = useOutletContext();
   const initialGroupData = location.state?.groupData;
 
   const {
@@ -27,7 +28,7 @@ export default function GroupDetailScreen() {
     fetchGroupById, fetchFiles, fetchTrashFiles, fetchMembers,
     toggleUploadPermission, kickMember,
     uploadFile, deleteFile, restoreFile, regenerateInvite,
-    leaveGroup, updateGroupPassword,
+    leaveGroup, updateGroupPassword, toggleChatPermission
   } = useGroups();
 
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -111,10 +112,12 @@ export default function GroupDetailScreen() {
     switch (activeTab) {
       case 'overview':
         return <GroupOverviewTab group={group} isOwner={isOwner} maxMembers={maxMembers} />;
+      case 'chat':
+        return <GroupChatTab group={group} currentUser={currentUser} profileData={profileData} />;
       case 'documents':
         return <GroupDocumentsTab group={group} files={files} currentUser={currentUser} isOwner={isOwner} canUpload={canUpload} onUpload={() => setShowUploadModal(true)} onDelete={handleDeleteFile} />;
       case 'members':
-        return <GroupMembersTab group={group} members={members} currentUser={currentUser} isOwner={isOwner} onTogglePermission={toggleUploadPermission} onKick={kickMember} />;
+        return <GroupMembersTab group={group} members={members} currentUser={currentUser} isOwner={isOwner} onTogglePermission={toggleUploadPermission} onToggleChatPermission={toggleChatPermission} onKick={kickMember} />;
       case 'trash':
         return <GroupTrashTab group={group} trashFiles={trashFiles} fetchTrashFiles={fetchTrashFiles} onRestore={handleRestoreFile} />;
       case 'settings':

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Input, Modal } from 'antd';
 import EmptyState from '../shared/EmptyState';
 
-export default function GroupMembersTab({ group, members = [], currentUser, isOwner, onTogglePermission, onKick }) {
+export default function GroupMembersTab({ group, members = [], currentUser, isOwner, onTogglePermission, onToggleChatPermission, onKick }) {
   const [search, setSearch] = useState('');
 
   const filtered = members.filter(m => {
@@ -58,9 +58,13 @@ export default function GroupMembersTab({ group, members = [], currentUser, isOw
                 className="flex items-center p-4 rounded-[18px] border border-black/[0.03] bg-[var(--color-surface)] hover:border-[var(--color-primary)]/15 hover:shadow-sm transition-all group">
                 {/* Avatar */}
                 <div className="relative mr-3.5 shrink-0">
-                  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[var(--color-primary)]/20 to-[var(--color-primary)]/5 flex items-center justify-center text-[var(--color-primary)] font-semibold text-[14px] border border-black/5">
-                    {displayName.charAt(0).toUpperCase()}
-                  </div>
+                  {member.avatarUrl ? (
+                    <img src={member.avatarUrl} alt={displayName} className="w-11 h-11 rounded-full object-cover border border-black/5" />
+                  ) : (
+                    <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[var(--color-primary)]/20 to-[var(--color-primary)]/5 flex items-center justify-center text-[var(--color-primary)] font-semibold text-[14px] border border-black/5">
+                      {displayName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white bg-[#34c759]" />
                 </div>
 
@@ -81,6 +85,11 @@ export default function GroupMembersTab({ group, members = [], currentUser, isOw
                         className={`h-7 px-2.5 rounded-lg text-[10px] font-medium border transition-all cursor-pointer flex items-center gap-1 ${member.canUpload ? 'text-[var(--color-primary)] bg-[var(--color-primary)]/10 border-[var(--color-primary)]/20' : 'text-black/40 bg-black/[0.02] border-black/[0.06] hover:border-[var(--color-primary)]/30 hover:text-[var(--color-primary)]' }`}>
                         <i className={`bi ${member.canUpload ? 'bi-cloud-check-fill' : 'bi-cloud-arrow-up'}`} />
                         {member.canUpload ? 'Upload ✓' : 'Upload'}
+                      </button>
+                      <button onClick={() => onToggleChatPermission && onToggleChatPermission(group.id, member.memberId || member.id, member.canChat === false ? true : false)}
+                        className={`h-7 px-2.5 rounded-lg text-[10px] font-medium border transition-all cursor-pointer flex items-center gap-1 ${member.canChat !== false ? 'text-blue-500 bg-blue-50 border-blue-200' : 'text-red-500 bg-red-50 border-red-200' }`}>
+                        <i className={`bi ${member.canChat !== false ? 'bi-chat-dots' : 'bi-chat-dots-fill'}`} />
+                        {member.canChat !== false ? 'Chat ✓' : 'Muted'}
                       </button>
                       <button onClick={() => handleKick(member)}
                         className="w-7 h-7 rounded-lg flex items-center justify-center text-black/25 hover:text-red-500 hover:bg-red-50 border border-transparent hover:border-red-200 transition-all cursor-pointer opacity-0 group-hover:opacity-100">
