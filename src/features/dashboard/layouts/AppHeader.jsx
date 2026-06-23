@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
-import { Badge, Popover, Tooltip } from 'antd';
+import { useState, useEffect, useRef } from 'react';
+import { Badge, Popover, Tooltip, notification } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MOCK_NOTIFICATIONS, OLDER_NOTIFICATIONS } from '../utils/notificationData.js';
 import { formatRelativeTime } from '../utils/dateUtils.js';
 import logoAvatarDefault from '../../../assets/logo_avatar_default.jpg';
-
+import { getNotifications, markNotificationsAsRead } from '../../notifications/api/notifications.api.js';
 
 /**
  * Shared Header Toolbar — Ultra-Premium Minimalist Stripe/Linear style.
@@ -28,9 +27,11 @@ export default function AppHeader({
 }) {
   const navigate = useNavigate();
   const [isFocused, setIsFocused] = useState(false);
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const [notificationsList, setNotificationsList] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const lastNotificationIdRef = useRef(null);
 
   // Xử lý các loại định dạng đường dẫn ảnh trả về từ Backend
   const getDisplayAvatar = (url) => {
@@ -42,18 +43,77 @@ export default function AppHeader({
     return `https://ash-project-be.onrender.com/${url}`;
   };
 
-  const handleToggleExpand = () => {
-    if (!isExpanded) {
-      setNotifications(prev => [...prev, ...OLDER_NOTIFICATIONS]);
-      setIsExpanded(true);
-    } else {
-      setNotifications(prev => prev.filter(n => !OLDER_NOTIFICATIONS.find(o => o.id === n.id)));
-      setIsExpanded(false);
+  const fetchNotis = async (isPolling = false) => {
+    try {
+      const data = await getNotifications({ page: 0, size: 20 });
+      setNotificationsList(data.items || []);
+      setUnreadCount(data.unreadCount || 0);
+
+      const newest = data.items && data.items[0];
+      if (isPolling && newest && newest.id !== lastNotificationIdRef.current && !newest.read) {
+        notification.info({
+          message: newest.title,
+          description: newest.message,
+          placement: 'bottomRight',
+          duration: 4,
+          onClick: () => handleNotificationClick(newest)
+        });
+      }
+      if (newest) {
+        lastNotificationIdRef.current = newest.id;
+      }
+    } catch (error) {
+      console.error('Failed to fetch notifications', error);
     }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+  useEffect(() => {
+    fetchNotis();
+    const interval = setInterval(() => {
+      fetchNotis(true);
+    }, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleToggleExpand = () => {
+    setIsExpanded(prev => !prev);
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      await markNotificationsAsRead({ all: true });
+      await fetchNotis();
+    } catch (error) {
+      console.error('Failed to mark all as read', error);
+    }
+  };
+
+  const handleNotificationClick = async (noti) => {
+    if (!noti.read) {
+      try {
+        await markNotificationsAsRead({ notificationIds: [noti.id] });
+        await fetchNotis();
+      } catch (error) {
+        console.error('Failed to mark notification as read', error);
+      }
+    }
+
+    if (noti.resourceType === 'GROUP' || noti.resourceType === 'GROUP_FILE') {
+      const tab = noti.resourceType === 'GROUP_FILE' ? 'documents' : 'overview';
+      navigate(`/dashboard/group/${noti.groupId}?tab=${tab}`);
+    }
+  };
+
+  const iconByType = {
+    GROUP_MEMBER_JOINED: 'bi-person-plus',
+    GROUP_UPLOAD_PERMISSION_GRANTED: 'bi-cloud-arrow-up',
+    GROUP_UPLOAD_PERMISSION_REVOKED: 'bi-cloud-slash',
+    GROUP_FILE_UPLOADED: 'bi-file-earmark-arrow-up',
+    GROUP_FILE_MOVED_TO_TRASH: 'bi-trash',
+    GROUP_FILE_RESTORED: 'bi-arrow-counterclockwise',
+    GROUP_MEMBER_KICKED: 'bi-person-x',
+    GROUP_MEMBER_LEFT: 'bi-box-arrow-right',
+    GROUP_PASSWORD_CHANGED: 'bi-key',
   };
 
   const notificationContent = (
@@ -70,30 +130,39 @@ export default function AppHeader({
       
       <div className={`flex flex-col overflow-y-auto px-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-black/10 hover:[&::-webkit-scrollbar-thumb]:bg-black/20 [&::-webkit-scrollbar-thumb]:rounded-full transition-all duration-500 ease-in-out ${isExpanded ? 'max-h-[450px]' : 'max-h-[260px]'}`}>
         <AnimatePresence>
-          {notifications.map((noti) => (
+          {notificationsList.map((noti) => (
             <motion.div 
               key={noti.id}
               initial={{ opacity: 0, height: 0, marginBottom: 0 }}
               animate={{ opacity: 1, height: 'auto', marginBottom: 4 }}
               exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-              className={`flex gap-3 items-start p-3 rounded-xl cursor-pointer transition-colors ${noti.isRead ? 'hover:bg-black/5' : 'bg-black/[0.02] hover:bg-black/[0.04]'}`}
+              onClick={() => handleNotificationClick(noti)}
+              className={`flex gap-3 items-start p-3 rounded-xl cursor-pointer transition-colors ${noti.read ? 'hover:bg-black/5' : 'bg-[var(--color-primary)]/5 hover:bg-[var(--color-primary)]/10'}`}
             >
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${noti.bg}`}>
-                <i className={`bi ${noti.icon} text-[14px]`} />
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${noti.read ? 'bg-black/5 text-black/50' : 'bg-[var(--color-primary)]/20 text-[var(--color-primary)]'}`}>
+                <i className={`bi ${iconByType[noti.type] || 'bi-bell'} text-[14px]`} />
               </div>
               <div className="flex-1">
-                <p className={`text-[12.5px] ${noti.isRead ? 'text-black/60 font-medium' : 'text-black font-bold'}`}>
+                <p className={`text-[12.5px] ${noti.read ? 'text-black/60 font-medium' : 'text-[var(--color-on-surface)] font-bold'}`}>
                   {noti.title}
                 </p>
+                <p className={`text-[11px] mt-0.5 ${noti.read ? 'text-black/50' : 'text-black/70 font-medium'}`}>
+                  {noti.message}
+                </p>
                 <p className="text-[10px] font-bold text-black/30 uppercase mt-1">
-                  {formatRelativeTime(noti.time)}
+                  {formatRelativeTime(noti.createdAt)}
                 </p>
               </div>
-              {!noti.isRead && (
-                <div className="w-2 h-2 rounded-full bg-[#ff5c00] shrink-0 mt-1.5 shadow-[0_0_8px_rgba(255,92,0,0.6)]" />
+              {!noti.read && (
+                <div className="w-2 h-2 rounded-full bg-[var(--color-primary)] shrink-0 mt-1.5 shadow-[0_0_8px_rgba(255,92,0,0.6)]" />
               )}
             </motion.div>
           ))}
+          {notificationsList.length === 0 && (
+            <div className="text-center py-6 text-black/40 text-[13px] font-medium">
+              Không có thông báo nào.
+            </div>
+          )}
         </AnimatePresence>
       </div>
 
@@ -205,7 +274,7 @@ export default function AppHeader({
           placement="bottomRight"
           styles={{ body: { borderRadius: '20px', padding: '8px', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)' } }}
         >
-          <Badge dot={notifications.some(n => !n.isRead)} color={accentColor} offset={[-1.5, 1.5]}>
+          <Badge count={unreadCount} overflowCount={99} color={accentColor} offset={[-1.5, 1.5]}>
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Button, Modal } from 'antd';
 import EmptyState from '../shared/EmptyState';
 
-export default function GroupTrashTab({ group, trashFiles = [], fetchTrashFiles, onRestore }) {
+export default function GroupTrashTab({ group, trashFiles = [], fetchTrashFiles, onRestore, onDeletePermanently, isOwner }) {
   useEffect(() => {
     if (group?.id) fetchTrashFiles(group.id);
   }, [group?.id, fetchTrashFiles]);
@@ -18,6 +18,19 @@ export default function GroupTrashTab({ group, trashFiles = [], fetchTrashFiles,
       cancelButtonProps: { className: '!rounded-xl' },
       centered: true,
       onOk: () => onRestore(group.id, fileId),
+    });
+  };
+
+  const handleDeletePermanently = (fileId, fileName) => {
+    Modal.confirm({
+      title: 'Xóa vĩnh viễn',
+      content: `Bạn có chắc chắn muốn xóa vĩnh viễn tài liệu "${fileName}"? Hành động này không thể hoàn tác.`,
+      okText: 'Xóa vĩnh viễn',
+      cancelText: 'Hủy',
+      okButtonProps: { danger: true, className: '!rounded-xl' },
+      cancelButtonProps: { className: '!rounded-xl' },
+      centered: true,
+      onOk: () => onDeletePermanently(group.id, fileId),
     });
   };
 
@@ -60,10 +73,18 @@ export default function GroupTrashTab({ group, trashFiles = [], fetchTrashFiles,
                   <span className="flex items-center gap-1"><i className="bi bi-person" /> {typeof deletedBy === 'string' ? deletedBy.split('@')[0] : deletedBy}</span>
                 </div>
               </div>
-              <Button onClick={() => handleRestore(fileId, name)}
-                className="!rounded-xl !font-medium !text-[12px] !h-9 !px-4 !border-[var(--color-primary)]/20 !text-[var(--color-primary)] hover:!bg-[var(--color-primary)]/10 opacity-0 group-hover:opacity-100 transition-opacity">
-                <i className="bi bi-arrow-counterclockwise mr-1" /> Khôi phục
-              </Button>
+              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button onClick={() => handleRestore(fileId, name)}
+                  className="!rounded-xl !font-medium !text-[12px] !h-9 !px-3 !border-[var(--color-primary)]/20 !text-[var(--color-primary)] hover:!bg-[var(--color-primary)]/10">
+                  <i className="bi bi-arrow-counterclockwise mr-1" /> Khôi phục
+                </Button>
+                {isOwner && (
+                  <Button onClick={() => handleDeletePermanently(fileId, name)} danger
+                    className="!rounded-xl !font-medium !text-[12px] !h-9 !w-9 !px-0 flex items-center justify-center">
+                    <i className="bi bi-trash3 text-[14px]" />
+                  </Button>
+                )}
+              </div>
             </motion.div>
           );
         })}

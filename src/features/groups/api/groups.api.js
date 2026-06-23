@@ -145,3 +145,17 @@ export const restoreFile = async (groupId, fileId) => {
   return response.data;
 };
 
+// ─── 22. Delete File Permanently ─── DELETE /groups/{groupId}/files/{fileId}/permanent
+export const deleteGroupFilePermanently = async (groupId, fileId) => {
+  const response = await axiosClient.delete(`${BASE_URL}/${groupId}/files/${fileId}/permanent`);
+  return response.data.result;
+};
+
+// ─── 23. Save Group File To Dashboard ─── POST /groups/{groupId}/files/{fileId}/save-to-dashboard
+export const saveGroupFileToDashboard = async (groupId, fileId, payload = {}) => {
+  const response = await axiosClient.post(
+    `${BASE_URL}/${groupId}/files/${fileId}/save-to-dashboard`,
+    payload
+  );
+  return response.data.result;
+};

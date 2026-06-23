@@ -27,7 +27,7 @@ export default function GroupDetailScreen() {
     currentGroup, files, trashFiles, members,
     fetchGroupById, fetchFiles, fetchTrashFiles, fetchMembers,
     toggleUploadPermission, kickMember,
-    uploadFile, deleteFile, restoreFile, regenerateInvite,
+    uploadFile, deleteFile, restoreFile, deleteFilePermanently, saveToDashboard, regenerateInvite,
     leaveGroup, updateGroupPassword, toggleChatPermission
   } = useGroups();
 
@@ -103,6 +103,15 @@ export default function GroupDetailScreen() {
     await fetchGroupById(group.id); // update counts
   };
 
+  const handleDeleteFilePermanently = async (groupId, fileId) => {
+    await deleteFilePermanently(groupId, fileId);
+    await fetchGroupById(group.id); // update counts
+  };
+
+  const handleSaveToDashboard = async (groupId, fileId, replaceExisting) => {
+    await saveToDashboard(groupId, fileId, replaceExisting);
+  };
+
   const handleLeaveGroup = async () => {
     await leaveGroup(group.id);
     navigate('/dashboard/group');
@@ -115,11 +124,11 @@ export default function GroupDetailScreen() {
       case 'chat':
         return <GroupChatTab group={group} currentUser={currentUser} profileData={profileData} />;
       case 'documents':
-        return <GroupDocumentsTab group={group} files={files} currentUser={currentUser} isOwner={isOwner} canUpload={canUpload} onUpload={() => setShowUploadModal(true)} onDelete={handleDeleteFile} />;
+        return <GroupDocumentsTab group={group} files={files} currentUser={currentUser} isOwner={isOwner} canUpload={canUpload} onUpload={() => setShowUploadModal(true)} onDelete={handleDeleteFile} onSaveToDashboard={handleSaveToDashboard} />;
       case 'members':
         return <GroupMembersTab group={group} members={members} currentUser={currentUser} isOwner={isOwner} onTogglePermission={toggleUploadPermission} onToggleChatPermission={toggleChatPermission} onKick={kickMember} />;
       case 'trash':
-        return <GroupTrashTab group={group} trashFiles={trashFiles} fetchTrashFiles={fetchTrashFiles} onRestore={handleRestoreFile} />;
+        return <GroupTrashTab group={group} trashFiles={trashFiles} fetchTrashFiles={fetchTrashFiles} onRestore={handleRestoreFile} onDeletePermanently={handleDeleteFilePermanently} isOwner={isOwner} />;
       case 'settings':
         return <GroupSettingsTab group={group} onRegenerateInvite={regenerateInvite} onUpdatePassword={updateGroupPassword} onLeaveGroup={handleLeaveGroup} currentUser={currentUser} isOwner={isOwner} />;
       default:

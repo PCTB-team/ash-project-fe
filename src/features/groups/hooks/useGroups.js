@@ -151,6 +151,41 @@ export const useGroups = () => {
     catch (err) { message.error('Lỗi khi khôi phục.'); throw err; }
   };
 
+  const deleteFilePermanently = async (groupId, fileId) => {
+    try {
+      const data = await groupApi.deleteGroupFilePermanently(groupId, fileId);
+      message.success('Đã xóa vĩnh viễn tài liệu.');
+      await fetchTrashFiles(groupId);
+      return data;
+    } catch (err) {
+      if (err.response?.data?.code === 1230) {
+        message.error("Tệp chưa nằm trong thùng rác.");
+      } else {
+        message.error('Lỗi khi xóa vĩnh viễn.');
+      }
+      throw err;
+    }
+  };
+
+  const saveToDashboard = async (groupId, fileId, replaceExisting = false) => {
+    try {
+      const data = await groupApi.saveGroupFileToDashboard(groupId, fileId, { replaceExisting });
+      message.success('Đã lưu tài liệu về Kho cá nhân thành công!');
+      return data;
+    } catch (err) {
+      const code = err.response?.data?.code;
+      if (code === 1306) {
+        message.error("Dung lượng không đủ. Vui lòng nâng cấp kho lưu trữ.");
+      } else if (code === 1307) {
+        // Will be caught by component to show confirm modal
+        throw new Error('FILE_ALREADY_EXISTS');
+      } else {
+        message.error('Lỗi khi lưu về Kho cá nhân.');
+      }
+      throw err;
+    }
+  };
+
 
 
   const toggleUploadPermission = async (groupId, memberId, canUpload) => {
@@ -188,7 +223,7 @@ export const useGroups = () => {
     totalGroups, currentPage, totalPages,
     fetchMyGroups, fetchGroupById, createGroup, previewGroup, joinViaInvite,
     fetchMembers, toggleUploadPermission, toggleChatPermission, kickMember,
-    fetchFiles, uploadFile, deleteFile, fetchTrashFiles, restoreFile,
+    fetchFiles, uploadFile, deleteFile, fetchTrashFiles, restoreFile, deleteFilePermanently, saveToDashboard,
     regenerateInvite, leaveGroup, updateGroupPassword,
   };
 };
