@@ -18,6 +18,7 @@ export default function DashboardLayout() {
   const [documentsCount, setDocumentsCount] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
   const [usedStorageBytes, setUsedStorageBytes] = useState(0);
+  const [maxStorageBytes, setMaxStorageBytes] = useState(500 * 1024 * 1024);
   
   const { profileData, fullName, avatarUrl, fetchProfile, setAvatarUrl } = useProfile();
   const { trashDocuments, fetchTrashDocuments } = useTrash();
@@ -35,6 +36,7 @@ export default function DashboardLayout() {
       const data = await profileApi.getStorageUsage();
       if (data && data.result) {
         setUsedStorageBytes(data.result.usedStorage || 0);
+        setMaxStorageBytes(data.result.maxStorage || 500 * 1024 * 1024);
       }
     } catch (e) {
       console.error('Failed to fetch storage usage', e);
@@ -61,9 +63,9 @@ export default function DashboardLayout() {
     }
   }, [currentView, trashDocuments.length, fetchTrashDocuments]);
 
-  const MAX_STORAGE_MB = 500;
+  const maxStorageMB = Number((maxStorageBytes / (1024 * 1024)).toFixed(1));
   const totalStorageMB = Number((usedStorageBytes / (1024 * 1024)).toFixed(1));
-  const storagePercentage = Math.min(100, Math.round((totalStorageMB / MAX_STORAGE_MB) * 100));
+  const storagePercentage = Math.min(100, Math.round((usedStorageBytes / maxStorageBytes) * 100));
 
   const handleLogoutClick = async () => {
     try {
@@ -92,6 +94,7 @@ export default function DashboardLayout() {
       currentUser={fullName}
       storagePercentage={storagePercentage}
       totalStorageMB={totalStorageMB}
+      maxStorageMB={maxStorageMB}
       documentsCount={documentsCount}
       deletedDocsCount={trashDocuments.length}
       searchTerm={searchTerm}

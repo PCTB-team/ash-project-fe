@@ -53,9 +53,11 @@ export default function PaymentScreen() {
   return (
     <div className="h-full w-full flex flex-col bg-[#fcfcfd] px-4 md:px-6 pb-6 pt-5 overflow-hidden relative select-none">
       
-      {/* Background Decor (Nhẹ nhàng, màu cam) */}
-      <div className="absolute top-[-10%] left-[-5%] w-[400px] h-[400px] bg-[#ff8a00]/5 blur-[100px] pointer-events-none rounded-full" />
-      <div className="absolute bottom-[-10%] right-[-5%] w-[300px] h-[300px] bg-[#ff5c00]/5 blur-[100px] pointer-events-none rounded-full" />
+      {/* Background Decor (Nhiều màu sắc) */}
+      <div className="absolute top-[-10%] left-[-5%] w-[400px] h-[400px] bg-blue-500/10 blur-[100px] pointer-events-none rounded-full" />
+      <div className="absolute bottom-[-10%] right-[-5%] w-[400px] h-[400px] bg-purple-500/10 blur-[100px] pointer-events-none rounded-full" />
+      <div className="absolute top-[30%] right-[20%] w-[300px] h-[300px] bg-[#ff5c00]/10 blur-[100px] pointer-events-none rounded-full" />
+      <div className="absolute bottom-[20%] left-[10%] w-[250px] h-[250px] bg-emerald-500/10 blur-[100px] pointer-events-none rounded-full" />
 
       {/* Top Header Row - Giống hệt Dashboard (Thư viện của tôi) */}
       <div className="flex justify-between items-start mb-5 sm:mb-6 z-10 shrink-0">
@@ -89,7 +91,7 @@ export default function PaymentScreen() {
             <span className="text-[10px] uppercase tracking-wider font-bold text-[#ff5c00]">Còn trống {formatBytes(remainingStorageBytes)}</span>
             <div className="w-20 h-1.5 bg-black/[0.04] rounded-full overflow-hidden ml-1 relative">
               <div 
-                className={`absolute top-0 left-0 h-full rounded-full transition-all duration-700 ease-out ${usagePercent > 90 ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-gradient-to-r from-[#ff8a00] to-[#ff5c00] shadow-[0_0_8px_rgba(255,92,0,0.4)]'}`} 
+                className={`absolute top-0 left-0 h-full rounded-full transition-all duration-700 ease-out ${usagePercent > 90 ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-gradient-to-r from-blue-500 via-purple-500 to-[#ff5c00] shadow-[0_0_8px_rgba(168,85,247,0.4)]'}`} 
                 style={{ width: `${Math.min(100, usagePercent)}%` }} 
               />
             </div>
@@ -108,7 +110,7 @@ export default function PaymentScreen() {
               {billingCycle === 'monthly' && (
                 <motion.div
                   layoutId="billing-toggle"
-                  className="absolute inset-0 bg-gradient-to-r from-[#ff8a00] to-[#ff5c00] rounded-lg shadow-sm"
+                  className="absolute inset-0 bg-gradient-to-r from-purple-500 to-[#ff5c00] rounded-lg shadow-sm"
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 />
               )}
@@ -124,7 +126,7 @@ export default function PaymentScreen() {
               {billingCycle === 'yearly' && (
                 <motion.div
                   layoutId="billing-toggle"
-                  className="absolute inset-0 bg-gradient-to-r from-[#ff8a00] to-[#ff5c00] rounded-lg shadow-sm"
+                  className="absolute inset-0 bg-gradient-to-r from-purple-500 to-[#ff5c00] rounded-lg shadow-sm"
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 />
               )}
@@ -172,6 +174,56 @@ export default function PaymentScreen() {
               {filteredPlans.map((plan, index) => {
                 const isPremium = plan.price > 100000 || plans.length === 1 || index === 1; // Highlighting logic
                 
+                // Bảng màu cho từng gói
+                const colorSchemes = [
+                  { 
+                    base: 'text-blue-500', 
+                    bgAccent: 'bg-blue-50', 
+                    borderAccent: 'border-blue-500', 
+                    hoverBorder: 'hover:border-blue-500',
+                    hoverShadow: 'hover:shadow-[0_4px_20px_rgba(59,130,246,0.15)]',
+                    hoverButtonShadow: 'hover:shadow-[0_8px_24px_rgba(59,130,246,0.4)]',
+                    gradient: 'from-blue-500 to-cyan-400',
+                    hoverGradient: 'hover:from-blue-500 hover:to-cyan-400',
+                    shadow: 'shadow-[0_4px_20px_rgba(59,130,246,0.15)]',
+                  },
+                  { 
+                    base: 'text-[#ff5c00]', 
+                    bgAccent: 'bg-[#ff5c00]/10', 
+                    borderAccent: 'border-[#ff5c00]', 
+                    hoverBorder: 'hover:border-[#ff5c00]',
+                    hoverShadow: 'hover:shadow-[0_4px_20px_rgba(255,92,0,0.15)]',
+                    hoverButtonShadow: 'hover:shadow-[0_8px_24px_rgba(255,92,0,0.4)]',
+                    gradient: 'from-[#ff7a00] to-[#ff5c00]',
+                    hoverGradient: 'hover:from-[#ff7a00] hover:to-[#ff5c00]',
+                    shadow: 'shadow-[0_4px_20px_rgba(255,92,0,0.15)]',
+                  },
+                  { 
+                    base: 'text-purple-500', 
+                    bgAccent: 'bg-purple-50', 
+                    borderAccent: 'border-purple-500', 
+                    hoverBorder: 'hover:border-purple-500',
+                    hoverShadow: 'hover:shadow-[0_4px_20px_rgba(168,85,247,0.15)]',
+                    hoverButtonShadow: 'hover:shadow-[0_8px_24px_rgba(168,85,247,0.4)]',
+                    gradient: 'from-purple-500 to-pink-500',
+                    hoverGradient: 'hover:from-purple-500 hover:to-pink-500',
+                    shadow: 'shadow-[0_4px_20px_rgba(168,85,247,0.15)]',
+                  },
+                  { 
+                    base: 'text-emerald-500', 
+                    bgAccent: 'bg-emerald-50', 
+                    borderAccent: 'border-emerald-500', 
+                    hoverBorder: 'hover:border-emerald-500',
+                    hoverShadow: 'hover:shadow-[0_4px_20px_rgba(16,185,129,0.15)]',
+                    hoverButtonShadow: 'hover:shadow-[0_8px_24px_rgba(16,185,129,0.4)]',
+                    gradient: 'from-emerald-400 to-teal-500',
+                    hoverGradient: 'hover:from-emerald-400 hover:to-teal-500',
+                    shadow: 'shadow-[0_4px_20px_rgba(16,185,129,0.15)]',
+                  }
+                ];
+                
+                const scheme = colorSchemes[index % colorSchemes.length];
+
                 return (
                   <motion.div
                     key={plan.id}
@@ -180,20 +232,20 @@ export default function PaymentScreen() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className={`bg-white rounded-2xl p-5 md:p-6 flex flex-col relative overflow-hidden transition-all h-full ${
+                    className={`bg-white rounded-2xl p-5 md:p-6 flex flex-col relative overflow-hidden transition-all duration-300 h-full border-2 ${
                       isPremium 
-                      ? 'border-2 border-[#ff5c00] shadow-[0_4px_20px_rgba(255,92,0,0.08)]' 
-                      : 'border border-black/[0.04] shadow-sm hover:border-black/10 hover:shadow-md'
+                      ? `${scheme.borderAccent} ${scheme.shadow} scale-[1.02] z-10` 
+                      : `border-transparent shadow-[0_2px_10px_rgba(0,0,0,0.03)] ${scheme.hoverBorder} ${scheme.hoverShadow} hover:scale-[1.01]`
                     }`}
                   >
                     {isPremium && (
-                      <div className="absolute top-0 right-0 bg-[#ff5c00] text-white text-[10px] font-semibold uppercase py-1 px-3 rounded-bl-xl shadow-sm">
+                      <div className={`absolute top-0 right-0 bg-gradient-to-r ${scheme.gradient} text-white text-[10px] font-semibold uppercase py-1 px-3 rounded-bl-xl shadow-sm`}>
                         Phổ biến
                       </div>
                     )}
 
                     <div className="mb-4 mt-1">
-                      <h3 className={`text-[16px] font-semibold mb-1 ${isPremium ? 'text-[#ff5c00]' : 'text-[#1d1d1f]'}`}>
+                      <h3 className={`text-[16px] font-semibold mb-1 ${scheme.base}`}>
                         {plan.planName}
                       </h3>
                       
@@ -203,11 +255,11 @@ export default function PaymentScreen() {
                       </div>
 
                       <div className="flex items-baseline gap-1">
-                        <span className="text-[24px] font-semibold text-[#ff5c00]">{formatPrice(plan.price)}</span>
+                        <span className={`text-[24px] font-semibold ${scheme.base}`}>{formatPrice(plan.price)}</span>
                         <span className="text-[12.5px] text-black/55 font-medium">/{plan.durationMonths}T</span>
                         
                         {/* Huy hiệu giảm giá ảo */}
-                        <span className="ml-2 text-[10px] font-semibold text-[#ff5c00] bg-[#ff5c00]/10 px-1.5 py-0.5 rounded-md border border-[#ff5c00]/20">
+                        <span className={`ml-2 text-[10px] font-semibold ${scheme.base} ${scheme.bgAccent} px-1.5 py-0.5 rounded-md border border-current/20`}>
                           -33%
                         </span>
                       </div>
@@ -216,25 +268,25 @@ export default function PaymentScreen() {
                     {/* Features List */}
                     <div className="space-y-3 flex-1 text-[12.5px] text-black/60 font-medium mt-2">
                       <div className="flex items-start gap-2.5">
-                        <div className={`mt-[3px] w-[14px] h-[14px] rounded-full flex items-center justify-center shrink-0 ${isPremium ? 'bg-[#ff5c00]/10 text-[#ff5c00]' : 'bg-black/[0.04] text-black/50'}`}>
+                        <div className={`mt-[3px] w-[14px] h-[14px] rounded-full flex items-center justify-center shrink-0 ${scheme.bgAccent} ${scheme.base}`}>
                           <i className="bi bi-check2 text-[10px]" />
                         </div>
                         <span>Lưu trữ lên đến <b className="text-[#1d1d1f]">{formatGB(plan.quotaSize)} GB</b></span>
                       </div>
                       <div className="flex items-start gap-2.5">
-                        <div className={`mt-[3px] w-[14px] h-[14px] rounded-full flex items-center justify-center shrink-0 ${isPremium ? 'bg-[#ff5c00]/10 text-[#ff5c00]' : 'bg-black/[0.04] text-black/50'}`}>
+                        <div className={`mt-[3px] w-[14px] h-[14px] rounded-full flex items-center justify-center shrink-0 ${scheme.bgAccent} ${scheme.base}`}>
                           <i className="bi bi-check2 text-[10px]" />
                         </div>
                         <span>Quản lý tài liệu học tập không giới hạn</span>
                       </div>
                       <div className="flex items-start gap-2.5">
-                        <div className={`mt-[3px] w-[14px] h-[14px] rounded-full flex items-center justify-center shrink-0 ${isPremium ? 'bg-[#ff5c00]/10 text-[#ff5c00]' : 'bg-black/[0.04] text-black/50'}`}>
+                        <div className={`mt-[3px] w-[14px] h-[14px] rounded-full flex items-center justify-center shrink-0 ${scheme.bgAccent} ${scheme.base}`}>
                           <i className="bi bi-check2 text-[10px]" />
                         </div>
                         <span>Sử dụng AI phân tích tài liệu cao cấp</span>
                       </div>
                       <div className="flex items-start gap-2.5">
-                        <div className={`mt-[3px] w-[14px] h-[14px] rounded-full flex items-center justify-center shrink-0 ${isPremium ? 'bg-[#ff5c00]/10 text-[#ff5c00]' : 'bg-black/[0.04] text-black/50'}`}>
+                        <div className={`mt-[3px] w-[14px] h-[14px] rounded-full flex items-center justify-center shrink-0 ${scheme.bgAccent} ${scheme.base}`}>
                           <i className="bi bi-check2 text-[10px]" />
                         </div>
                         <span>Tốc độ Upload/Download cực nhanh</span>
@@ -244,10 +296,10 @@ export default function PaymentScreen() {
                     <button
                       onClick={() => handleCheckout(plan.id)}
                       disabled={loading}
-                      className={`w-full h-10 mt-5 rounded-full font-medium text-[13px] transition-all duration-300 cursor-pointer flex items-center justify-center ${
+                      className={`w-full h-10 mt-5 rounded-full font-medium text-[13px] transition-all duration-300 cursor-pointer flex items-center justify-center group ${
                         isPremium
-                        ? 'bg-gradient-to-b from-[#ff7a00] to-[#ff5c00] text-white shadow-[0_1px_3px_rgba(255,92,0,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] hover:brightness-110 hover:shadow-[0_8px_24px_rgba(255,92,0,0.4)]'
-                        : 'border border-black/10 bg-black/[0.02] hover:bg-black/[0.06] text-black/60 hover:text-black'
+                        ? `bg-gradient-to-r ${scheme.gradient} text-white shadow-md hover:${scheme.hoverButtonShadow} hover:brightness-110`
+                        : `border-2 ${scheme.borderAccent} ${scheme.base} bg-transparent hover:bg-gradient-to-r ${scheme.hoverGradient} hover:text-white hover:border-transparent ${scheme.hoverButtonShadow}`
                       } ${loading ? 'opacity-70 !cursor-not-allowed' : ''}`}
                     >
                       {loading ? (
