@@ -13,14 +13,18 @@ export const useGroups = () => {
   const [statistics, setStatistics] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [totalGroups, setTotalGroups] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
 
 
 
-  const fetchMyGroups = useCallback(async () => {
+  const fetchMyGroups = useCallback(async (page = 0, size = 6, keyword = '') => {
     setIsLoading(true); setError(null);
     try {
-      const data = await groupApi.getMyGroups();
-      const raw = data.result || data || [];
+      const data = await groupApi.getMyGroups(page, size, keyword);
+      const resultObj = data.result || {};
+      const raw = resultObj.items || [];
       // Map API response fields → GroupCard expected fields
       const mapped = raw.map(g => ({
         id: g.groupId,
@@ -41,6 +45,9 @@ export const useGroups = () => {
         isMine: true,
       }));
       setGroups(mapped);
+      setTotalGroups(resultObj.totalElements || 0);
+      setCurrentPage((resultObj.page || 0) + 1);
+      setTotalPages(resultObj.totalPages || 0);
     }
     catch (err) { setError(err.message); message.error('Không thể tải danh sách nhóm của bạn.'); }
     finally { setIsLoading(false); }
@@ -173,6 +180,7 @@ export const useGroups = () => {
 
   return {
     groups, currentGroup, groupPreview, members, memberCount, files, trashFiles, statistics, isLoading, error,
+    totalGroups, currentPage, totalPages,
     fetchMyGroups, fetchGroupById, createGroup, previewGroup, joinViaInvite,
     fetchMembers, toggleUploadPermission, kickMember,
     fetchFiles, uploadFile, deleteFile, fetchTrashFiles, restoreFile,

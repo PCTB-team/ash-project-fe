@@ -7,13 +7,23 @@ import App from './App.jsx'
 // NOTE: Thay thế clientId này bằng Client ID thực tế từ Google Cloud Console
 const GOOGLE_CLIENT_ID = "973784581614-5iplta9p33rbkd28o7lneevpm0l5sgva.apps.googleusercontent.com";
 
-// Suppress antd static message warning since we don't use dynamic themes for messages
 const originalWarn = console.warn;
-console.warn = (...args) => {
+const originalError = console.error;
+const suppressAntdWarning = (...args) => {
   if (args[0] && typeof args[0] === 'string' && args[0].includes('Static function can not consume context')) {
-    return;
+    return true;
   }
+  return false;
+};
+
+console.warn = (...args) => {
+  if (suppressAntdWarning(...args)) return;
   originalWarn(...args);
+};
+
+console.error = (...args) => {
+  if (suppressAntdWarning(...args)) return;
+  originalError(...args);
 };
 
 createRoot(document.getElementById('root')).render(

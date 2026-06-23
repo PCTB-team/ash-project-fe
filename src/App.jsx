@@ -26,6 +26,11 @@ import ProfileScreen from './features/profile/pages/ProfileScreen.jsx';
 import TrashScreen from './features/trash/pages/TrashScreen.jsx';
 import AIScreen from './features/ai/pages/AIScreen.jsx';
 
+// ── Payment Pages ──
+import PaymentScreen from './features/payment/pages/PaymentScreen.jsx';
+import PaymentSuccessScreen from './features/payment/pages/PaymentSuccessScreen.jsx';
+import PaymentCancelScreen from './features/payment/pages/PaymentCancelScreen.jsx';
+
 // ── Groups Pages ──
 import CommunityScreen from './features/groups/pages/CommunityScreen.jsx';
 import GroupDetailScreen from './features/groups/pages/GroupDetailScreen.jsx';
@@ -60,7 +65,12 @@ function App() {
           <Route path="group/:groupId" element={<GroupDetailScreen />} />
           <Route path="group/:groupId/:tab" element={<GroupDetailScreen />} />
           <Route path="ai" element={<AIScreen />} />
+          <Route path="payment" element={<PaymentScreen />} />
         </Route>
+        
+        {/* Payment Callbacks */}
+        <Route path="/payment/success" element={<PaymentSuccessScreen />} />
+        <Route path="/payment/cancel" element={<PaymentCancelScreen />} />
       </Route>
 
       {/* Unguarded Pages (Accessible to both logged-in and guests) */}

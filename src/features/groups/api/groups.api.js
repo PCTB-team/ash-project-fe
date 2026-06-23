@@ -2,8 +2,10 @@ import { axiosClient } from '../../../utils/apiClient';
 
 const BASE_URL = 'https://ash-project-be.onrender.com/api/v1/groups';
 
-export const getMyGroups = async () => {
-  const response = await axiosClient.get(`${BASE_URL}/my`);
+export const getMyGroups = async (page = 0, size = 5, keyword = undefined) => {
+  const response = await axiosClient.get(`${BASE_URL}/my`, {
+    params: { page, size, keyword: keyword || undefined }
+  });
   return response.data;
 };
 
