@@ -29,7 +29,7 @@ export default function ChatMessage({ message }) {
       <div className={`max-w-[80%] min-w-0 flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
         {/* Name + time */}
         <div className={`flex items-center gap-2 mb-1 ${isUser ? 'flex-row-reverse' : ''}`}>
-          <span className="text-[12px] font-semibold text-black/40">{isUser ? 'Bạn' : 'CapyAI'}</span>
+          <span className="text-[12px] font-semibold text-black/40">{isUser ? 'Bạn' : 'Giáo Sư Capy'}</span>
           <span className="text-[11px] text-black/30 font-medium">
             {new Date(message.timestamp).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
           </span>
@@ -64,16 +64,36 @@ export default function ChatMessage({ message }) {
           )}
         </div>
 
-        {/* Sources */}
-        {!isUser && message.sources && message.sources.length > 0 && (
-          <div className="mt-2 flex items-center flex-wrap gap-1.5">
-            <span className="text-[10px] font-semibold text-black/40 uppercase">Nguồn:</span>
-            {message.sources.map((src, i) => (
-              <span key={i} className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#ff5c00] bg-[#ff5c00]/[0.06] px-2 py-0.5 rounded-md border border-[#ff5c00]/10">
-                <i className="bi bi-file-earmark-text text-[10px]" />
-                {src.name || src.fileName || `Tài liệu ${i + 1}`}
-              </span>
-            ))}
+        {/* Sources & Badge */}
+        {!isUser && !isLoading && !isError && (
+          <div className="mt-2 flex flex-col gap-1.5">
+            {message.answerSource === 'DOCUMENT' && (
+              <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 w-fit px-2 py-0.5 rounded border border-emerald-100">
+                <i className="bi bi-shield-check" />
+                DỰA TRÊN TÀI LIỆU CỦA BẠN
+              </div>
+            )}
+            
+            {message.sources && message.sources.length > 0 && (
+              <div className="flex items-start flex-wrap gap-1.5 mt-0.5">
+                <span className="text-[10px] font-semibold text-black/40 uppercase mt-1">Nguồn tham khảo:</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {message.sources.map((src, i) => (
+                    <div 
+                      key={i} 
+                      title={src.excerpt}
+                      className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#ff5c00] bg-[#ff5c00]/[0.06] px-2.5 py-1 rounded-md border border-[#ff5c00]/15 hover:bg-[#ff5c00]/10 transition-colors cursor-help"
+                    >
+                      <i className="bi bi-file-earmark-text text-[10px]" />
+                      <span className="max-w-[150px] truncate">{src.fileName || src.name || `Tài liệu ${i + 1}`}</span>
+                      {src.chunkIndex !== undefined && (
+                        <span className="text-[9px] bg-[#ff5c00]/10 px-1 rounded text-[#ff5c00]/70">#{src.chunkIndex}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

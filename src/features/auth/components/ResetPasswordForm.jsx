@@ -19,7 +19,7 @@ export default function ResetPasswordForm({ form, isLoading, onSubmit }) {
                 <span className={ICON_WRAP}><i className="bi bi-lock text-[14px]" /></span>
                 <input type={showPassword ? 'text' : 'password'} autoComplete="new-password" placeholder="Ít nhất 6 ký tự"
                   className={INPUT_CLS_PR}
-                  onChange={(e) => form.setFieldsValue({ newPassword: e.target.value })} />
+                  onChange={(e) => { form.setFieldsValue({ newPassword: e.target.value }); form.validateFields(['newPassword', 'confirmPassword']); }} />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-black/25 hover:text-black/50 transition-colors cursor-pointer">
                   <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'} text-[13px]`} />
@@ -31,14 +31,24 @@ export default function ResetPasswordForm({ form, isLoading, onSubmit }) {
 
         {/* Confirm Password */}
         <motion.div variants={ANIM.child}>
-          <Form.Item name="confirmPassword" rules={[{ required: true, message: 'Vui lòng xác nhận mật khẩu!' }]}>
+          <Form.Item name="confirmPassword" rules={[
+            { required: true, message: 'Vui lòng xác nhận mật khẩu!' },
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!value || getFieldValue('newPassword') === value) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error('Mật khẩu nhập lại không khớp!'));
+              },
+            }),
+          ]}>
             <div className="group">
               <label className={LABEL_CLS}>Xác nhận mật khẩu</label>
               <div className="relative">
                 <span className={ICON_WRAP}><i className="bi bi-lock text-[14px]" /></span>
                 <input type={showConfirmPassword ? 'text' : 'password'} autoComplete="new-password" placeholder="Nhập lại mật khẩu mới"
                   className={INPUT_CLS_PR}
-                  onChange={(e) => form.setFieldsValue({ confirmPassword: e.target.value })} />
+                  onChange={(e) => { form.setFieldsValue({ confirmPassword: e.target.value }); form.validateFields(['confirmPassword']); }} />
                 <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-black/25 hover:text-black/50 transition-colors cursor-pointer">
                   <i className={`bi ${showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'} text-[13px]`} />

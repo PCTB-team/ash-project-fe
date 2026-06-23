@@ -94,16 +94,19 @@ export const useAIChat = () => {
     try {
       const payload = {
         message: text.trim(),
-        conversationId: activeConversationId,
-        scope: chatContext.scope,
-        ...(chatContext.documentId && { documentId: chatContext.documentId }),
-        ...(chatContext.folderId && { folderId: chatContext.folderId }),
+        conversationId: activeConversationId, // Giữ lại nếu BE hỗ trợ
       };
+      
+      if (chatContext.scope === 'document' && chatContext.documentId) {
+        payload.documentId = chatContext.documentId;
+      } else if (chatContext.scope === 'folder' && chatContext.folderId) {
+        payload.folderId = chatContext.folderId;
+      }
 
-      const data = await aiApi.sendMessage(payload);
+      const data = await aiApi.chatWithKnowledge(payload);
 
       if (data?.code === 0 || data?.code === 1000) {
-        const aiContent = data.result?.content || data.result?.message || data.result || 'Xin lỗi, tôi không thể tạo câu trả lời.';
+        const aiContent = data.result?.answer || data.result?.content || data.result?.message || data.result || 'Xin lỗi, tôi không thể tạo câu trả lời.';
         const newConvId = data.result?.conversationId || activeConversationId;
 
         if (newConvId && !activeConversationId) {
@@ -112,7 +115,13 @@ export const useAIChat = () => {
 
         setMessages(prev => prev.map(m =>
           m.id === aiPlaceholderId
-            ? { ...m, content: typeof aiContent === 'string' ? aiContent : JSON.stringify(aiContent), isLoading: false, sources: data.result?.sources }
+            ? { 
+                ...m, 
+                content: typeof aiContent === 'string' ? aiContent : JSON.stringify(aiContent), 
+                isLoading: false, 
+                sources: data.result?.sources,
+                answerSource: data.result?.answerSource 
+              }
             : m
         ));
       } else {

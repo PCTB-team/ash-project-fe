@@ -5,6 +5,7 @@ import { useAIChat } from '../hooks/useAIChat.js';
 import MessageList from '../components/MessageList.jsx';
 import ChatInput from '../components/ChatInput.jsx';
 import ConversationSidebar from '../components/ConversationSidebar.jsx';
+import KnowledgePickerModal from '../components/KnowledgePickerModal.jsx';
 import logoAI from '../../../assets/logo_AI.png';
 
 const SCOPES = [
@@ -35,6 +36,7 @@ export default function AIScreen() {
 
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [showScopeDropdown, setShowScopeDropdown] = useState(false);
+  const [pickerModal, setPickerModal] = useState({ open: false, type: 'document' }); // 'document' or 'folder'
   const scopeRef = useRef(null);
 
   useEffect(() => {
@@ -56,6 +58,35 @@ export default function AIScreen() {
   const handleSelectPrompt = (prompt) => sendMessage(prompt);
   const handleClearContext = () => {
     setChatContext({ scope: 'all', documentId: null, folderId: null, contextName: null });
+  };
+
+  const handleScopeSelect = (scopeKey) => {
+    if (scopeKey === 'all') {
+      setChatContext({ scope: 'all', documentId: null, folderId: null, contextName: null });
+      setShowScopeDropdown(false);
+    } else {
+      setPickerModal({ open: true, type: scopeKey });
+      setShowScopeDropdown(false);
+    }
+  };
+
+  const handlePickerSelect = (item) => {
+    if (pickerModal.type === 'document') {
+      setChatContext({ 
+        scope: 'document', 
+        documentId: item.documentId || item.id, 
+        folderId: null, 
+        contextName: item.fileName || item.name 
+      });
+    } else {
+      setChatContext({ 
+        scope: 'folder', 
+        documentId: null, 
+        folderId: item.folderId || item.id, 
+        contextName: item.name 
+      });
+    }
+    setPickerModal({ open: false, type: pickerModal.type });
   };
 
   const activeScope = SCOPES.find(s => s.key === chatContext.scope) || SCOPES[0];
@@ -87,17 +118,17 @@ export default function AIScreen() {
               <i className="bi bi-layout-sidebar text-[15px] text-black/40" />
             </button>
 
-            {/* CapyAI Identity */}
+            {/* Giáo Sư Capy Identity */}
             <div className="flex items-center gap-3">
               <div className="relative shrink-0">
                 <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-sm shadow-[#ff5c00]/15 overflow-hidden border border-black/5">
-                  <img src={logoAI} alt="CapyAI" className="w-full h-full object-cover" />
+                  <img src={logoAI} alt="Giáo Sư Capy" className="w-full h-full object-cover" />
                 </div>
                 <div className="absolute -bottom-px -right-px w-[10px] h-[10px] bg-emerald-400 rounded-full border-[1.5px] border-white z-10" />
               </div>
               <div className="flex flex-col justify-center">
                 <h2 className="text-xl font-semibold text-[#1d1d1f] flex items-center gap-2 leading-none mb-1">
-                  CapyAI
+                  Giáo Sư Capy
                   <span className="text-[10px] font-semibold text-[#ff5c00] bg-[#ff5c00]/10 px-1.5 py-0.5 rounded-md uppercase border border-[#ff5c00]/20">Beta</span>
                 </h2>
                 <p className="text-[12px] text-black/55 font-medium flex items-center gap-1.5 leading-none">
@@ -115,14 +146,16 @@ export default function AIScreen() {
               <button
                 onClick={() => setShowScopeDropdown(!showScopeDropdown)}
                 className={`h-9 px-3 rounded-lg flex items-center gap-1.5 text-[13px] font-medium transition-all duration-200 cursor-pointer
-                  ${showScopeDropdown
+                  ${showScopeDropdown || chatContext.scope !== 'all'
                     ? 'bg-[#ff5c00]/10 text-[#ff5c00]'
                     : 'text-black/55 hover:bg-black/[0.03] hover:text-black'
                   }`}
               >
-                <i className="bi bi-sliders2 text-[13px]" />
-                <span className="hidden sm:inline">{activeScope.label}</span>
-                <i className={`bi bi-chevron-down text-[10px] transition-transform duration-200 ${showScopeDropdown ? 'rotate-180' : ''}`} />
+                <i className={`bi ${activeScope.icon} text-[13px]`} />
+                <span className="hidden sm:inline max-w-[150px] truncate">
+                  {chatContext.contextName ? chatContext.contextName : activeScope.label}
+                </span>
+                <i className={`bi bi-chevron-down text-[10px] transition-transform duration-200 ml-1 ${showScopeDropdown ? 'rotate-180' : ''}`} />
               </button>
 
               {/* Dropdown (opens downward, z-50) */}
@@ -141,13 +174,7 @@ export default function AIScreen() {
                       return (
                         <button
                           key={scope.key}
-                          onClick={() => {
-                            setChatContext(scope.key === 'all'
-                              ? { scope: 'all', documentId: null, folderId: null, contextName: null }
-                              : prev => ({ ...prev, scope: scope.key })
-                            );
-                            setShowScopeDropdown(false);
-                          }}
+                          onClick={() => handleScopeSelect(scope.key)}
                           className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left cursor-pointer transition-all duration-150 mb-0.5
                             ${isActive ? 'bg-[#ff5c00]/10' : 'hover:bg-black/[0.03]'}`}
                         >
@@ -194,6 +221,13 @@ export default function AIScreen() {
           onClearContext={handleClearContext}
         />
       </div>
+
+      <KnowledgePickerModal
+        open={pickerModal.open}
+        type={pickerModal.type}
+        onCancel={() => setPickerModal(prev => ({ ...prev, open: false }))}
+        onSelect={handlePickerSelect}
+      />
     </div>
   );
 }

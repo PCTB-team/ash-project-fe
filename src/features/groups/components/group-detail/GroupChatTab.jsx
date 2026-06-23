@@ -18,61 +18,102 @@ export default function GroupChatTab({ group, currentUser, profileData }) {
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(true);
   const [socketStatus, setSocketStatus] = useState('DISCONNECTED');
-  
+
   const messagesEndRef = useRef(null);
+  const socketStatusRef = useRef('DISCONNECTED');
 
   const currentUserId = profileData?.id || profileData?.userId;
 
   const isLeader = group.role === 'LEADER' || group.owner === currentUser;
   const canChat = isLeader || group.canChat !== false;
 
+  const getMessageId = (msg) => msg?.messageId || msg?.id;
+
+  const mergeMessages = (incomingMessages) => {
+    setMessages((prev) => {
+      const merged = [...prev];
+      let hasNew = false;
+
+      incomingMessages.forEach((incoming) => {
+        const incomingId = getMessageId(incoming);
+        const exists = incomingId
+          ? merged.some((item) => getMessageId(item) === incomingId)
+          : false;
+
+        if (!exists) {
+          merged.push(incoming);
+          hasNew = true;
+        }
+      });
+
+      if (!hasNew) return prev;
+
+      return merged.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+    });
+  };
+
   useEffect(() => {
     let active = true;
+    let disconnect;
+    let pollingId;
 
-    const fetchHistory = async () => {
+    const fetchHistory = async (silent = false) => {
       try {
-        setLoading(true);
+        if (!silent) setLoading(true);
+
         const data = await getGroupMessages(group.id, 0, 100);
+
         if (active && data?.items) {
           // Backend returns newest first, reverse for display
-          setMessages([...data.items].reverse());
+          mergeMessages([...data.items].reverse());
         }
       } catch (error) {
-        if (active) antMessage.error('Không thể tải lịch sử trò chuyện.');
+        if (active && !silent) {
+          antMessage.error('Không thể tải lịch sử trò chuyện.');
+        }
       } finally {
-        if (active) setLoading(false);
+        if (active && !silent) setLoading(false);
       }
     };
 
     fetchHistory();
 
     const token = localStorage.getItem('accessToken');
-    let disconnect;
+
     if (token) {
       disconnect = connectGroupChatSocket({
         groupId: group.id,
         accessToken: token,
         onStatusChange: (status) => {
           if (active) {
+            socketStatusRef.current = status;
             setSocketStatus(status);
             setConnecting(status !== 'CONNECTED');
           }
         },
         onMessage: (newMessage) => {
           if (active) {
-            setMessages((prev) => {
-              // Prevent duplicates (check both messageId and id safely)
-              const newId = newMessage.messageId || newMessage.id;
-              if (newId && prev.some((m) => (m.messageId || m.id) === newId)) return prev;
-              return [...prev, newMessage];
-            });
+            mergeMessages([newMessage]);
           }
         }
       });
+    } else {
+      socketStatusRef.current = 'ERROR';
+      setSocketStatus('ERROR');
+      setConnecting(false);
     }
+
+    // Fallback khi WebSocket lỗi: tự GET lại messages để không cần F5.
+    pollingId = setInterval(() => {
+      if (active && socketStatusRef.current !== 'CONNECTED') {
+        fetchHistory(true);
+      }
+    }, 2500);
 
     return () => {
       active = false;
+
+      if (pollingId) clearInterval(pollingId);
       if (disconnect) disconnect();
     };
   }, [group.id]);
@@ -89,11 +130,7 @@ export default function GroupChatTab({ group, currentUser, profileData }) {
 
     try {
       const sentMessage = await sendGroupMessage(group.id, content);
-      setMessages((prev) => {
-        const sentId = sentMessage.messageId || sentMessage.id;
-        if (sentId && prev.some((m) => (m.messageId || m.id) === sentId)) return prev;
-        return [...prev, sentMessage];
-      });
+      mergeMessages([sentMessage]);
     } catch (error) {
       const errorCode = error.response?.data?.code;
       if (errorCode === 1237 || errorCode === 'GROUP_CHAT_NOT_ALLOWED') {
@@ -125,21 +162,6 @@ export default function GroupChatTab({ group, currentUser, profileData }) {
         <h3 className="font-semibold text-[16px] text-[var(--color-on-surface)] flex items-center gap-2">
           <i className="bi bi-chat-dots text-[var(--color-primary)]"></i> Trò chuyện nhóm
         </h3>
-        {socketStatus === 'CONNECTING' && !loading && (
-          <span className="text-[12px] text-amber-500 font-medium flex items-center gap-1.5 bg-amber-50 px-2 py-0.5 rounded-full">
-            <Spin size="small" /> Đang kết nối...
-          </span>
-        )}
-        {socketStatus === 'ERROR' && !loading && (
-          <span className="text-[12px] text-red-500 font-medium flex items-center gap-1.5 bg-red-50 px-2 py-0.5 rounded-full">
-            <i className="bi bi-exclamation-triangle"></i> Lỗi kết nối
-          </span>
-        )}
-        {socketStatus === 'DISCONNECTED' && !loading && (
-          <span className="text-[12px] text-gray-500 font-medium flex items-center gap-1.5 bg-gray-50 px-2 py-0.5 rounded-full">
-            <i className="bi bi-wifi-off"></i> Mất kết nối
-          </span>
-        )}
       </div>
 
       {/* Messages Area */}
@@ -158,11 +180,11 @@ export default function GroupChatTab({ group, currentUser, profileData }) {
           messages.map((msg, idx) => {
             // Check if isMine by currentUserId if available, else fallback to email check (currentUser is email)
             const isMine = currentUserId ? msg.senderId === currentUserId : (msg.senderEmail === currentUser || msg.senderName === profileData?.fullName);
-            
+
             const currentSender = msg.senderId || msg.senderEmail || msg.senderName || 'unknown';
             const nextSender = idx < messages.length - 1 ? (messages[idx + 1].senderId || messages[idx + 1].senderEmail || messages[idx + 1].senderName || 'unknown') : null;
             const prevSender = idx > 0 ? (messages[idx - 1].senderId || messages[idx - 1].senderEmail || messages[idx - 1].senderName || 'unknown') : null;
-            
+
             const isNextSameSender = nextSender === currentSender;
             const isPrevSameSender = prevSender === currentSender;
 
@@ -204,7 +226,7 @@ export default function GroupChatTab({ group, currentUser, profileData }) {
                     ) : null}
                   </div>
                 )}
-                
+
                 <div className={`max-w-[70%] flex flex-col ${isMine ? 'items-end' : 'items-start'}`}>
                   {showName && (
                     <span className="text-[11.5px] font-medium text-black/45 ml-1.5 mb-1">{msg.senderName}</span>
