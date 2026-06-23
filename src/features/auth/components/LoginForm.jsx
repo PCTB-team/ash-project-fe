@@ -20,7 +20,7 @@ export default function LoginForm({ form, showPassword, setShowPassword }) {
               <span className={ICON_WRAP}><i className="bi bi-person text-[14px]" /></span>
               <input type="text" autoComplete="username" placeholder="name@example.com"
                 className={INPUT_CLS}
-                onChange={(e) => form.setFieldsValue({ usernameOrEmail: e.target.value })} />
+                onChange={(e) => { form.setFieldsValue({ usernameOrEmail: e.target.value }); form.validateFields(['usernameOrEmail']); }} />
             </div>
           </div>
         </Form.Item>
@@ -35,7 +35,7 @@ export default function LoginForm({ form, showPassword, setShowPassword }) {
               <span className={ICON_WRAP}><i className="bi bi-lock text-[14px]" /></span>
               <input type={showPassword ? 'text' : 'password'} autoComplete="current-password" placeholder="••••••••"
                 className={INPUT_CLS_PR}
-                onChange={(e) => form.setFieldsValue({ password: e.target.value })} />
+                onChange={(e) => { form.setFieldsValue({ password: e.target.value }); form.validateFields(['password']); }} />
               <button type="button" onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-black/25 hover:text-black/50 transition-colors cursor-pointer">
                 <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'} text-[13px]`} />

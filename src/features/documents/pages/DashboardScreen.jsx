@@ -22,13 +22,13 @@ const { Dragger } = Upload;
 
 export default function DashboardScreen() {
   const navigate = useNavigate();
-  const { 
-    searchTerm, 
-    refreshKey: refreshTrigger, 
-    setDocumentsCount: onUpdateDocumentsCount, 
-    refreshAll: onRefreshDocuments 
+  const {
+    searchTerm,
+    refreshKey: refreshTrigger,
+    setDocumentsCount: onUpdateDocumentsCount,
+    refreshAll: onRefreshDocuments
   } = useOutletContext();
-  
+
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [previewDoc, setPreviewDoc] = useState(null);
   const [folderPath, setFolderPath] = useState([]);
@@ -51,7 +51,7 @@ export default function DashboardScreen() {
 
     const executeUpload = async (replaceExisting = false) => {
       const formData = new FormData();
-      
+
       let fileToSend = selectedFile;
       const ext = selectedFile.name.split('.').pop().toLowerCase();
       // If it's a markdown file, we use the original file but force text/plain just in case the backend is strict about MIME types
@@ -60,7 +60,7 @@ export default function DashboardScreen() {
       } else {
         fileToSend = selectedFile.originFileObj || selectedFile;
       }
-      
+
       // Step 1: Upload the file exactly as Swagger expects (only 'file' and 'folderId')
       formData.append('file', fileToSend, selectedFile.name);
 
@@ -76,19 +76,19 @@ export default function DashboardScreen() {
       try {
         setIsUploading(true);
         const uploadUrl = `${UPLOAD_DOCUMENT_API_URL}${params.toString() ? '?' + params.toString() : ''}`;
-        
+
         const response = await axiosClient.post(uploadUrl, formData);
         const data = response.data;
 
         if (response.status === 200 || data.code === 0 || data.code === 1000) {
           const documentId = data.result?.documentId;
-          
+
           if (documentId && finalName !== selectedFile.name) {
-             try {
-               await axiosClient.put(`${DOCUMENTS_API_URL}/${documentId}`, { fileName: finalName });
-             } catch (renameError) {
-               console.error("Failed to rename document after upload:", renameError);
-             }
+            try {
+              await axiosClient.put(`${DOCUMENTS_API_URL}/${documentId}`, { fileName: finalName });
+            } catch (renameError) {
+              console.error("Failed to rename document after upload:", renameError);
+            }
           }
 
           if (onRefreshDocuments) onRefreshDocuments();
@@ -98,7 +98,7 @@ export default function DashboardScreen() {
           message.success(`Đã tải lên "${finalName}" thành công!`);
         } else {
           const errMsg = data.message || "";
-          
+
           if (errMsg.toLowerCase().includes('tồn tại') || errMsg.toLowerCase().includes('exist')) {
             Modal.confirm({
               title: 'Tài liệu đã tồn tại',
@@ -119,18 +119,18 @@ export default function DashboardScreen() {
         console.error("Upload error detailed:", errorData);
         const errMsg = error.response?.data?.message || errorData;
         if (errMsg.toLowerCase().includes('tồn tại') || errMsg.toLowerCase().includes('exist')) {
-            Modal.confirm({
-              title: 'Tài liệu đã tồn tại',
-              content: 'Một tài liệu với tên này đã tồn tại trong thư mục. Bạn có muốn ghi đè lên tài liệu cũ không?',
-              okText: 'Ghi đè',
-              cancelText: 'Hủy',
-              centered: true,
-              onOk: () => {
-                executeUpload(true);
-              }
-            });
+          Modal.confirm({
+            title: 'Tài liệu đã tồn tại',
+            content: 'Một tài liệu với tên này đã tồn tại trong thư mục. Bạn có muốn ghi đè lên tài liệu cũ không?',
+            okText: 'Ghi đè',
+            cancelText: 'Hủy',
+            centered: true,
+            onOk: () => {
+              executeUpload(true);
+            }
+          });
         } else {
-            message.error(errMsg || "Không thể tải tệp lên!");
+          message.error(errMsg || "Không thể tải tệp lên!");
         }
       } finally {
         setIsUploading(false);
@@ -143,7 +143,7 @@ export default function DashboardScreen() {
   const handleRenameDocument = async (doc, newName) => {
     try {
       const isFolder = doc.type === 'folder' || doc.type === 'FOLDER';
-      const url = isFolder 
+      const url = isFolder
         ? `https://ash-project-be.onrender.com/api/v1/folders/${doc.id}`
         : `${DOCUMENTS_API_URL}/${doc.id}`;
       const payload = isFolder ? { name: newName } : { fileName: newName };
@@ -165,7 +165,7 @@ export default function DashboardScreen() {
   const handleRemoveDocument = async (doc) => {
     try {
       const isFolder = doc.type === 'folder' || doc.type === 'FOLDER';
-      const url = isFolder 
+      const url = isFolder
         ? `https://ash-project-be.onrender.com/api/v1/folders/${doc.id}`
         : `${DOCUMENTS_API_URL}/${doc.id}`;
       const response = await axiosClient.delete(url);

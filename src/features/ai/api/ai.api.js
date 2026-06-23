@@ -15,6 +15,15 @@ export const aiApi = {
   },
 
   /**
+   * Trò chuyện với AI dựa trên tài liệu đã lưu
+   * @param {Object} payload - { message, documentId?, folderId? }
+   */
+  chatWithKnowledge: async (payload) => {
+    const response = await axiosClient.post(`${AI_API_URL}/knowledge/chat`, payload);
+    return response.data;
+  },
+
+  /**
    * Lấy danh sách các cuộc trò chuyện (chat history)
    */
   getConversations: async () => {

@@ -50,14 +50,14 @@ export default function WelcomePrompts({ onSelectPrompt }) {
             className="absolute w-20 h-20 rounded-full bg-[#ff5c00]/20 blur-xl"
           />
           <div className="relative w-[60px] h-[60px] rounded-2xl bg-white flex items-center justify-center shadow-lg shadow-[#ff5c00]/20 ring-4 ring-white overflow-hidden border border-black/5">
-            <img src={logoAI} alt="CapyAI" className="w-full h-full object-cover" />
+            <img src={logoAI} alt="Giáo Sư Capy" className="w-full h-full object-cover" />
           </div>
         </div>
 
-        <h2 className="text-2xl font-semibold text-[#1d1d1f] mb-2 flex items-center justify-center gap-2">
-          Xin chào! Tôi là CapyAI <i className="bi bi-robot text-[#ff5c00] text-[22px]" />
+        <h2 className="text-3xl font-bold text-[#1d1d1f] mb-3 tracking-tight flex items-center justify-center gap-3">
+          Xin chào! Tôi là Giáo Sư Capy <i className="bi bi-robot text-[#ff5c00] text-[22px]" />
         </h2>
-        <p className="text-[13px] text-black/55 font-medium max-w-[420px] leading-relaxed mx-auto">
+        <p className="text-[15px] text-black/50 font-medium max-w-[420px] leading-relaxed mx-auto">
           Trợ lý học tập thông minh của Capy Study — hỏi đáp, tóm tắt, và hỗ trợ bạn mọi lúc.
         </p>
       </motion.div>
@@ -105,12 +105,13 @@ export default function WelcomePrompts({ onSelectPrompt }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="mt-8 flex items-center gap-2"
       >
-        <i className="bi bi-shield-lock text-[13px] text-black/30" />
-        <span className="text-[12px] text-black/40 font-medium">
-          CapyAI chỉ truy cập tài liệu bạn có quyền
-        </span>
+        <div className="flex items-center gap-1.5 justify-center py-4 bg-white border-t border-black/[0.04]">
+          <i className="bi bi-shield-check text-[#ff5c00] text-[13px]" />
+          <p className="text-[10px] text-black/40 font-medium uppercase tracking-wide">
+            Giáo Sư Capy chỉ truy cập tài liệu bạn có quyền
+          </p>
+        </div>
       </motion.div>
     </div>
   );

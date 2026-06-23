@@ -5,7 +5,7 @@ import './index.css'
 import App from './App.jsx'
 
 // NOTE: Thay thế clientId này bằng Client ID thực tế từ Google Cloud Console
-const GOOGLE_CLIENT_ID = "973784581614-5iplta9p33rbkd28o7lneevpm0l5sgva.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "973784581614-5iplta9p33rbkd28o7lneevpm0l5sgva.apps.googleusercontent.com";
 
 const originalWarn = console.warn;
 const originalError = console.error;

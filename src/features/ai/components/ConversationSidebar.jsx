@@ -53,7 +53,7 @@ export default function ConversationSidebar({
               <i className="bi bi-chat-left text-[18px] text-black/8" />
             </div>
             <p className="text-[11px] text-black/20 font-medium">Chưa có hội thoại</p>
-            <p className="text-[10px] text-black/12 font-medium mt-0.5">Hỏi CapyAI bất cứ điều gì</p>
+            <p className="text-[10px] text-black/12 font-medium mt-0.5">Hỏi Giáo Sư Capy bất cứ điều gì</p>
           </div>
         ) : (
           sorted.map((conv) => {
@@ -100,7 +100,7 @@ export default function ConversationSidebar({
           </div>
           <div className="leading-tight">
             <p className="text-[10px] font-bold text-black/25">Capy Study</p>
-            <p className="text-[8.5px] text-black/12 font-medium">Powered by CapyAI</p>
+            <p className="text-[8.5px] text-black/12 font-medium">Powered by Giáo Sư Capy</p>
           </div>
         </div>
       </div>

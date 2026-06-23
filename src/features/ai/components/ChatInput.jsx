@@ -86,7 +86,7 @@ export default function ChatInput({
             onKeyDown={handleKeyDown}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            placeholder="Hỏi CapyAI bất cứ điều gì..."
+            placeholder="Hỏi Giáo Sư Capy bất cứ điều gì..."
             rows={1}
             disabled={isSending}
             className="w-full bg-transparent px-4 pt-3 pb-2 text-[13.5px] text-[#1d1d1f] font-medium placeholder:text-black/25 outline-none resize-none max-h-[120px] disabled:opacity-40 leading-relaxed"
@@ -130,7 +130,7 @@ export default function ChatInput({
 
         {/* Footer */}
         <p className="text-center text-[9px] text-black/15 font-medium mt-2">
-          CapyAI có thể tạo ra thông tin không chính xác. Hãy kiểm tra lại các thông tin quan trọng.
+          Giáo Sư Capy có thể tạo ra thông tin không chính xác. Hãy kiểm tra lại các thông tin quan trọng.
         </p>
       </div>
     </div>

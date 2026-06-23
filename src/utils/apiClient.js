@@ -115,7 +115,6 @@ axiosClient.interceptors.response.use(
           // We usually handle FILE_ALREADY_EXISTS at the component level to ask for overwrite
           break;
         default:
-          // If status is 5xx
           if (error.response.status >= 500) {
             message.error("Lỗi hệ thống máy chủ. Vui lòng thử lại sau.");
           }
