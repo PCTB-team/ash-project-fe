@@ -15,7 +15,7 @@ export default function PaymentScreen() {
   // Fallback defaults
   const usagePercent = storageData?.usagePercent ?? 0;
   const usedStorageBytes = storageData?.usedStorage || 0;
-  const maxStorageBytes = storageData?.maxStorage || 500 * 1024 * 1024;
+  const maxStorageBytes = storageData?.maxStorage || storageData?.quotaSize || storageData?.maxStorageSize || storageData?.totalCapacity || 500 * 1024 * 1024;
   const remainingStorageBytes = storageData?.remainingStorage || Math.max(0, maxStorageBytes - usedStorageBytes);
 
   // Helper formats

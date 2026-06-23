@@ -35,8 +35,9 @@ export default function DashboardLayout() {
     try {
       const data = await profileApi.getStorageUsage();
       if (data && data.result) {
+        console.log("STORAGE API RESPONSE:", data.result);
         setUsedStorageBytes(data.result.usedStorage || 0);
-        setMaxStorageBytes(data.result.maxStorage || 500 * 1024 * 1024);
+        setMaxStorageBytes(data.result.maxStorage || data.result.quotaSize || data.result.maxStorageSize || data.result.totalCapacity || 500 * 1024 * 1024);
       }
     } catch (e) {
       console.error('Failed to fetch storage usage', e);
