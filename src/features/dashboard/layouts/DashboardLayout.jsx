@@ -84,7 +84,7 @@ export default function DashboardLayout() {
     } finally {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
-      navigate('/login', { replace: true });
+      navigate('/', { replace: true });
     }
   };
 
