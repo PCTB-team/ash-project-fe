@@ -1,93 +1,123 @@
 /**
- * admin.api.js — API layer cho Admin Panel (Mock data)
- * Khi có API thật, chỉ cần thay body các function bằng axiosClient calls.
+ * admin.api.js — API layer cho Admin Panel
  */
-import {
-  MOCK_USERS, MOCK_DOCUMENTS, MOCK_GROUPS, MOCK_PAYMENTS, MOCK_PLANS,
-  MOCK_ACTIVITIES, MOCK_DASHBOARD_STATS, MOCK_USERS_CHART, MOCK_UPLOADS_CHART,
-  MOCK_FILE_TYPE_CHART, MOCK_REVENUE_CHART, MOCK_AI_STATS, MOCK_AI_USAGE_CHART,
-  MOCK_SETTINGS,
-} from '../utils/admin.mock.js';
-
-const delay = (ms = 300) => new Promise(r => setTimeout(r, ms));
+import { axiosClient } from '../../../utils/apiClient.js';
 
 export const adminApi = {
   // ── Dashboard ──
-  getDashboardStats: async () => { await delay(); return { code: 1000, result: MOCK_DASHBOARD_STATS }; },
-  getUsersChart: async () => { await delay(); return { code: 1000, result: MOCK_USERS_CHART }; },
-  getUploadsChart: async () => { await delay(); return { code: 1000, result: MOCK_UPLOADS_CHART }; },
-  getFileTypeChart: async () => { await delay(); return { code: 1000, result: MOCK_FILE_TYPE_CHART }; },
-  getRevenueChart: async () => { await delay(); return { code: 1000, result: MOCK_REVENUE_CHART }; },
-  getRecentActivities: async () => { await delay(); return { code: 1000, result: MOCK_ACTIVITIES }; },
+  getDashboardStats: async () => {
+    const res = await axiosClient.get('/api/v1/admin/dashboard/stats');
+    return res.data;
+  },
+
+  getRecentActivities: async ({ page = 0, size = 10, logType = 'ADMIN_ACTION' } = {}) => {
+    const res = await axiosClient.get(`/api/v1/admin/logs`, {
+      params: { page, size, logType }
+    });
+    return res.data;
+  },
 
   // ── Users ──
   getUsers: async ({ page = 0, size = 10, keyword = '', role = '', status = '' } = {}) => {
-    await delay();
-    let filtered = [...MOCK_USERS];
-    if (keyword) filtered = filtered.filter(u => u.fullname.toLowerCase().includes(keyword.toLowerCase()) || u.email.toLowerCase().includes(keyword.toLowerCase()));
-    if (role) filtered = filtered.filter(u => u.roles.includes(role));
-    if (status) filtered = filtered.filter(u => u.status === status);
-    const total = filtered.length;
-    const start = page * size;
-    const content = filtered.slice(start, start + size);
-    return { code: 1000, result: { content, totalElements: total, totalPages: Math.ceil(total / size), page } };
+    const params = { page, size };
+    if (keyword) params.keyword = keyword;
+    if (role) params.role = role;
+    if (status) params.status = status;
+    
+    const res = await axiosClient.get('/api/v1/admin/users', { params });
+    return res.data;
   },
-  getUserById: async (userId) => { await delay(); const u = MOCK_USERS.find(u => u.id === userId); return { code: 1000, result: u || null }; },
-  updateUserRole: async (userId, role) => { await delay(); return { code: 1000, message: 'Success' }; },
-  updateUserStatus: async (userId, status) => { await delay(); return { code: 1000, message: 'Success' }; },
-  deleteUser: async (userId) => { await delay(); return { code: 1000, message: 'Success' }; },
-
-  // ── Documents ──
-  getDocuments: async ({ page = 0, size = 10, keyword = '', fileType = '' } = {}) => {
-    await delay();
-    let filtered = [...MOCK_DOCUMENTS];
-    if (keyword) filtered = filtered.filter(d => d.name.toLowerCase().includes(keyword.toLowerCase()) || d.owner.toLowerCase().includes(keyword.toLowerCase()));
-    if (fileType) filtered = filtered.filter(d => d.type === fileType);
-    const total = filtered.length;
-    const start = page * size;
-    const content = filtered.slice(start, start + size);
-    return { code: 1000, result: { content, totalElements: total, totalPages: Math.ceil(total / size), page } };
+  
+  getUserById: async (userId) => {
+    const res = await axiosClient.get(`/api/v1/admin/users/${userId}`);
+    return res.data;
   },
-  deleteDocument: async (docId) => { await delay(); return { code: 1000, message: 'Success' }; },
+  
+  updateUserRole: async (userId, role) => {
+    const res = await axiosClient.put(`/api/v1/admin/users/${userId}/role?roleName=${role}`);
+    return res.data;
+  },
+  
+  updateUserStatus: async (userId, status) => {
+    let res;
+    if (status === 'BANNED') {
+      res = await axiosClient.put(`/api/v1/admin/users/${userId}/lock`, { reason: 'Policy violation' });
+    } else {
+      res = await axiosClient.put(`/api/v1/admin/users/${userId}/unlock`);
+    }
+    return res.data;
+  },
+  
+  deleteUser: async (userId) => {
+    const res = await axiosClient.delete(`/api/v1/admin/users/${userId}`);
+    return res.data;
+  },
 
   // ── Groups ──
   getGroups: async ({ page = 0, size = 10, keyword = '' } = {}) => {
-    await delay();
-    let filtered = [...MOCK_GROUPS];
-    if (keyword) filtered = filtered.filter(g => g.name.toLowerCase().includes(keyword.toLowerCase()) || g.leader.toLowerCase().includes(keyword.toLowerCase()));
-    const total = filtered.length;
-    const start = page * size;
-    const content = filtered.slice(start, start + size);
-    return { code: 1000, result: { content, totalElements: total, totalPages: Math.ceil(total / size), page } };
+    const params = { page, size };
+    if (keyword) params.keyword = keyword;
+    const res = await axiosClient.get('/api/v1/admin/groups', { params });
+    return res.data;
   },
-  deleteGroup: async (groupId) => { await delay(); return { code: 1000, message: 'Success' }; },
-  updateGroupStatus: async (groupId, status) => { await delay(); return { code: 1000, message: 'Success' }; },
+  
+  getGroupById: async (groupId) => {
+    const res = await axiosClient.get(`/api/v1/admin/groups/${groupId}`);
+    return res.data;
+  },
+
+  getGroupStats: async () => {
+    const res = await axiosClient.get('/api/v1/admin/groups/statistics');
+    return res.data;
+  },
+  
+  deleteGroup: async (groupId) => {
+    const res = await axiosClient.delete(`/api/v1/admin/groups/${groupId}`);
+    return res.data;
+  },
+  
+  // TODO: Missing API to update group status (Lock/Unlock Group). 
+  // BE needs to provide this endpoint later.
+  updateGroupStatus: async (groupId, status) => {
+    console.warn("API updateGroupStatus is currently missing from Backend.");
+    return { code: 1000, message: 'Not implemented by BE yet' };
+  },
 
   // ── Payments ──
   getPayments: async ({ page = 0, size = 10, status = '' } = {}) => {
-    await delay();
-    let filtered = [...MOCK_PAYMENTS];
-    if (status) filtered = filtered.filter(p => p.status === status);
-    filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    const total = filtered.length;
-    const start = page * size;
-    const content = filtered.slice(start, start + size);
-    const stats = {
-      totalRevenue: MOCK_PAYMENTS.filter(p => p.status === 'SUCCESS').reduce((s, p) => s + p.amount, 0),
-      successCount: MOCK_PAYMENTS.filter(p => p.status === 'SUCCESS').length,
-      failedCount: MOCK_PAYMENTS.filter(p => p.status === 'FAILED').length,
-      pendingCount: MOCK_PAYMENTS.filter(p => p.status === 'PENDING').length,
-    };
-    return { code: 1000, result: { content, totalElements: total, totalPages: Math.ceil(total / size), page, stats } };
+    const params = { page, size };
+    if (status) params.status = status;
+    const res = await axiosClient.get('/api/v1/admin/payments', { params });
+    return res.data;
   },
-  getPlans: async () => { await delay(); return { code: 1000, result: MOCK_PLANS }; },
-  updatePlan: async (planId, data) => { await delay(); return { code: 1000, message: 'Success' }; },
+  
+  // TODO: Missing API to get subscription plans.
+  getPlans: async () => {
+    console.warn("API getPlans is currently missing from Backend.");
+    return { code: 1000, result: [] }; // Return empty or mock array to avoid breaking UI
+  },
+  
+  // TODO: Missing API to update a plan.
+  updatePlan: async (planId, data) => {
+    console.warn("API updatePlan is currently missing from Backend.");
+    return { code: 1000, message: 'Not implemented by BE yet' };
+  },
 
   // ── AI ──
-  getAIStats: async () => { await delay(); return { code: 1000, result: MOCK_AI_STATS }; },
-  getAIUsageChart: async () => { await delay(); return { code: 1000, result: MOCK_AI_USAGE_CHART }; },
+  getAIStats: async () => {
+    const res = await axiosClient.get('/api/v1/admin/ai/statistics');
+    return res.data;
+  },
 
   // ── Settings ──
-  getSettings: async () => { await delay(); return { code: 1000, result: MOCK_SETTINGS }; },
-  updateSettings: async (settings) => { await delay(500); return { code: 1000, message: 'Settings updated' }; },
+  getSettings: async () => {
+    const res = await axiosClient.get('/api/v1/admin/settings');
+    return res.data;
+  },
+  
+  // TODO: Missing API to update system settings.
+  updateSettings: async (settings) => {
+    console.warn("API updateSettings is currently missing from Backend.");
+    return { code: 1000, message: 'Not implemented by BE yet' };
+  },
 };

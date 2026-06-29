@@ -41,7 +41,6 @@ import JoinGroupScreen from './features/groups/pages/JoinGroupScreen.jsx';
 import AdminLayout from './features/admin/layouts/AdminLayout.jsx';
 import AdminDashboard from './features/admin/pages/AdminDashboard.jsx';
 import AdminUsers from './features/admin/pages/AdminUsers.jsx';
-import AdminDocuments from './features/admin/pages/AdminDocuments.jsx';
 import AdminGroups from './features/admin/pages/AdminGroups.jsx';
 import AdminPayments from './features/admin/pages/AdminPayments.jsx';
 import AdminAI from './features/admin/pages/AdminAI.jsx';
@@ -93,7 +92,6 @@ function App() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<AdminUsers />} />
-          <Route path="documents" element={<AdminDocuments />} />
           <Route path="groups" element={<AdminGroups />} />
           <Route path="payments" element={<AdminPayments />} />
           <Route path="ai" element={<AdminAI />} />

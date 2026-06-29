@@ -41,9 +41,12 @@ export default function AdminGroups() {
   const fetchGroups = useCallback(async (page = 0) => {
     setLoading(true);
     try {
-      const res = await adminApi.getGroups({ page, size: pagination.pageSize, keyword });
+      const [res, statsRes] = await Promise.all([
+        adminApi.getGroups({ page, size: pagination.pageSize, keyword }),
+        adminApi.getGroupStats().catch(() => ({ result: { totalGroups: 0, activeGroupsLast7Days: 0, averageMembersPerGroup: 0 } }))
+      ]);
       setGroups(res.result.content);
-      setPagination(p => ({ ...p, current: page + 1, total: res.result.totalElements }));
+      setPagination(p => ({ ...p, current: page + 1, total: res.result.totalElements, stats: statsRes.result }));
     } finally { setLoading(false); }
   }, [keyword, pagination.pageSize]);
 
@@ -58,15 +61,10 @@ export default function AdminGroups() {
   };
 
   const handleToggleStatus = async (groupId, currentStatus) => {
-    const newStatus = currentStatus === 'ACTIVE' ? 'LOCKED' : 'ACTIVE';
-    await adminApi.updateGroupStatus(groupId, newStatus);
-    message.success(`Đã ${newStatus === 'LOCKED' ? 'khóa' : 'mở khóa'} nhóm`);
-    fetchGroups(pagination.current - 1);
+    message.info('Tính năng này hiện tại chưa được hỗ trợ bởi Backend.');
   };
 
-  const totalMembers = groups.reduce((s, g) => s + g.memberCount, 0);
-  const totalFiles = groups.reduce((s, g) => s + g.fileCount, 0);
-  const activeGroups = groups.filter(g => g.status === 'ACTIVE').length;
+  const stats = pagination.stats || {};
 
   const columns = [
     { title: 'Nhóm', key: 'name', render: (_, r, idx) => {
@@ -86,8 +84,8 @@ export default function AdminGroups() {
     }, width: 260 },
     { title: 'Trưởng nhóm', key: 'leader', render: (_, r) => (
       <div className="flex items-center gap-2">
-        <Avatar size={26} style={{ background: 'linear-gradient(135deg, #ff5c00, #ffaa00)', fontSize: 10, fontWeight: 700 }}>{r.leader?.charAt(0)}</Avatar>
-        <span className="text-[12px] font-semibold">{r.leader}</span>
+        <Avatar size={26} style={{ background: 'linear-gradient(135deg, #ff5c00, #ffaa00)', fontSize: 10, fontWeight: 700 }}>{(r.leaderName || r.leader)?.charAt(0)}</Avatar>
+        <span className="text-[12px] font-semibold">{r.leaderName || r.leader}</span>
       </div>
     ), width: 160 },
     { title: 'Thành viên', dataIndex: 'memberCount', render: (v) => (
@@ -127,10 +125,10 @@ export default function AdminGroups() {
     <div className="space-y-5">
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <GlassMiniCard icon="bi-collection-fill" label="Tổng nhóm" value={pagination.total} color="#6366f1" delay={0} />
-        <GlassMiniCard icon="bi-check-circle-fill" label="Đang hoạt động" value={activeGroups} color="#10b981" delay={0.05} />
-        <GlassMiniCard icon="bi-people-fill" label="Tổng thành viên" value={totalMembers} color="#ff5c00" delay={0.1} />
-        <GlassMiniCard icon="bi-file-earmark-fill" label="Tổng tài liệu" value={totalFiles} color="#8b5cf6" delay={0.15} />
+        <GlassMiniCard icon="bi-collection-fill" label="Tổng nhóm" value={stats.totalGroups || 0} color="#6366f1" delay={0} />
+        <GlassMiniCard icon="bi-check-circle-fill" label="Hoạt động 7 ngày qua" value={stats.activeGroupsLast7Days || 0} color="#10b981" delay={0.05} />
+        <GlassMiniCard icon="bi-people-fill" label="Trung bình thành viên" value={stats.averageMembersPerGroup?.toFixed(1) || 0} color="#ff5c00" delay={0.1} />
+        <GlassMiniCard icon="bi-file-earmark-fill" label="Tổng nhóm hiện thị" value={pagination.total} color="#8b5cf6" delay={0.15} />
       </div>
 
       {/* Table */}
@@ -170,9 +168,9 @@ export default function AdminGroups() {
                 <p className="text-[12px] text-black/35 mt-1">{detailGroup.description}</p>
               </div>
               <div className="grid grid-cols-2 gap-3 bg-black/[0.02] rounded-2xl p-5 border border-black/[0.04]">
-                {[['Trưởng nhóm', detailGroup.leader], ['Thành viên', detailGroup.memberCount], ['Tài liệu', detailGroup.fileCount],
-                  ['Tin nhắn', detailGroup.messageCount], ['Trạng thái', detailGroup.status], ['Mật khẩu', detailGroup.hasPassword ? 'Có' : 'Không'],
-                  ['Ngày tạo', new Date(detailGroup.createdAt).toLocaleDateString('vi-VN')], ['Hoạt động cuối', new Date(detailGroup.lastActivity).toLocaleDateString('vi-VN')],
+                {[['Trưởng nhóm', detailGroup.leaderName || detailGroup.leader], ['Email trưởng nhóm', detailGroup.leaderEmail || 'N/A'], ['Thành viên', detailGroup.memberCount], ['Tài liệu', detailGroup.fileCount],
+                  ['Trạng thái', detailGroup.status],
+                  ['Ngày tạo', new Date(detailGroup.createdAt).toLocaleDateString('vi-VN')],
                 ].map(([label, val]) => (
                   <div key={label}><p className="text-[10px] text-black/35 font-semibold mb-0.5 uppercase tracking-wider">{label}</p><p className="text-[13px] font-bold m-0">{val}</p></div>
                 ))}

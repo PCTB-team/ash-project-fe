@@ -134,20 +134,22 @@ const CustomTooltipStyle = { borderRadius: 16, fontSize: 12, border: 'none', box
 const ActivityTimeline = ({ activities }) => {
   const typeConfig = {
     USER_REGISTER: { icon: 'bi-person-plus-fill', color: '#6366f1', bg: '#6366f115', label: 'Đăng ký' },
-    DOCUMENT_UPLOAD: { icon: 'bi-cloud-arrow-up-fill', color: '#ff5c00', bg: '#ff5c0015', label: 'Upload' },
+    USER_UPLOAD_DOCUMENT: { icon: 'bi-cloud-arrow-up-fill', color: '#ff5c00', bg: '#ff5c0015', label: 'Upload' },
     GROUP_CREATE: { icon: 'bi-people-fill', color: '#8b5cf6', bg: '#8b5cf615', label: 'Tạo nhóm' },
     PAYMENT_SUCCESS: { icon: 'bi-check-circle-fill', color: '#10b981', bg: '#10b98115', label: 'Thanh toán' },
     AI_CHAT: { icon: 'bi-stars', color: '#0ea5e9', bg: '#0ea5e915', label: 'AI Chat' },
     USER_LOGIN: { icon: 'bi-box-arrow-in-right', color: '#94a3b8', bg: '#94a3b815', label: 'Đăng nhập' },
+    DELETE_USER: { icon: 'bi-person-x-fill', color: '#f43f5e', bg: '#f43f5e15', label: 'Xóa User' },
+    ADMIN_ACTION: { icon: 'bi-shield-fill', color: '#ffaa00', bg: '#ffaa0015', label: 'Admin' },
   };
 
   return (
     <div className="space-y-1">
       {activities?.slice(0, 8).map((act, i) => {
-        const cfg = typeConfig[act.type] || typeConfig.USER_LOGIN;
+        const cfg = typeConfig[act.action] || typeConfig.ADMIN_ACTION;
         return (
           <motion.div 
-            key={act.id}
+            key={i}
             initial={{ opacity: 0, x: -10 }} 
             animate={{ opacity: 1, x: 0 }} 
             transition={{ delay: 0.4 + i * 0.05 }}
@@ -163,15 +165,15 @@ const ActivityTimeline = ({ activities }) => {
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-[13px] font-semibold text-[#1d1d1f] truncate">{act.user}</span>
+                <span className="text-[13px] font-semibold text-[#1d1d1f] truncate">{act.actor}</span>
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" 
                   style={{ color: cfg.color, background: cfg.bg }}>{cfg.label}</span>
               </div>
-              <p className="text-[11px] text-black/40 m-0 truncate">{act.description}</p>
+              <p className="text-[11px] text-black/40 m-0 truncate">{act.detail}</p>
             </div>
 
             <span className="text-[10px] text-black/30 font-medium shrink-0 tabular-nums">
-              {new Date(act.timestamp).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+              {new Date(act.createdAt).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
             </span>
           </motion.div>
         );
@@ -192,12 +194,36 @@ export default function AdminDashboard() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [s, uc, ulc, ftc, rc, act] = await Promise.all([
-          adminApi.getDashboardStats(), adminApi.getUsersChart(), adminApi.getUploadsChart(),
-          adminApi.getFileTypeChart(), adminApi.getRevenueChart(), adminApi.getRecentActivities(),
-        ]);
-        setStats(s.result); setUsersChart(uc.result); setUploadsChart(ulc.result);
-        setFileTypeChart(ftc.result); setRevenueChart(rc.result); setActivities(act.result);
+        const res = await adminApi.getDashboardStats();
+        const s = res.result;
+        setStats(s);
+        
+        // Map users chart
+        setUsersChart((s.monthlyUserGrowth || []).map(item => ({ month: item.label, users: item.value })));
+        
+        // Map uploads chart
+        setUploadsChart((s.weeklyUploadTrend || []).map(item => ({ week: item.label, uploads: item.uploads })));
+        
+        // Map file types chart
+        if (s.fileTypeDistribution) {
+          const fileTypes = Object.entries(s.fileTypeDistribution).map(([name, value], i) => ({
+            name, value, color: COLORS[i % COLORS.length]
+          })).filter(item => item.value > 0);
+          
+          // Calculate percentage for display if needed
+          const totalFiles = fileTypes.reduce((acc, curr) => acc + curr.value, 0);
+          const fileTypesWithPercent = fileTypes.map(ft => ({
+            ...ft,
+            percent: totalFiles > 0 ? Math.round((ft.value / totalFiles) * 100) : 0
+          }));
+          setFileTypeChart(fileTypesWithPercent);
+        }
+        
+        // Map revenue chart
+        setRevenueChart((s.monthlyRevenueTrend || []).map(item => ({ month: item.label, revenue: item.value })));
+        
+        // Set activities
+        setActivities(s.recentActivities || []);
       } finally { setLoading(false); }
     };
     load();
@@ -348,7 +374,7 @@ export default function AdminDashboard() {
                       <div className="w-2.5 h-2.5 rounded-full" style={{ background: item.color || COLORS[i], boxShadow: `0 0 6px ${item.color || COLORS[i]}40` }} />
                       <span className="text-[12px] text-black/60 font-medium">{item.name}</span>
                     </div>
-                    <span className="text-[12px] font-bold text-black/70">{item.value}%</span>
+                    <span className="text-[12px] font-bold text-black/70">{item.percent}%</span>
                   </div>
                 ))}
               </div>

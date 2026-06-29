@@ -9,7 +9,6 @@ import logoImg from '../../../assets/logo.png';
 const menuItems = [
   { key: '', icon: 'bi-grid-1x2-fill', label: 'Tổng quan', color: '#ff5c00' },
   { key: 'users', icon: 'bi-people-fill', label: 'Người dùng', color: '#6366f1' },
-  { key: 'documents', icon: 'bi-file-earmark-fill', label: 'Tài liệu', color: '#10b981' },
   { key: 'groups', icon: 'bi-collection-fill', label: 'Nhóm học tập', color: '#8b5cf6' },
   { key: 'payments', icon: 'bi-credit-card-fill', label: 'Thanh toán', color: '#f43f5e' },
   { key: 'ai', icon: 'bi-stars', label: 'Thống kê AI', color: '#0ea5e9' },

@@ -39,8 +39,30 @@ export default function AdminAI() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [s, u] = await Promise.all([adminApi.getAIStats(), adminApi.getAIUsageChart()]);
-        setStats(s.result); setUsageChart(u.result);
+        const res = await adminApi.getAIStats();
+        const apiStats = res.result || {};
+        
+        const knowledgePercent = apiStats.knowledgeChatRatio || 0;
+        const mappedStats = {
+          totalMessages: apiStats.totalAiMessagesThisMonth || 0,
+          totalConversations: Math.floor((apiStats.totalAiMessagesThisMonth || 0) / 4), // mocked
+          knowledgeChatPercent: knowledgePercent,
+          generalChatPercent: 100 - knowledgePercent,
+          documentsSummarized: apiStats.totalSummarizedDocs || 0,
+          avgMessagesPerUser: apiStats.topAiUserMessageCount || 0,
+        };
+        
+        let mappedChart = [];
+        if (apiStats.aiUsageTrendByDay) {
+          mappedChart = Object.entries(apiStats.aiUsageTrendByDay).map(([date, messages]) => ({
+            date,
+            messages,
+            knowledge: Math.floor(messages * (knowledgePercent / 100))
+          }));
+        }
+        
+        setStats(mappedStats); 
+        setUsageChart(mappedChart);
       } finally { setLoading(false); }
     };
     load();
@@ -60,11 +82,11 @@ export default function AdminAI() {
       {/* Bento Grid Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         <BentoStatCard icon="bi-chat-dots-fill" label="Tổng tin nhắn" value={stats.totalMessages.toLocaleString()} color="#ff5c00" delay={0} />
-        <BentoStatCard icon="bi-chat-left-text-fill" label="Cuộc trò chuyện" value={stats.totalConversations} color="#6366f1" delay={0.04} />
+        <BentoStatCard icon="bi-chat-left-text-fill" label="Ước tính Chat" value={stats.totalConversations} color="#6366f1" delay={0.04} />
         <BentoStatCard icon="bi-book-fill" label="Knowledge Chat" value={`${stats.knowledgeChatPercent}%`} color="#10b981" delay={0.08} />
         <BentoStatCard icon="bi-robot" label="General Chat" value={`${stats.generalChatPercent}%`} color="#8b5cf6" delay={0.12} />
         <BentoStatCard icon="bi-file-text-fill" label="Tài liệu tóm tắt" value={stats.documentsSummarized} color="#f43f5e" delay={0.16} />
-        <BentoStatCard icon="bi-bar-chart-fill" label="TB tin nhắn/user" value={stats.avgMessagesPerUser} color="#0ea5e9" delay={0.20} />
+        <BentoStatCard icon="bi-bar-chart-fill" label="Top User Msg" value={stats.avgMessagesPerUser} color="#0ea5e9" delay={0.20} />
       </div>
 
       {/* Charts */}
@@ -138,63 +160,6 @@ export default function AdminAI() {
           </Card>
         </motion.div>
       </div>
-
-      {/* Top Users — Card style */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
-        <Card className="!rounded-2xl !border-0 !overflow-hidden" bodyStyle={{ padding: '20px' }}
-          style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.03)', background: 'rgba(255,255,255,0.9)' }}>
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-[#f43f5e]/10 flex items-center justify-center">
-                <i className="bi bi-trophy-fill text-[13px] text-[#f43f5e]" />
-              </div>
-              <span className="text-[13px] font-bold text-[#1d1d1f]">Top người dùng AI</span>
-            </div>
-            <span className="text-[10px] font-semibold text-black/30 uppercase tracking-wider">Top 5</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-            {stats.topUsers.map((user, i) => {
-              const medals = ['🥇', '🥈', '🥉'];
-              const colors = ['#ff5c00', '#6366f1', '#10b981', '#8b5cf6', '#f43f5e'];
-              return (
-                <motion.div 
-                  key={user.userId}
-                  initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 + i * 0.05 }}
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  className="relative rounded-2xl p-4 text-center group cursor-default"
-                  style={{ 
-                    background: i === 0 ? 'linear-gradient(135deg, #ff5c00/5, #ffaa00/3)' : 'rgba(0,0,0,0.01)',
-                    border: `1px solid ${i === 0 ? 'rgba(255,92,0,0.12)' : 'rgba(0,0,0,0.04)'}`,
-                  }}
-                >
-                  {/* Rank */}
-                  <div className="absolute -top-1 -left-1 text-[16px]">{medals[i] || ''}</div>
-                  
-                  <Avatar size={48} style={{ 
-                    background: `linear-gradient(135deg, ${colors[i]}, ${colors[(i + 1) % 5]})`, 
-                    fontSize: 18, fontWeight: 700, border: '3px solid white',
-                    boxShadow: `0 4px 12px ${colors[i]}30`,
-                  }}>
-                    {user.name?.charAt(0)}
-                  </Avatar>
-                  <p className="text-[13px] font-bold mt-2 mb-0 truncate">{user.name}</p>
-                  <div className="flex justify-center gap-3 mt-2">
-                    <div>
-                      <p className="text-[16px] font-extrabold m-0" style={{ color: colors[i] }}>{user.messages}</p>
-                      <p className="text-[9px] text-black/30 font-semibold uppercase m-0">Tin nhắn</p>
-                    </div>
-                    <div className="w-px bg-black/[0.06]" />
-                    <div>
-                      <p className="text-[16px] font-extrabold m-0 text-[#1d1d1f]">{user.conversations}</p>
-                      <p className="text-[9px] text-black/30 font-semibold uppercase m-0">Cuộc chat</p>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </Card>
-      </motion.div>
     </div>
   );
 }
