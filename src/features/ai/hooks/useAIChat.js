@@ -22,37 +22,40 @@ export const useAIChat = () => {
   });
 
   /**
-   * Lấy danh sách cuộc hội thoại
+   * Lấy danh sách lịch sử chat (từng câu hỏi - đáp)
    */
-  const fetchConversations = useCallback(async () => {
+  const fetchConversations = useCallback(async (page = 0, size = 30) => {
     try {
-      const data = await aiApi.getConversations();
+      const data = await aiApi.getChatHistory(page, size);
       if (data?.code === 0 || data?.code === 1000) {
-        setConversations(data.result || []);
+        setConversations(data.result?.items || []);
       }
     } catch (err) {
-      console.error('Lỗi lấy danh sách hội thoại:', err);
+      console.error('Lỗi lấy danh sách lịch sử chat:', err);
     }
   }, []);
 
   /**
-   * Tải tin nhắn của cuộc hội thoại
+   * Tải chi tiết một lịch sử chat
    */
-  const loadConversation = useCallback(async (conversationId) => {
+  const loadConversation = useCallback(async (historyId) => {
     setIsLoading(true);
-    setActiveConversationId(conversationId);
-    try {
-      const data = await aiApi.getConversationMessages(conversationId);
-      if (data?.code === 0 || data?.code === 1000) {
-        setMessages(data.result || []);
+    setActiveConversationId(historyId);
+    
+    // Thay vì gọi API, tìm trong danh sách history hiện có
+    setMessages((prev) => {
+      const item = conversations.find(c => c.historyId === historyId || c.id === historyId);
+      if (item) {
+        return [
+          { id: `user-${historyId}`, role: 'user', content: item.question, timestamp: item.createdAt },
+          { id: `ai-${historyId}`, role: 'assistant', content: item.answer, sources: item.sources, answerSource: item.answerSource, timestamp: item.createdAt }
+        ];
       }
-    } catch (err) {
-      console.error('Lỗi tải cuộc trò chuyện:', err);
-      setError('Không thể tải lịch sử trò chuyện');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+      return [];
+    });
+    
+    setIsLoading(false);
+  }, [conversations]);
 
   /**
    * Tạo cuộc hội thoại mới
@@ -94,7 +97,6 @@ export const useAIChat = () => {
     try {
       const payload = {
         message: text.trim(),
-        conversationId: activeConversationId, // Giữ lại nếu BE hỗ trợ
       };
       
       if (chatContext.scope === 'document' && chatContext.documentId) {
@@ -107,12 +109,8 @@ export const useAIChat = () => {
 
       if (data?.code === 0 || data?.code === 1000) {
         const aiContent = data.result?.answer || data.result?.content || data.result?.message || data.result || 'Xin lỗi, tôi không thể tạo câu trả lời.';
-        const newConvId = data.result?.conversationId || activeConversationId;
-
-        if (newConvId && !activeConversationId) {
-          setActiveConversationId(newConvId);
-        }
-
+        
+        // Cập nhật lại UI message list
         setMessages(prev => prev.map(m =>
           m.id === aiPlaceholderId
             ? { 
@@ -124,6 +122,17 @@ export const useAIChat = () => {
               }
             : m
         ));
+        
+        // Thêm history mới vào đầu danh sách sidebar
+        const newHistoryItem = {
+          historyId: data.result?.historyId,
+          question: text.trim(),
+          answer: typeof aiContent === 'string' ? aiContent : JSON.stringify(aiContent),
+          createdAt: new Date().toISOString()
+        };
+        setConversations(prev => [newHistoryItem, ...prev]);
+        setActiveConversationId(data.result?.historyId);
+        
       } else {
         throw new Error(data?.message || 'AI response failed');
       }
@@ -142,24 +151,15 @@ export const useAIChat = () => {
     } finally {
       setIsSending(false);
     }
-  }, [isSending, activeConversationId, chatContext]);
+  }, [isSending, chatContext]);
 
   /**
-   * Xóa cuộc hội thoại
+   * Xóa cuộc hội thoại (Tính năng chưa được hỗ trợ bởi BE)
    */
   const deleteConversation = useCallback(async (conversationId) => {
-    try {
-      await aiApi.deleteConversation(conversationId);
-      setConversations(prev => prev.filter(c => (c.id || c.conversationId) !== conversationId));
-      if (activeConversationId === conversationId) {
-        createNewConversation();
-      }
-      return { success: true };
-    } catch (err) {
-      console.error('Lỗi xóa hội thoại:', err);
-      return { success: false, message: err.message };
-    }
-  }, [activeConversationId, createNewConversation]);
+    // API chưa hỗ trợ xóa lịch sử
+    return { success: false, message: 'Tính năng xóa lịch sử chưa được hỗ trợ' };
+  }, []);
 
   /**
    * Tóm tắt tài liệu

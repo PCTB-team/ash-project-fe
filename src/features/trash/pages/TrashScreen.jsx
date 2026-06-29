@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { message, Tooltip, Modal } from 'antd';
+import { message, Tooltip, Modal, Checkbox } from 'antd';
 import FileIcon from '../../documents/components/FileIcon.jsx';
 import { formatRelativeTime } from '../../dashboard/utils/dateUtils.js';
 import { useOutletContext } from 'react-router-dom';
@@ -11,8 +11,9 @@ export default function TrashScreen() {
     searchTerm,
     refreshAll: onRefreshDocuments,
   } = useOutletContext();
-  const { restoreDocument, deleteDocumentPermanent } = useTrash();
+  const { restoreDocument, deleteDocumentPermanent, bulkRestore, bulkDeletePermanent } = useTrash();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedDocs, setSelectedDocs] = useState([]);
 
   // Lọc theo tìm kiếm
   const filteredDocs = trashDocuments.filter(doc => 
@@ -43,9 +44,61 @@ export default function TrashScreen() {
         const result = await deleteDocumentPermanent(doc);
         if (result.success) {
           message.success('Đã xóa vĩnh viễn!');
+          setSelectedDocs(prev => prev.filter(d => d.id !== doc.id));
           if (onRefreshDocuments) onRefreshDocuments();
         } else {
           message.error(result.message || 'Xóa thất bại!');
+        }
+        setIsProcessing(false);
+      }
+    });
+  };
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedDocs(filteredDocs);
+    } else {
+      setSelectedDocs([]);
+    }
+  };
+
+  const handleSelectDoc = (doc, checked) => {
+    if (checked) {
+      setSelectedDocs(prev => [...prev, doc]);
+    } else {
+      setSelectedDocs(prev => prev.filter(d => d.id !== doc.id));
+    }
+  };
+
+  const handleBulkRestore = async () => {
+    setIsProcessing(true);
+    const result = await bulkRestore(selectedDocs);
+    if (result.success) {
+      message.success(`Đã khôi phục ${selectedDocs.length} mục thành công!`);
+      setSelectedDocs([]);
+      if (onRefreshDocuments) onRefreshDocuments();
+    } else {
+      message.error(result.message || 'Khôi phục hàng loạt thất bại!');
+    }
+    setIsProcessing(false);
+  };
+
+  const handleBulkDelete = () => {
+    Modal.confirm({
+      title: 'Xóa vĩnh viễn hàng loạt?',
+      content: `Bạn có chắc chắn muốn xóa vĩnh viễn ${selectedDocs.length} mục đã chọn không? Hành động này không thể hoàn tác.`,
+      okText: 'Xóa vĩnh viễn',
+      okType: 'danger',
+      cancelText: 'Hủy',
+      onOk: async () => {
+        setIsProcessing(true);
+        const result = await bulkDeletePermanent(selectedDocs);
+        if (result.success) {
+          message.success(`Đã xóa vĩnh viễn ${selectedDocs.length} mục!`);
+          setSelectedDocs([]);
+          if (onRefreshDocuments) onRefreshDocuments();
+        } else {
+          message.error(result.message || 'Xóa hàng loạt thất bại!');
         }
         setIsProcessing(false);
       }
@@ -60,6 +113,28 @@ export default function TrashScreen() {
           <h1 className="text-xl font-semibold text-[#1d1d1f] text-red-500">Thùng rác</h1>
           <p className="text-[12px] text-black/55 font-medium mt-0.5">Quản lý các tài liệu đã bị xóa tạm thời</p>
         </div>
+        
+        {selectedDocs.length > 0 && (
+          <div className="flex items-center gap-2 animate-fade-in">
+            <span className="text-[12px] font-medium text-black/50 mr-2">
+              Đã chọn {selectedDocs.length} mục
+            </span>
+            <button
+              disabled={isProcessing}
+              onClick={handleBulkRestore}
+              className="h-9 px-4 rounded-xl bg-green-50 text-green-600 font-semibold text-[13px] hover:bg-green-100 transition-all disabled:opacity-50"
+            >
+              <i className="bi bi-arrow-counterclockwise mr-1.5" /> Khôi phục
+            </button>
+            <button
+              disabled={isProcessing}
+              onClick={handleBulkDelete}
+              className="h-9 px-4 rounded-xl bg-red-50 text-red-500 font-semibold text-[13px] hover:bg-red-500 hover:text-white transition-all disabled:opacity-50"
+            >
+              <i className="bi bi-trash3-fill mr-1.5" /> Xóa vĩnh viễn
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 bg-white border border-black/[0.04] rounded-2xl shadow-sm overflow-hidden relative flex flex-col" style={{ minHeight: '420px' }}>
@@ -74,6 +149,13 @@ export default function TrashScreen() {
         ) : (
           <>
             <div className="hidden sm:flex items-center gap-3 px-4 sm:px-5 py-3 border-b border-black/[0.03] text-[10px] font-medium text-black/30 uppercase select-none bg-black/[0.01]">
+              <div className="w-5 flex-shrink-0 flex justify-center">
+                <Checkbox 
+                  checked={selectedDocs.length === filteredDocs.length && filteredDocs.length > 0}
+                  indeterminate={selectedDocs.length > 0 && selectedDocs.length < filteredDocs.length}
+                  onChange={handleSelectAll}
+                />
+              </div>
               <div className="w-10 flex-shrink-0" />
               <span className="flex-1 min-w-0">Tên tài liệu</span>
               <span className="w-[120px] text-center hidden md:block">Ngày xóa</span>
@@ -84,6 +166,12 @@ export default function TrashScreen() {
             <div className="divide-y divide-black/[0.025] overflow-y-auto">
               {filteredDocs.map((doc) => (
                 <div key={doc.id} className="group flex items-center gap-3 px-4 sm:px-5 py-3 sm:py-3.5 hover:bg-red-50/30 transition-all duration-200">
+                  <div className="w-5 flex-shrink-0 flex justify-center hidden sm:flex">
+                    <Checkbox 
+                      checked={selectedDocs.some(d => d.id === doc.id)}
+                      onChange={(e) => handleSelectDoc(doc, e.target.checked)}
+                    />
+                  </div>
                   <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-black/[0.02] border border-black/[0.04] flex items-center justify-center flex-shrink-0">
                     <FileIcon type={doc.type} style={{ fontSize: 16 }} />
                   </div>

@@ -28,5 +28,15 @@ export const trashApi = {
     const url = isFolder ? DELETE_FOLDER_API_URL : DELETE_DOCUMENT_API_URL;
     const response = await axiosClient.delete(url.replace('{id}', id));
     return response.data;
+  },
+
+  restoreTrashItems: async (payload) => {
+    const response = await axiosClient.put(`${TRASH_API_URL}/items/restore`, payload);
+    return response.data;
+  },
+
+  deleteTrashItems: async (payload) => {
+    const response = await axiosClient.delete(`${TRASH_API_URL}/items`, { data: payload });
+    return response.data;
   }
 };

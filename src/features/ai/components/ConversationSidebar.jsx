@@ -22,9 +22,9 @@ export default function ConversationSidebar({
       <div className="px-4 h-[54px] border-b border-black/[0.04] flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#ff8a00] to-[#ff5c00] flex items-center justify-center">
-            <i className="bi bi-chat-dots-fill text-white text-[10px]" />
+            <i className="bi bi-clock-history text-white text-[10px]" />
           </div>
-          <h3 className="text-[13px] font-bold text-[#1d1d1f]">Hội thoại</h3>
+          <h3 className="text-[13px] font-bold text-[#1d1d1f]">Lịch sử Chat</h3>
         </div>
         <button
           onClick={onClose}
@@ -57,9 +57,9 @@ export default function ConversationSidebar({
           </div>
         ) : (
           sorted.map((conv) => {
-            const id = conv.id || conv.conversationId;
+            const id = conv.historyId || conv.id;
             const isActive = id === activeConversationId;
-            const title = conv.title || conv.name || 'Cuộc trò chuyện';
+            const title = conv.question || 'Câu hỏi AI';
             return (
               <div
                 key={id}
@@ -76,16 +76,6 @@ export default function ConversationSidebar({
                 <span className={`text-[11.5px] truncate flex-1 ${isActive ? 'font-semibold text-[#ff5c00]' : 'font-medium'}`}>
                   {title}
                 </span>
-                {hoveredId === id && onDeleteConversation && (
-                  <motion.button
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    onClick={(e) => { e.stopPropagation(); onDeleteConversation(id); }}
-                    className="w-5 h-5 rounded hover:bg-red-50 flex items-center justify-center flex-shrink-0 cursor-pointer"
-                  >
-                    <i className="bi bi-trash3 text-[9px] text-black/20 hover:text-red-500" />
-                  </motion.button>
-                )}
               </div>
             );
           })
