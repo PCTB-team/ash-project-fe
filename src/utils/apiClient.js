@@ -41,6 +41,11 @@ axiosClient.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // Bỏ qua interceptor nếu là request login/register/otp
+      if (originalRequest.url?.includes('/auth/login') || originalRequest.url?.includes('/auth/register') || originalRequest.url?.includes('/auth/otp')) {
+        return Promise.reject(error);
+      }
+
       originalRequest._retry = true;
       const refreshToken = localStorage.getItem('refreshToken');
 

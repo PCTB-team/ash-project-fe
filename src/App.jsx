@@ -12,6 +12,7 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 // ── Guards ──
 import PublicRoute from './routes/PublicRoute.jsx';
 import ProtectedRoute from './routes/ProtectedRoute.jsx';
+import AdminRoute from './routes/AdminRoute.jsx';
 
 // ── Pages ──
 import IntroScreen from './features/intro/pages/IntroScreen.jsx';
@@ -36,6 +37,16 @@ import CommunityScreen from './features/groups/pages/CommunityScreen.jsx';
 import GroupDetailScreen from './features/groups/pages/GroupDetailScreen.jsx';
 import JoinGroupScreen from './features/groups/pages/JoinGroupScreen.jsx';
 
+// ── Admin Pages ──
+import AdminLayout from './features/admin/layouts/AdminLayout.jsx';
+import AdminDashboard from './features/admin/pages/AdminDashboard.jsx';
+import AdminUsers from './features/admin/pages/AdminUsers.jsx';
+import AdminDocuments from './features/admin/pages/AdminDocuments.jsx';
+import AdminGroups from './features/admin/pages/AdminGroups.jsx';
+import AdminPayments from './features/admin/pages/AdminPayments.jsx';
+import AdminAI from './features/admin/pages/AdminAI.jsx';
+import AdminSettings from './features/admin/pages/AdminSettings.jsx';
+
 function App() {
   const navigate = useNavigate();
 
@@ -45,13 +56,17 @@ function App() {
     navigate(redirect || '/dashboard');
   };
 
+  const handleAdminLoginSuccess = () => {
+    navigate('/admin');
+  };
+
   return (
     <Routes>
       {/* Public Pages */}
       <Route element={<PublicRoute />}>
         <Route path="/" element={<IntroScreen />} />
-        <Route path="/login" element={<LoginScreen currentView="login" onLoginSuccess={handleLoginSuccess} />} />
-        <Route path="/register" element={<LoginScreen currentView="register" onLoginSuccess={handleLoginSuccess} />} />
+        <Route path="/login" element={<LoginScreen currentView="login" onLoginSuccess={handleLoginSuccess} onAdminLoginSuccess={handleAdminLoginSuccess} />} />
+        <Route path="/register" element={<LoginScreen currentView="register" onLoginSuccess={handleLoginSuccess} onAdminLoginSuccess={handleAdminLoginSuccess} />} />
         <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
       </Route>
 
@@ -71,6 +86,19 @@ function App() {
         {/* Payment Callbacks */}
         <Route path="/payment/success" element={<PaymentSuccessScreen />} />
         <Route path="/payment/cancel" element={<PaymentCancelScreen />} />
+      </Route>
+
+      {/* Admin Pages (Role-based guard) */}
+      <Route element={<AdminRoute />}>
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="documents" element={<AdminDocuments />} />
+          <Route path="groups" element={<AdminGroups />} />
+          <Route path="payments" element={<AdminPayments />} />
+          <Route path="ai" element={<AdminAI />} />
+          <Route path="settings" element={<AdminSettings />} />
+        </Route>
       </Route>
 
       {/* Unguarded Pages (Accessible to both logged-in and guests) */}
