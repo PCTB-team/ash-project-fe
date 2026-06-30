@@ -24,6 +24,11 @@ const onRefreshed = (token) => {
 
 axiosClient.interceptors.request.use(
   (config) => {
+    // Không đính kèm token cho các request đăng nhập/đăng ký để tránh lỗi 401 do token cũ
+    if (config.url && config.url.includes('/auth/') && !config.url.includes('/auth/logout')) {
+      return config;
+    }
+
     const token = localStorage.getItem('accessToken');
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;

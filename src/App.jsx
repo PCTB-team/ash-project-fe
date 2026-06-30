@@ -45,6 +45,7 @@ import AdminGroups from './features/admin/pages/AdminGroups.jsx';
 import AdminPayments from './features/admin/pages/AdminPayments.jsx';
 import AdminAI from './features/admin/pages/AdminAI.jsx';
 import AdminSettings from './features/admin/pages/AdminSettings.jsx';
+import AdminIntroConfig from './features/admin/pages/AdminIntroConfig.jsx';
 
 function App() {
   const navigate = useNavigate();
@@ -96,6 +97,7 @@ function App() {
           <Route path="payments" element={<AdminPayments />} />
           <Route path="ai" element={<AdminAI />} />
           <Route path="settings" element={<AdminSettings />} />
+          <Route path="intro-config" element={<AdminIntroConfig />} />
         </Route>
       </Route>
 

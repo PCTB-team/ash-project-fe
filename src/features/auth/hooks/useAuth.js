@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { message } from 'antd';
 import { ADMIN_CREDENTIALS } from '../utils/constants';
 import { axiosClient } from '../../../utils/apiClient.js';
+import { checkIsAdmin } from '../../../routes/AdminRoute.jsx';
 
 export const LOGIN_API_URL = "/api/v1/auth/login";
 export const REGISTER_API_URL = "/api/v1/auth/register";
@@ -16,6 +17,7 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(new Set());
 
   const handleLogin = async (values) => {
     setErrorMsg('');
@@ -41,6 +43,13 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
       return;
     }
 
+    const cacheKey = `${values.usernameOrEmail}:${values.password}`;
+    if (failedAttempts.has(cacheKey)) {
+      setErrorMsg('Tài khoản hoặc mật khẩu không chính xác!');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await axiosClient.post(LOGIN_API_URL, {
         identifier: values.usernameOrEmail,
@@ -57,7 +66,11 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
         if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
 
         message.success('Đăng nhập thành công!');
-        onLoginSuccess(values.usernameOrEmail);
+        if (checkIsAdmin(token)) {
+          onAdminLoginSuccess();
+        } else {
+          onLoginSuccess(values.usernameOrEmail);
+        }
       }
     } catch (error) {
       console.error("Login Error:", error);
@@ -66,6 +79,7 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
         const data = error.response.data || {};
         if (status === 401 || status === 403) {
           setErrorMsg('Tài khoản hoặc mật khẩu không chính xác!');
+          setFailedAttempts(prev => new Set(prev).add(cacheKey));
         } else {
           setErrorMsg(data.message || 'Đăng nhập thất bại!');
         }
@@ -198,7 +212,11 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
         if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
 
         message.success('Đăng nhập bằng Google thành công!');
-        onLoginSuccess(data.result?.email || data.email || 'Người dùng Google');
+        if (checkIsAdmin(token)) {
+          onAdminLoginSuccess();
+        } else {
+          onLoginSuccess(data.result?.email || data.email || 'Người dùng Google');
+        }
       }
     } catch (error) {
       console.error("Google Login Error:", error);

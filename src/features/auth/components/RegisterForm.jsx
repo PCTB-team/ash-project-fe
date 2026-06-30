@@ -4,74 +4,84 @@ import { useState } from 'react';
 import { INPUT_CLS, INPUT_CLS_PR, LABEL_CLS, ICON_WRAP, ANIM } from '../utils/constants';
 
 /**
- * RegisterForm — Apple-style register form fields.
- * Display name, email, password with toggle, confirm password.
+ * RegisterForm — Apple-style register form fields with Formik & Yup.
  */
-export default function RegisterForm({ form, showPassword, setShowPassword }) {
+export default function RegisterForm({ formik, showPassword, setShowPassword }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
   return (
     <>
-      {/* Display Name */}
       <motion.div variants={ANIM.child}>
-        <Form.Item name="displayName" rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập!' }]}>
+        <Form.Item 
+          validateStatus={formik.touched.displayName && formik.errors.displayName ? 'error' : ''}
+          help={formik.touched.displayName && formik.errors.displayName ? formik.errors.displayName : ''}
+        >
           <div className="group">
             <label className={LABEL_CLS}>Tên đăng nhập (Username)</label>
             <div className="relative">
               <span className={ICON_WRAP}><i className="bi bi-person-badge text-[14px]" /></span>
-              <input type="text" autoComplete="username" placeholder="nguyenvana"
+              <input type="text" name="displayName" autoComplete="username" placeholder="nguyenvana"
                 className={INPUT_CLS}
-                onChange={(e) => { form.setFieldsValue({ displayName: e.target.value }); form.validateFields(['displayName']); }} />
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.displayName} />
             </div>
           </div>
         </Form.Item>
       </motion.div>
 
-      {/* Full Name */}
       <motion.div variants={ANIM.child}>
-        <Form.Item name="fullname" rules={[{ required: true, message: 'Vui lòng nhập họ và tên!' }]}>
+        <Form.Item 
+          validateStatus={formik.touched.fullname && formik.errors.fullname ? 'error' : ''}
+          help={formik.touched.fullname && formik.errors.fullname ? formik.errors.fullname : ''}
+        >
           <div className="group">
             <label className={LABEL_CLS}>Họ và tên</label>
             <div className="relative">
               <span className={ICON_WRAP}><i className="bi bi-person-lines-fill text-[14px]" /></span>
-              <input type="text" autoComplete="name" placeholder="Nguyễn Văn A"
+              <input type="text" name="fullname" autoComplete="name" placeholder="Nguyễn Văn A"
                 className={INPUT_CLS}
-                onChange={(e) => { form.setFieldsValue({ fullname: e.target.value }); form.validateFields(['fullname']); }} />
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.fullname} />
             </div>
           </div>
         </Form.Item>
       </motion.div>
 
-      {/* Email */}
       <motion.div variants={ANIM.child}>
-        <Form.Item name="usernameOrEmail" rules={[
-          { required: true, message: 'Vui lòng nhập email!' },
-          { type: 'email', message: 'Email không hợp lệ!' }
-        ]}>
+        <Form.Item 
+          validateStatus={formik.touched.usernameOrEmail && formik.errors.usernameOrEmail ? 'error' : ''}
+          help={formik.touched.usernameOrEmail && formik.errors.usernameOrEmail ? formik.errors.usernameOrEmail : ''}
+        >
           <div className="group">
             <label className={LABEL_CLS}>Email</label>
             <div className="relative">
               <span className={ICON_WRAP}><i className="bi bi-envelope text-[14px]" /></span>
-              <input type="email" autoComplete="email" placeholder="name@example.com"
+              <input type="email" name="usernameOrEmail" autoComplete="email" placeholder="name@example.com"
                 className={INPUT_CLS}
-                onChange={(e) => { form.setFieldsValue({ usernameOrEmail: e.target.value }); form.validateFields(['usernameOrEmail']); }} />
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.usernameOrEmail} />
             </div>
           </div>
         </Form.Item>
       </motion.div>
 
-      {/* Password */}
       <motion.div variants={ANIM.child}>
-        <Form.Item name="password" rules={[
-          { required: true, message: 'Vui lòng nhập mật khẩu!' },
-          { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự!' }
-        ]}>
+        <Form.Item 
+          validateStatus={formik.touched.password && formik.errors.password ? 'error' : ''}
+          help={formik.touched.password && formik.errors.password ? formik.errors.password : ''}
+        >
           <div className="group">
             <label className={LABEL_CLS}>Mật khẩu</label>
             <div className="relative">
               <span className={ICON_WRAP}><i className="bi bi-lock text-[14px]" /></span>
-              <input type={showPassword ? 'text' : 'password'} autoComplete="new-password" placeholder="Ít nhất 6 ký tự"
+              <input type={showPassword ? 'text' : 'password'} name="password" autoComplete="new-password" placeholder="Ít nhất 6 ký tự"
                 className={INPUT_CLS_PR}
-                onChange={(e) => { form.setFieldsValue({ password: e.target.value }); form.validateFields(['password', 'confirmPassword']); }} />
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.password} />
               <button type="button" onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-black/25 hover:text-black/50 transition-colors cursor-pointer">
                 <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'} text-[13px]`} />
@@ -81,26 +91,20 @@ export default function RegisterForm({ form, showPassword, setShowPassword }) {
         </Form.Item>
       </motion.div>
 
-      {/* Confirm Password */}
       <motion.div variants={ANIM.child}>
-        <Form.Item name="confirmPassword" rules={[
-          { required: true, message: 'Vui lòng nhập lại mật khẩu!' },
-          ({ getFieldValue }) => ({
-            validator(_, value) {
-              if (!value || getFieldValue('password') === value) {
-                return Promise.resolve();
-              }
-              return Promise.reject(new Error('Mật khẩu nhập lại không khớp!'));
-            },
-          }),
-        ]}>
+        <Form.Item 
+          validateStatus={formik.touched.confirmPassword && formik.errors.confirmPassword ? 'error' : ''}
+          help={formik.touched.confirmPassword && formik.errors.confirmPassword ? formik.errors.confirmPassword : ''}
+        >
           <div className="group">
             <label className={LABEL_CLS}>Xác nhận mật khẩu</label>
             <div className="relative">
               <span className={ICON_WRAP}><i className="bi bi-lock text-[14px]" /></span>
-              <input type={showConfirmPassword ? 'text' : 'password'} autoComplete="new-password" placeholder="Nhập lại mật khẩu"
+              <input type={showConfirmPassword ? 'text' : 'password'} name="confirmPassword" autoComplete="new-password" placeholder="Nhập lại mật khẩu"
                 className={INPUT_CLS_PR}
-                onChange={(e) => { form.setFieldsValue({ confirmPassword: e.target.value }); form.validateFields(['confirmPassword']); }} />
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.confirmPassword} />
               <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-black/25 hover:text-black/50 transition-colors cursor-pointer">
                 <i className={`bi ${showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'} text-[13px]`} />

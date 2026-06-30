@@ -42,7 +42,7 @@ export default function AdminGroups() {
     setLoading(true);
     try {
       const [res, statsRes] = await Promise.all([
-        adminApi.getGroups({ page, size: pagination.pageSize, keyword }),
+        adminApi.getGroups({ page, size: pagination.pageSize, keyword }).catch(() => ({ result: { content: [], totalElements: 0 } })),
         adminApi.getGroupStats().catch(() => ({ result: { totalGroups: 0, activeGroupsLast7Days: 0, averageMembersPerGroup: 0 } }))
       ]);
       setGroups(res.result.content);
@@ -133,7 +133,7 @@ export default function AdminGroups() {
 
       {/* Table */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-        <Card className="!rounded-2xl !border-0 !overflow-hidden" bodyStyle={{ padding: 0 }}
+        <Card className="!rounded-2xl !border-0 !overflow-hidden" styles={{ body: { padding: 0 } }}
           style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.03)', background: 'rgba(255,255,255,0.9)' }}>
           <div className="p-4 pb-0">
             <Input.Search placeholder="Tìm theo tên nhóm hoặc trưởng nhóm..." allowClear className="!w-[300px] [&_input]:!rounded-xl [&_.ant-input-group-addon]:!rounded-xl"

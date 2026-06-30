@@ -37,7 +37,7 @@ export function detectFileType(fileName) {
  * Classifies a raw file type into a category for tab filtering.
  * Returns: 'document' | 'audio' | 'video' | 'image' | 'folder' | 'other'
  */
-export function classifyFileType(type) {
+function classifyFileType(type) {
   for (const [category, extensions] of Object.entries(TYPE_CLASSIFICATION)) {
     if (extensions.includes(type)) return category;
   }

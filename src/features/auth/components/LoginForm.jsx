@@ -4,38 +4,45 @@ import { useNavigate } from 'react-router-dom';
 import { INPUT_CLS, INPUT_CLS_PR, LABEL_CLS, ICON_WRAP, ANIM } from '../utils/constants';
 
 /**
- * LoginForm — Apple-style login form fields.
- * Email/username, password with toggle, remember-me, forgot password.
+ * LoginForm — Apple-style login form fields with Formik & Yup.
  */
-export default function LoginForm({ form, showPassword, setShowPassword }) {
+export default function LoginForm({ formik, showPassword, setShowPassword }) {
   const navigate = useNavigate();
   return (
     <>
-      {/* Email / Username */}
       <motion.div variants={ANIM.child}>
-        <Form.Item name="usernameOrEmail" rules={[{ required: true, message: 'Vui lòng điền thông tin đăng nhập!' }]}>
+        <Form.Item 
+          validateStatus={formik.touched.usernameOrEmail && formik.errors.usernameOrEmail ? 'error' : ''}
+          help={formik.touched.usernameOrEmail && formik.errors.usernameOrEmail ? formik.errors.usernameOrEmail : ''}
+        >
           <div className="group">
             <label className={LABEL_CLS}>Email hoặc tên đăng nhập</label>
             <div className="relative">
               <span className={ICON_WRAP}><i className="bi bi-person text-[14px]" /></span>
-              <input type="text" autoComplete="username" placeholder="name@example.com"
+              <input type="text" name="usernameOrEmail" autoComplete="username" placeholder="name@example.com"
                 className={INPUT_CLS}
-                onChange={(e) => { form.setFieldsValue({ usernameOrEmail: e.target.value }); form.validateFields(['usernameOrEmail']); }} />
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.usernameOrEmail} />
             </div>
           </div>
         </Form.Item>
       </motion.div>
 
-      {/* Password */}
       <motion.div variants={ANIM.child}>
-        <Form.Item name="password" rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }]}>
+        <Form.Item 
+          validateStatus={formik.touched.password && formik.errors.password ? 'error' : ''}
+          help={formik.touched.password && formik.errors.password ? formik.errors.password : ''}
+        >
           <div className="group">
             <label className={LABEL_CLS}>Mật khẩu</label>
             <div className="relative">
               <span className={ICON_WRAP}><i className="bi bi-lock text-[14px]" /></span>
-              <input type={showPassword ? 'text' : 'password'} autoComplete="current-password" placeholder="••••••••"
+              <input type={showPassword ? 'text' : 'password'} name="password" autoComplete="current-password" placeholder="••••••••"
                 className={INPUT_CLS_PR}
-                onChange={(e) => { form.setFieldsValue({ password: e.target.value }); form.validateFields(['password']); }} />
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.password} />
               <button type="button" onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-black/25 hover:text-black/50 transition-colors cursor-pointer">
                 <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'} text-[13px]`} />
@@ -45,11 +52,16 @@ export default function LoginForm({ form, showPassword, setShowPassword }) {
         </Form.Item>
       </motion.div>
 
-      {/* Remember + Forgot */}
       <motion.div variants={ANIM.child} className="flex items-center justify-between mb-1 -mt-1">
-        <Form.Item name="remember" valuePropName="checked" noStyle>
+        <Form.Item>
           <ConfigProvider theme={{ token: { colorPrimary: '#ff5c00' } }}>
-            <Checkbox className="text-[11.5px] font-normal text-black/40 select-none">Ghi nhớ</Checkbox>
+            <Checkbox 
+              name="remember" 
+              checked={formik.values.remember}
+              onChange={formik.handleChange}
+              className="text-[11.5px] font-normal text-black/40 select-none">
+              Ghi nhớ
+            </Checkbox>
           </ConfigProvider>
         </Form.Item>
         <button type="button"
