@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion';
 import logoAI from '../../../assets/logo_AI.png';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export default function ChatMessage({ message }) {
   const isUser = message.role === 'user';
@@ -57,9 +59,15 @@ export default function ChatMessage({ message }) {
               <span className="text-[12px] text-black/30 font-medium">Đang phân tích...</span>
             </div>
           ) : (
-            <div className={`text-[14px] leading-relaxed whitespace-pre-wrap break-words ${isUser ? 'font-medium' : ''}`}>
+            <div className={`text-[14px] leading-relaxed whitespace-pre-wrap break-words ${isUser ? 'font-medium' : 'ai-markdown'}`}>
               {isError && <i className="bi bi-exclamation-triangle-fill text-[12px] mr-1.5" />}
-              {message.content}
+              {isUser ? (
+                message.content
+              ) : (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {message.content}
+                </ReactMarkdown>
+              )}
             </div>
           )}
         </div>

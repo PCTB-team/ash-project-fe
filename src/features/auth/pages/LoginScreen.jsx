@@ -13,6 +13,7 @@ import { loginSchema, registerSchema } from '../utils/auth.schema';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GoogleLogin } from '@react-oauth/google';
 import useAuth from '../hooks/useAuth';
+import { useMemo } from 'react';
 import AuthLayout from '../components/AuthLayout';
 import AuthCard from '../components/AuthCard';
 import LoginForm from '../components/LoginForm';
@@ -177,18 +178,20 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, curre
                     transition={{ duration: 0.35, delay: 0.25, ease: [0.25, 1, 0.5, 1] }}
                   >
                     <div className="flex justify-center w-full mt-1">
-                      <GoogleLogin
-                        onSuccess={credentialResponse => {
-                          handleGoogleLogin(credentialResponse.credential);
-                        }}
-                        onError={() => {
-                          setErrorMsg('Đăng nhập Google bị lỗi.');
-                        }}
-                        theme="outline"
-                        size="large"
-                        shape="pill"
-                        text="signin_with"
-                      />
+                      {useMemo(() => (
+                        <GoogleLogin
+                          onSuccess={credentialResponse => {
+                            handleGoogleLogin(credentialResponse.credential);
+                          }}
+                          onError={() => {
+                            setErrorMsg('Đăng nhập Google bị lỗi.');
+                          }}
+                          theme="outline"
+                          size="large"
+                          shape="pill"
+                          text="signin_with"
+                        />
+                      ), [handleGoogleLogin, setErrorMsg])}
                     </div>
                   </motion.div>
                 </>
