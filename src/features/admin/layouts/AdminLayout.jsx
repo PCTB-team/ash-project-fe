@@ -15,6 +15,7 @@ const PAGE_TITLES = {
   'payments': 'Quản lý thanh toán',
   'ai': 'Thống kê AI',
   'settings': 'Cài đặt hệ thống',
+  'intro-config': 'Cấu hình Trang chủ',
 };
 
 const PAGE_ICONS = {
@@ -25,6 +26,7 @@ const PAGE_ICONS = {
   'payments': 'bi-credit-card-fill',
   'ai': 'bi-stars',
   'settings': 'bi-gear-fill',
+  'intro-config': 'bi-layout-text-window',
 };
 
 const PAGE_DESCRIPTIONS = {
@@ -35,6 +37,7 @@ const PAGE_DESCRIPTIONS = {
   'payments': 'Theo dõi doanh thu và giao dịch thanh toán',
   'ai': 'Phân tích và thống kê sử dụng AI Chatbot',
   'settings': 'Cấu hình và tùy chỉnh hệ thống',
+  'intro-config': 'Tùy chỉnh nội dung và hình ảnh của trang Giới thiệu (Intro).',
 };
 
 function LiveClock() {

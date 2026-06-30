@@ -8,6 +8,8 @@
  */
 import { useEffect, useState } from 'react';
 import { Form, Divider } from 'antd';
+import { useFormik } from 'formik';
+import { loginSchema, registerSchema } from '../utils/auth.schema';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GoogleLogin } from '@react-oauth/google';
 import useAuth from '../hooks/useAuth';
@@ -22,7 +24,6 @@ import { useNavigate } from 'react-router-dom';
 
 export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, currentView }) {
   const navigate = useNavigate();
-  const [form] = Form.useForm();
   const isRegister = currentView === 'register';
 
   const [registerStep, setRegisterStep] = useState('form'); // 'form' | 'otp' | 'success'
@@ -34,18 +35,35 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, curre
     handleLogin, handleRegister, handleVerifyRegisterOtp, handleResendRegisterOtp, handleGoogleLogin,
   } = useAuth({ onLoginSuccess, onAdminLoginSuccess });
 
+  const formik = useFormik({
+    initialValues: {
+      usernameOrEmail: 'vuongbaovipvip@gmail.com',
+      password: '12345678',
+      remember: true,
+      displayName: '',
+      fullname: '',
+      confirmPassword: ''
+    },
+    validationSchema: isRegister ? registerSchema : loginSchema,
+    onSubmit: (values) => {
+      if (isRegister) handleRegisterSubmit(values);
+      else handleLogin(values);
+    }
+  });
+
   useEffect(() => {
     setTimeout(() => {
       setErrorMsg('');
       setShowPassword(false);
       setRegisterStep('form');
-      form.resetFields();
+      formik.resetForm();
     }, 0);
-  }, [currentView, form, setErrorMsg, setShowPassword]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentView, setErrorMsg, setShowPassword]);
 
   const handleToggleMode = () => {
     setErrorMsg('');
-    form.resetFields();
+    formik.resetForm();
     setRegisterStep('form');
     navigate(isRegister ? '/login' : '/register');
   };
@@ -92,7 +110,7 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, curre
                 whileTap={{ scale: 0.997 }}
                 onClick={() => {
                   setRegisterStep('form');
-                  form.resetFields();
+                  formik.resetForm();
                   navigate('/login');
                 }}
                 className="w-full h-[42px] text-white bg-gradient-to-b from-[#ff7a00] to-[#ff5c00] font-medium rounded-full text-[13.5px] border-none shadow-[0_1px_3px_rgba(255,92,0,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] flex items-center justify-center gap-2 cursor-pointer transition-all duration-200"
@@ -113,19 +131,15 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, curre
           ) : (
             <motion.div key="form" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}>
               {/* ── Form ── */}
-              <Form
-                form={form}
-                layout="vertical"
-                onFinish={isRegister ? handleRegisterSubmit : handleLogin}
-                initialValues={{ usernameOrEmail: 'vuongbaovipvip@gmail.com', password: '12345678', remember: true }}
-                requiredMark={false}
+              <form
+                onSubmit={formik.handleSubmit}
                 className={isRegister ? '[&_.ant-form-item]:!mb-2.5' : '[&_.ant-form-item]:!mb-3.5'}
               >
                 <motion.div variants={ANIM.stagger} initial="initial" animate="animate">
                   {isRegister ? (
-                    <RegisterForm form={form} showPassword={showPassword} setShowPassword={setShowPassword} />
+                    <RegisterForm formik={formik} showPassword={showPassword} setShowPassword={setShowPassword} />
                   ) : (
-                    <LoginForm form={form} showPassword={showPassword} setShowPassword={setShowPassword} />
+                    <LoginForm formik={formik} showPassword={showPassword} setShowPassword={setShowPassword} />
                   )}
 
                   {/* ── Submit Button ── */}
@@ -150,7 +164,7 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, curre
                     </Form.Item>
                   </motion.div>
                 </motion.div>
-              </Form>
+              </form>
 
               {/* ── Divider & Google Button (Only on Login) ── */}
               {!isRegister && (

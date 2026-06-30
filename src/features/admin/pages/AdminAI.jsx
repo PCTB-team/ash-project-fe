@@ -46,8 +46,8 @@ export default function AdminAI() {
         const mappedStats = {
           totalMessages: apiStats.totalAiMessagesThisMonth || 0,
           totalConversations: Math.floor((apiStats.totalAiMessagesThisMonth || 0) / 4), // mocked
-          knowledgeChatPercent: knowledgePercent,
-          generalChatPercent: 100 - knowledgePercent,
+          knowledgeChatPercent: Number(knowledgePercent.toFixed(1)),
+          generalChatPercent: Number((100 - knowledgePercent).toFixed(1)),
           documentsSummarized: apiStats.totalSummarizedDocs || 0,
           avgMessagesPerUser: apiStats.topAiUserMessageCount || 0,
         };
@@ -92,7 +92,7 @@ export default function AdminAI() {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-          <Card className="!rounded-2xl !border-0 !overflow-hidden" bodyStyle={{ padding: '20px 20px 12px' }}
+          <Card className="!rounded-2xl !border-0 !overflow-hidden" styles={{ body: { padding: '20px 20px 12px' } }}
             style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.03)', background: 'rgba(255,255,255,0.9)' }}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -126,7 +126,7 @@ export default function AdminAI() {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-          <Card className="!rounded-2xl !border-0 !overflow-hidden" bodyStyle={{ padding: '20px 20px 12px' }}
+          <Card className="!rounded-2xl !border-0 !overflow-hidden" styles={{ body: { padding: '20px 20px 12px' } }}
             style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.03)', background: 'rgba(255,255,255,0.9)' }}>
             <div className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 rounded-lg bg-[#8b5cf6]/10 flex items-center justify-center">

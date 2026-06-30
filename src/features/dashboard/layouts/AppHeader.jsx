@@ -52,7 +52,7 @@ export default function AppHeader({
       const newest = data.items && data.items[0];
       if (isPolling && newest && newest.id !== lastNotificationIdRef.current && !newest.read) {
         notification.info({
-          message: newest.title,
+          title: newest.title,
           description: newest.message,
           placement: 'bottomRight',
           duration: 4,

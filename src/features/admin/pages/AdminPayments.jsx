@@ -44,7 +44,7 @@ export default function AdminPayments() {
   const fetchPayments = useCallback(async (page = 0) => {
     setLoading(true);
     try {
-      const res = await adminApi.getPayments({ page, size: pagination.pageSize, status: statusFilter });
+      const res = await adminApi.getPayments({ page, size: pagination.pageSize, status: statusFilter }).catch(() => ({ result: { content: [], stats: {}, totalElements: 0 } }));
       setPayments(res.result.content); setPayStats(res.result.stats);
       setPagination(p => ({ ...p, current: page + 1, total: res.result.totalElements }));
     } finally { setLoading(false); }
@@ -106,7 +106,7 @@ export default function AdminPayments() {
       {/* Revenue Chart + Plans */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="lg:col-span-2">
-          <Card className="!rounded-2xl !border-0 !overflow-hidden" bodyStyle={{ padding: '20px 20px 12px' }}
+          <Card className="!rounded-2xl !border-0 !overflow-hidden" styles={{ body: { padding: '20px 20px 12px' } }}
             style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.03)', background: 'rgba(255,255,255,0.9)' }}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -136,7 +136,7 @@ export default function AdminPayments() {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-          <Card className="!rounded-2xl !border-0 !overflow-hidden h-full" bodyStyle={{ padding: '20px' }}
+          <Card className="!rounded-2xl !border-0 !overflow-hidden h-full" styles={{ body: { padding: '20px' } }}
             style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.03)', background: 'rgba(255,255,255,0.9)' }}>
             <div className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 rounded-lg bg-[#ff5c00]/10 flex items-center justify-center">
@@ -175,7 +175,7 @@ export default function AdminPayments() {
 
       {/* Transactions Table */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-        <Card className="!rounded-2xl !border-0 !overflow-hidden" bodyStyle={{ padding: 0 }}
+        <Card className="!rounded-2xl !border-0 !overflow-hidden" styles={{ body: { padding: 0 } }}
           style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.03)', background: 'rgba(255,255,255,0.9)' }}>
           <div className="p-4 pb-0 flex items-center justify-between">
             <div className="flex items-center gap-2">

@@ -122,7 +122,7 @@ export default function AdminUsers() {
         <div className="min-w-[120px]">
           <Progress percent={pct} size="small" 
             strokeColor={pct > 80 ? { from: '#f43f5e', to: '#e11d48' } : { from: '#ff5c00', to: '#ffaa00' }} 
-            trailColor="rgba(0,0,0,0.04)" className="!mb-0" />
+            railColor="rgba(0,0,0,0.04)" className="!mb-0" />
           <p className="text-[10px] text-black/35 mt-0.5 font-medium">{formatBytes(used)} / {formatBytes(max)}</p>
         </div>
       );
@@ -169,7 +169,7 @@ export default function AdminUsers() {
 
       {/* Table */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-        <Card className="!rounded-2xl !border-0 !overflow-hidden" bodyStyle={{ padding: 0 }}
+        <Card className="!rounded-2xl !border-0 !overflow-hidden" styles={{ body: { padding: 0 } }}
           style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.03)', background: 'rgba(255,255,255,0.9)' }}>
           <Table dataSource={users} columns={columns} rowKey="id" loading={loading} size="middle"
             pagination={{ ...pagination, showSizeChanger: true, pageSizeOptions: ['10', '20', '50'],
