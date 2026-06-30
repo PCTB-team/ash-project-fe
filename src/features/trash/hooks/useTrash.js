@@ -66,11 +66,61 @@ export const useTrash = () => {
     }
   };
 
+  const bulkRestore = async (selectedItems) => {
+    try {
+      const documentIds = selectedItems
+        .filter(item => item.type !== 'folder')
+        .map(item => item.id);
+      
+      const folderIds = selectedItems
+        .filter(item => item.type === 'folder')
+        .map(item => item.id);
+
+      const payload = { documentIds, folderIds };
+      const data = await trashApi.restoreTrashItems(payload);
+      
+      if (data.code === 0 || data.code === 1000) {
+        setTrashDocuments(prev => prev.filter(d => !documentIds.includes(d.id) && !folderIds.includes(d.id)));
+        return { success: true, result: data.result };
+      }
+      return { success: false, message: data.message };
+    } catch (error) {
+      console.error("Lỗi khôi phục hàng loạt:", error);
+      return { success: false, message: error.response?.data?.message || error.message };
+    }
+  };
+
+  const bulkDeletePermanent = async (selectedItems) => {
+    try {
+      const documentIds = selectedItems
+        .filter(item => item.type !== 'folder')
+        .map(item => item.id);
+      
+      const folderIds = selectedItems
+        .filter(item => item.type === 'folder')
+        .map(item => item.id);
+
+      const payload = { documentIds, folderIds };
+      const data = await trashApi.deleteTrashItems(payload);
+      
+      if (data.code === 0 || data.code === 1000) {
+        setTrashDocuments(prev => prev.filter(d => !documentIds.includes(d.id) && !folderIds.includes(d.id)));
+        return { success: true, result: data.result };
+      }
+      return { success: false, message: data.message };
+    } catch (error) {
+      console.error("Lỗi xóa vĩnh viễn hàng loạt:", error);
+      return { success: false, message: error.response?.data?.message || error.message };
+    }
+  };
+
   return {
     trashDocuments,
     isLoading,
     fetchTrashDocuments,
     restoreDocument,
-    deleteDocumentPermanent
+    deleteDocumentPermanent,
+    bulkRestore,
+    bulkDeletePermanent
   };
 };

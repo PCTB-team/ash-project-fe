@@ -52,8 +52,12 @@ export default function AdminPayments() {
 
   useEffect(() => {
     fetchPayments(0);
-    adminApi.getPlans().then(r => setPlans(r.result));
-    adminApi.getRevenueChart().then(r => setRevenueChart(r.result));
+    adminApi.getPlans().then(r => setPlans(r.result || []));
+    adminApi.getDashboardStats().then(r => {
+      if (r.result?.monthlyRevenueTrend) {
+        setRevenueChart(r.result.monthlyRevenueTrend.map(item => ({ month: item.label, revenue: item.value })));
+      }
+    });
   }, [fetchPayments]);
 
   const columns = [
@@ -61,9 +65,9 @@ export default function AdminPayments() {
       <span className="text-[12px] font-mono text-black/40 bg-black/[0.03] px-2 py-0.5 rounded-md">{t?.slice(0, 16)}...</span>
     ), width: 160 },
     { title: 'Người dùng', key: 'user', render: (_, r) => (
-      <div><p className="text-[13px] font-semibold m-0">{r.user}</p><p className="text-[10px] text-black/30 m-0">{r.userEmail}</p></div>
+      <div><p className="text-[13px] font-semibold m-0">{r.username}</p><p className="text-[10px] text-black/30 m-0">{r.email}</p></div>
     ), width: 180 },
-    { title: 'Gói', dataIndex: 'plan', render: (p) => (
+    { title: 'Gói', dataIndex: 'planName', render: (p) => (
       <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-[#6366f1]/8 text-[#6366f1]">
         <i className="bi bi-box-fill text-[9px]" />
         {p}
@@ -184,7 +188,7 @@ export default function AdminPayments() {
               options={[{ value: 'SUCCESS', label: 'Thành công' }, { value: 'FAILED', label: 'Thất bại' }, { value: 'PENDING', label: 'Chờ xử lý' }, { value: 'CANCELLED', label: 'Đã hủy' }]}
               onChange={v => setStatusFilter(v || '')} />
           </div>
-          <Table dataSource={payments} columns={columns} rowKey="id" loading={loading} size="middle"
+          <Table dataSource={payments} columns={columns} rowKey="transactionId" loading={loading} size="middle"
             pagination={{ ...pagination, showSizeChanger: true, onChange: (p, ps) => { setPagination(prev => ({ ...prev, pageSize: ps })); fetchPayments(p - 1); } }}
             className="[&_.ant-table-thead_th]:!bg-[#fafafa] [&_.ant-table-thead_th]:!text-[11px] [&_.ant-table-thead_th]:!font-bold [&_.ant-table-thead_th]:!text-black/35 [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-row]:hover:!bg-[#fafafe]"
           />

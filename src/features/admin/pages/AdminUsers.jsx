@@ -82,7 +82,7 @@ export default function AdminUsers() {
       <div className="flex items-center gap-3">
         <div className="relative">
           <Avatar size={40} style={{ 
-            background: r.roles?.includes('ADMIN') ? 'linear-gradient(135deg, #ff5c00, #ffaa00)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)', 
+            background: r.roles?.some(role => role.name === 'ADMIN') ? 'linear-gradient(135deg, #ff5c00, #ffaa00)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)', 
             fontSize: 14, fontWeight: 700, border: '2px solid rgba(255,255,255,0.8)' 
           }}>{r.fullname?.charAt(0)}</Avatar>
           {r.status === 'ACTIVE' && <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-white" />}
@@ -94,7 +94,7 @@ export default function AdminUsers() {
       </div>
     ), width: 260 },
     { title: 'Vai trò', dataIndex: 'roles', render: (roles) => {
-      const isAdmin = roles?.includes('ADMIN');
+      const isAdmin = roles?.some(role => role.name === 'ADMIN');
       return (
         <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold ${
           isAdmin ? 'bg-gradient-to-r from-[#ff5c00]/10 to-[#ffaa00]/10 text-[#ff5c00]' : 'bg-[#6366f1]/8 text-[#6366f1]'
@@ -115,22 +115,24 @@ export default function AdminUsers() {
       );
     }, width: 140 },
     { title: 'Storage', key: 'storage', render: (_, r) => {
-      const pct = Math.round((r.storageUsed / r.storageMax) * 100);
+      const used = r.storageUsed || 0;
+      const max = r.storageMax || 1;
+      const pct = Math.round((used / max) * 100);
       return (
         <div className="min-w-[120px]">
           <Progress percent={pct} size="small" 
             strokeColor={pct > 80 ? { from: '#f43f5e', to: '#e11d48' } : { from: '#ff5c00', to: '#ffaa00' }} 
             trailColor="rgba(0,0,0,0.04)" className="!mb-0" />
-          <p className="text-[10px] text-black/35 mt-0.5 font-medium">{formatBytes(r.storageUsed)} / {formatBytes(r.storageMax)}</p>
+          <p className="text-[10px] text-black/35 mt-0.5 font-medium">{formatBytes(used)} / {formatBytes(max)}</p>
         </div>
       );
     }, width: 160 },
-    { title: 'Tài liệu', dataIndex: 'documentsCount', render: (v) => <span className="text-[13px] font-bold text-[#1d1d1f]">{v}</span>, width: 80 },
-    { title: 'Ngày tạo', dataIndex: 'createdAt', render: (t) => <span className="text-[12px] text-black/40 font-medium">{new Date(t).toLocaleDateString('vi-VN')}</span>, width: 110 },
+    { title: 'Tài liệu', dataIndex: 'documentsCount', render: (v) => <span className="text-[13px] font-bold text-[#1d1d1f]">{v || 0}</span>, width: 80 },
+    { title: 'Ngày tạo', dataIndex: 'createdAt', render: (t) => <span className="text-[12px] text-black/40 font-medium">{t ? new Date(t).toLocaleDateString('vi-VN') : 'N/A'}</span>, width: 110 },
     { title: '', key: 'actions', render: (_, r) => (
       <Dropdown menu={{ items: [
         { key: 'view', label: 'Xem chi tiết', icon: <i className="bi bi-eye text-[12px]" />, onClick: () => { setDetailUser(r); setDetailVisible(true); } },
-        { key: 'role', label: r.roles?.includes('ADMIN') ? 'Đổi thành User' : 'Đổi thành Admin', icon: <i className="bi bi-shield text-[12px]" />, onClick: () => handleRoleChange(r.id, r.roles?.includes('ADMIN') ? 'USER' : 'ADMIN') },
+        { key: 'role', label: r.roles?.some(role => role.name === 'ADMIN') ? 'Đổi thành User' : 'Đổi thành Admin', icon: <i className="bi bi-shield text-[12px]" />, onClick: () => handleRoleChange(r.id, r.roles?.some(role => role.name === 'ADMIN') ? 'USER' : 'ADMIN') },
         { key: 'status', label: r.status === 'BANNED' ? 'Mở khóa' : 'Khóa tài khoản', icon: <i className={`bi ${r.status === 'BANNED' ? 'bi-unlock' : 'bi-lock'} text-[12px]`} />, onClick: () => handleStatusChange(r.id, r.status === 'BANNED' ? 'ACTIVE' : 'BANNED') },
         { type: 'divider' },
         { key: 'delete', label: 'Xóa tài khoản', icon: <i className="bi bi-trash text-[12px]" />, danger: true, onClick: () => handleDelete(r.id, r.fullname) },
@@ -147,7 +149,7 @@ export default function AdminUsers() {
         <GlassMiniCard icon="bi-people-fill" label="Tổng người dùng" value={pagination.total} color="#6366f1" delay={0} />
         <GlassMiniCard icon="bi-person-check-fill" label="Đang hoạt động" value={users.filter(u => u.status === 'ACTIVE').length} color="#10b981" delay={0.05} />
         <GlassMiniCard icon="bi-person-x-fill" label="Bị khóa" value={users.filter(u => u.status === 'BANNED').length} color="#f43f5e" delay={0.1} />
-        <GlassMiniCard icon="bi-shield-fill" label="Admin" value={users.filter(u => u.roles?.includes('ADMIN')).length} color="#ff5c00" delay={0.15} />
+        <GlassMiniCard icon="bi-shield-fill" label="Admin" value={users.filter(u => u.roles?.some(role => role.name === 'ADMIN')).length} color="#ff5c00" delay={0.15} />
       </div>
 
       {/* Filters */}
@@ -194,22 +196,22 @@ export default function AdminUsers() {
             
             <div className="relative z-10 text-center pt-8">
               <Avatar size={72} style={{ 
-                background: detailUser.roles?.includes('ADMIN') ? 'linear-gradient(135deg, #ff5c00, #ffaa00)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)', 
+                background: detailUser.roles?.some(role => role.name === 'ADMIN') ? 'linear-gradient(135deg, #ff5c00, #ffaa00)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)', 
                 fontSize: 28, fontWeight: 700, border: '4px solid white',
                 boxShadow: '0 4px 16px rgba(0,0,0,0.15)' 
               }}>{detailUser.fullname?.charAt(0)}</Avatar>
               <h3 className="text-[18px] font-bold mt-3 mb-0">{detailUser.fullname}</h3>
               <p className="text-[13px] text-black/40 mb-4">{detailUser.email}</p>
               <div className="grid grid-cols-2 gap-3 text-left bg-black/[0.02] rounded-2xl p-5 border border-black/[0.04]">
-                {[['Username', detailUser.username], ['Vai trò', detailUser.roles?.join(', ')], ['Trạng thái', detailUser.status], ['Tài liệu', detailUser.documentsCount],
-                  ['Nhóm', detailUser.groupsCount], ['Đăng nhập cuối', new Date(detailUser.lastLogin).toLocaleString('vi-VN')],
+                {[['Username', detailUser.username], ['Vai trò', detailUser.roles?.map(r => r.name).join(', ')], ['Trạng thái', detailUser.status], ['Tài liệu', detailUser.documentsCount || 0],
+                  ['Nhóm', detailUser.groupsCount || 0], ['Đăng nhập cuối', detailUser.lastLogin ? new Date(detailUser.lastLogin).toLocaleString('vi-VN') : 'N/A'],
                 ].map(([label, val]) => (
                   <div key={label}><p className="text-[10px] text-black/35 font-semibold mb-0.5 uppercase tracking-wider">{label}</p><p className="text-[13px] font-bold m-0">{val}</p></div>
                 ))}
               </div>
               <div className="mt-4 px-2">
                 <p className="text-[10px] text-black/35 font-semibold mb-1 text-left uppercase tracking-wider">Dung lượng sử dụng</p>
-                <Progress percent={Math.round((detailUser.storageUsed / detailUser.storageMax) * 100)} strokeColor={{ from: '#ff5c00', to: '#ffaa00' }} />
+                <Progress percent={Math.round(((detailUser.storageUsed || 0) / (detailUser.storageMax || 1)) * 100)} strokeColor={{ from: '#ff5c00', to: '#ffaa00' }} />
                 <p className="text-[11px] text-black/35 text-right font-medium">{formatBytes(detailUser.storageUsed)} / {formatBytes(detailUser.storageMax)}</p>
               </div>
             </div>

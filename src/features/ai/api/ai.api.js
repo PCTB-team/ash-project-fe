@@ -5,17 +5,7 @@ const CONVERSATIONS_API_URL = 'https://ash-project-be.onrender.com/api/v1/ai/con
 
 export const aiApi = {
   /**
-   * Gửi tin nhắn tới AI Chatbot
-   * @param {Object} payload - { message, conversationId?, documentId?, folderId?, scope? }
-   * scope: 'all' | 'document' | 'folder'
-   */
-  sendMessage: async (payload) => {
-    const response = await axiosClient.post(`${AI_API_URL}/chat`, payload);
-    return response.data;
-  },
-
-  /**
-   * Trò chuyện với AI dựa trên tài liệu đã lưu
+   * Trò chuyện với AI dựa trên tài liệu đã lưu (tự động lưu lịch sử)
    * @param {Object} payload - { message, documentId?, folderId? }
    */
   chatWithKnowledge: async (payload) => {
@@ -24,34 +14,14 @@ export const aiApi = {
   },
 
   /**
-   * Lấy danh sách các cuộc trò chuyện (chat history)
+   * Lấy lịch sử chat AI (từng cặp Q&A)
+   * @param {number} page 
+   * @param {number} size 
    */
-  getConversations: async () => {
-    const response = await axiosClient.get(CONVERSATIONS_API_URL);
-    return response.data;
-  },
-
-  /**
-   * Lấy lịch sử tin nhắn của một cuộc trò chuyện
-   */
-  getConversationMessages: async (conversationId) => {
-    const response = await axiosClient.get(`${CONVERSATIONS_API_URL}/${conversationId}/messages`);
-    return response.data;
-  },
-
-  /**
-   * Tạo cuộc trò chuyện mới
-   */
-  createConversation: async (title) => {
-    const response = await axiosClient.post(CONVERSATIONS_API_URL, { title });
-    return response.data;
-  },
-
-  /**
-   * Xóa cuộc trò chuyện
-   */
-  deleteConversation: async (conversationId) => {
-    const response = await axiosClient.delete(`${CONVERSATIONS_API_URL}/${conversationId}`);
+  getChatHistory: async (page = 0, size = 30) => {
+    const response = await axiosClient.get(`${AI_API_URL}/knowledge/history`, {
+      params: { page, size }
+    });
     return response.data;
   },
 
@@ -62,4 +32,31 @@ export const aiApi = {
     const response = await axiosClient.post(`${AI_API_URL}/summarize`, { documentId });
     return response.data;
   },
+
+  // ==========================================
+  // CÁC API DƯỚI ĐÂY ĐÃ BỊ LOẠI BỎ Ở BACKEND
+  // ==========================================
+
+  /*
+  sendMessage: async (payload) => {
+    const response = await axiosClient.post(`${AI_API_URL}/chat`, payload);
+    return response.data;
+  },
+  getConversations: async () => {
+    const response = await axiosClient.get(CONVERSATIONS_API_URL);
+    return response.data;
+  },
+  getConversationMessages: async (conversationId) => {
+    const response = await axiosClient.get(`${CONVERSATIONS_API_URL}/${conversationId}/messages`);
+    return response.data;
+  },
+  createConversation: async (title) => {
+    const response = await axiosClient.post(CONVERSATIONS_API_URL, { title });
+    return response.data;
+  },
+  deleteConversation: async (conversationId) => {
+    const response = await axiosClient.delete(`${CONVERSATIONS_API_URL}/${conversationId}`);
+    return response.data;
+  },
+  */
 };

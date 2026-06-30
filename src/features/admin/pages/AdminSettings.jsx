@@ -62,16 +62,38 @@ export default function AdminSettings() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    adminApi.getSettings().then(r => { setSettings(r.result); setLoading(false); });
+    adminApi.getSettings().then(r => { 
+      const realSettings = r.result || {};
+      setSettings({
+        general: { 
+          appName: realSettings.applicationName || '', 
+          maintenanceMode: realSettings.maintenanceMode || false,
+          allowRegistration: true,
+          maxLoginAttempts: 5
+        },
+        storage: {
+          defaultStorageLimit: 536870912,
+          maxFileSize: 20971520,
+          allowedFileTypes: ['pdf', 'doc', 'docx', 'jpg', 'png']
+        },
+        security: {
+          otpExpiryMinutes: 5,
+          sessionTimeoutMinutes: 60,
+          passwordMinLength: 8,
+          requireEmailVerification: true
+        },
+        notifications: {
+          emailNotifications: true,
+          loginAlerts: true,
+          storageWarningPercent: 80
+        }
+      }); 
+      setLoading(false); 
+    });
   }, []);
 
   const handleSave = async () => {
-    setSaving(true);
-    try {
-      await adminApi.updateSettings(settings);
-      message.success('Đã lưu cài đặt thành công!');
-    } catch { message.error('Lỗi khi lưu cài đặt'); }
-    finally { setSaving(false); }
+    message.info('Tính năng cập nhật cài đặt hiện chưa được hỗ trợ bởi Backend.');
   };
 
   const update = (section, key, value) => {
