@@ -37,8 +37,8 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, curre
 
   const formik = useFormik({
     initialValues: {
-      usernameOrEmail: 'vuongbaovipvip@gmail.com',
-      password: '12345678',
+      usernameOrEmail: '',
+      password: '',
       remember: true,
       displayName: '',
       fullname: '',
