@@ -62,38 +62,71 @@ export default function AdminSettings() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    adminApi.getSettings().then(r => { 
-      const realSettings = r.result || {};
-      setSettings({
-        general: { 
-          appName: realSettings.applicationName || '', 
-          maintenanceMode: realSettings.maintenanceMode || false,
-          allowRegistration: true,
-          maxLoginAttempts: 5
-        },
-        storage: {
-          defaultStorageLimit: 536870912,
-          maxFileSize: 20971520,
-          allowedFileTypes: ['pdf', 'doc', 'docx', 'jpg', 'png']
-        },
-        security: {
-          otpExpiryMinutes: 5,
-          sessionTimeoutMinutes: 60,
-          passwordMinLength: 8,
-          requireEmailVerification: true
-        },
-        notifications: {
-          emailNotifications: true,
-          loginAlerts: true,
-          storageWarningPercent: 80
-        }
-      }); 
-      setLoading(false); 
-    });
+    adminApi.getSettings()
+      .then(r => { 
+        const s = r.result || {};
+        setSettings({
+          general: { 
+            appName: s.applicationName || '', 
+            maintenanceMode: s.maintenanceMode || false,
+            allowRegistration: s.allowRegistration !== false,
+            maxLoginAttempts: s.maxLoginAttempts || 5
+          },
+          storage: {
+            defaultStorageLimit: s.defaultStorageLimit || s.defaultUserStorage || 524288000,
+            maxFileSize: s.maxFileSizeUpload || 10485760,
+            allowedFileTypes: s.allowedFileTypes ? s.allowedFileTypes.split(',').map(t => t.trim()) : ['pdf', 'doc', 'docx', 'jpg', 'png']
+          },
+          security: {
+            otpExpiryMinutes: s.otpExpiryMinutes || 5,
+            sessionTimeoutMinutes: s.sessionTimeoutMinutes || 60,
+            passwordMinLength: 8,
+            requireEmailVerification: true
+          },
+          notifications: {
+            emailNotifications: s.emailNotificationEnabled !== false,
+            loginAlerts: true,
+            storageWarningPercent: 80
+          }
+        }); 
+        setLoading(false); 
+      })
+      .catch(e => {
+        console.error('Failed to load settings:', e);
+        setSettings({
+          general: { appName: '', maintenanceMode: false, allowRegistration: true, maxLoginAttempts: 5 },
+          storage: { defaultStorageLimit: 524288000, maxFileSize: 10485760, allowedFileTypes: ['pdf', 'doc', 'docx', 'jpg', 'png'] },
+          security: { otpExpiryMinutes: 5, sessionTimeoutMinutes: 60, passwordMinLength: 8, requireEmailVerification: true },
+          notifications: { emailNotifications: true, loginAlerts: true, storageWarningPercent: 80 }
+        });
+        setLoading(false);
+      });
   }, []);
 
   const handleSave = async () => {
-    message.info('Tính năng cập nhật cài đặt hiện chưa được hỗ trợ bởi Backend.');
+    setSaving(true);
+    try {
+      const payload = {
+        applicationName: settings.general.appName,
+        maintenanceMode: settings.general.maintenanceMode,
+        allowRegistration: settings.general.allowRegistration,
+        maxLoginAttempts: settings.general.maxLoginAttempts,
+        defaultStorageLimit: settings.storage.defaultStorageLimit,
+        maxFileSizeUpload: settings.storage.maxFileSize,
+        allowedFileTypes: settings.storage.allowedFileTypes.join(','),
+        otpExpiryMinutes: settings.security.otpExpiryMinutes,
+        sessionTimeoutMinutes: settings.security.sessionTimeoutMinutes,
+        emailNotificationEnabled: settings.notifications.emailNotifications,
+        defaultUserStorage: settings.storage.defaultStorageLimit
+      };
+      await adminApi.updateSettings(payload);
+      message.success('Đã lưu cài đặt hệ thống thành công!');
+    } catch (e) {
+      console.error('Failed to save settings:', e);
+      message.error(e.response?.data?.message || 'Không thể lưu cài đặt');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const update = (section, key, value) => {

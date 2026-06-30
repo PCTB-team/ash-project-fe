@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { adminApi } from '../api/admin.api.js';
 
-const COLORS = ['#ff5c00', '#6366f1', '#10b981', '#f43f5e', '#8b5cf6'];
+const COLORS = ['#ff5c00', '#0ea5e9', '#10b981', '#f43f5e', '#eab308', '#8b5cf6'];
 
 const GlassStatCard = ({ icon, label, value, suffix, color, trend, trendValue, delay = 0 }) => (
   <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.5, ease: 'easeOut' }}>
@@ -146,6 +146,9 @@ const ActivityTimeline = ({ activities }) => {
     AI_CHAT: { icon: 'bi-stars', color: '#0ea5e9', bg: '#0ea5e915', label: 'AI Chat' },
     USER_LOGIN: { icon: 'bi-box-arrow-in-right', color: '#94a3b8', bg: '#94a3b815', label: 'Đăng nhập' },
     DELETE_USER: { icon: 'bi-person-x-fill', color: '#f43f5e', bg: '#f43f5e15', label: 'Xóa User' },
+    SET_USER_STORAGE_PLAN: { icon: 'bi-hdd-fill', color: '#6366f1', bg: '#6366f115', label: 'Cấp gói' },
+    LOCK_USER: { icon: 'bi-lock-fill', color: '#f43f5e', bg: '#f43f5e15', label: 'Khóa TK' },
+    UNLOCK_USER: { icon: 'bi-unlock-fill', color: '#10b981', bg: '#10b98115', label: 'Mở khóa' },
     ADMIN_ACTION: { icon: 'bi-shield-fill', color: '#ffaa00', bg: '#ffaa0015', label: 'Admin' },
   };
 
@@ -198,7 +201,7 @@ export default function AdminDashboard() {
     const load = async () => {
       try {
         const res = await adminApi.getDashboardStats();
-        const s = res.result;
+        const s = res?.result || { totalUsers: 0, totalDocuments: 0, totalGroups: 0, totalRevenue: 0 };
         setStats(s);
         
         // Map users chart
@@ -226,6 +229,11 @@ export default function AdminDashboard() {
         
         // Set activities
         setActivities(s.recentActivities || []);
+      } catch (e) {
+        console.error('Failed to load dashboard stats:', e);
+        setStats({
+          totalUsers: 0, totalDocuments: 0, totalGroups: 0, totalRevenue: 0
+        });
       } finally { setLoading(false); }
     };
     load();
@@ -246,11 +254,13 @@ export default function AdminDashboard() {
       <WelcomeBanner stats={stats} />
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <GlassStatCard icon="bi-people-fill" label="Tổng người dùng" value={stats.totalUsers} color="#6366f1" trend="up" trendValue="+12%" delay={0} />
-        <GlassStatCard icon="bi-file-earmark-fill" label="Tổng tài liệu" value={stats.totalDocuments} color="#ff5c00" trend="up" trendValue="+8%" delay={0.06} />
-        <GlassStatCard icon="bi-collection-fill" label="Tổng nhóm" value={stats.totalGroups} color="#8b5cf6" trend="up" trendValue="+5%" delay={0.12} />
-        <GlassStatCard icon="bi-cash-stack" label="Tổng doanh thu" value={stats.totalRevenue} suffix="₫" color="#10b981" trend="up" trendValue="+18%" delay={0.18} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        <GlassStatCard icon="bi-people-fill" label="Tổng người dùng" value={stats?.totalUsers || 0} color="#6366f1" trend="up" trendValue="+12%" delay={0} />
+        <GlassStatCard icon="bi-broadcast" label="Đang online" value={stats?.activeUsersRightNow || 0} color="#10b981" delay={0.04} />
+        <GlassStatCard icon="bi-file-earmark-fill" label="Tổng tài liệu" value={stats?.totalDocuments || 0} color="#ff5c00" trend="up" trendValue="+8%" delay={0.08} />
+        <GlassStatCard icon="bi-collection-fill" label="Tổng nhóm" value={stats?.totalGroups || 0} color="#8b5cf6" delay={0.12} />
+        <GlassStatCard icon="bi-cash-stack" label="Tổng doanh thu" value={stats?.totalRevenue || 0} suffix="₫" color="#0ea5e9" delay={0.16} />
+        <GlassStatCard icon="bi-exclamation-triangle-fill" label="Báo cáo chờ" value={stats?.pendingReports || 0} color="#f43f5e" delay={0.20} />
       </div>
 
       {/* Charts Row 1 */}

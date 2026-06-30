@@ -61,7 +61,14 @@ export default function AdminGroups() {
   };
 
   const handleToggleStatus = async (groupId, currentStatus) => {
-    message.info('Tính năng này hiện tại chưa được hỗ trợ bởi Backend.');
+    const newStatus = currentStatus === 'ACTIVE' ? 'BANNED' : 'ACTIVE';
+    try {
+      await adminApi.updateGroupStatus(groupId, newStatus);
+      message.success(`Đã ${newStatus === 'BANNED' ? 'khóa' : 'mở khóa'} nhóm`);
+      fetchGroups(pagination.current - 1);
+    } catch (e) {
+      message.error(e.response?.data?.message || 'Không thể cập nhật trạng thái nhóm');
+    }
   };
 
   const stats = pagination.stats || {};

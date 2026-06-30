@@ -178,20 +178,18 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, curre
                     transition={{ duration: 0.35, delay: 0.25, ease: [0.25, 1, 0.5, 1] }}
                   >
                     <div className="flex justify-center w-full mt-1">
-                      {useMemo(() => (
-                        <GoogleLogin
-                          onSuccess={credentialResponse => {
-                            handleGoogleLogin(credentialResponse.credential);
-                          }}
-                          onError={() => {
-                            setErrorMsg('Đăng nhập Google bị lỗi.');
-                          }}
-                          theme="outline"
-                          size="large"
-                          shape="pill"
-                          text="signin_with"
-                        />
-                      ), [handleGoogleLogin, setErrorMsg])}
+                      <GoogleLogin
+                        onSuccess={credentialResponse => {
+                          handleGoogleLogin(credentialResponse.credential);
+                        }}
+                        onError={() => {
+                          setErrorMsg('Đăng nhập Google bị lỗi.');
+                        }}
+                        theme="outline"
+                        size="large"
+                        shape="pill"
+                        text="signin_with"
+                      />
                     </div>
                   </motion.div>
                 </>

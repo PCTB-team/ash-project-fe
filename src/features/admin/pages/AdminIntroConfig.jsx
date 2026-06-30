@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Card, Form, Input, Select, Button, message, Tabs } from 'antd';
 import { motion } from 'framer-motion';
+import { adminApi } from '../api/admin.api.js';
 
 const DEFAULT_CONFIG = {
   heroBadge: 'Nền tảng học tập thông minh',
@@ -58,29 +59,47 @@ export default function AdminIntroConfig() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Load config from LocalStorage
-    const saved = localStorage.getItem('capy_intro_config');
-    if (saved) {
+    const loadConfig = async () => {
       try {
-        const parsed = JSON.parse(saved);
-        // Merge with default in case of missing arrays
-        form.setFieldsValue({ ...DEFAULT_CONFIG, ...parsed });
+        const res = await adminApi.getIntroConfig();
+        if (res && res.result) {
+          form.setFieldsValue({ ...DEFAULT_CONFIG, ...res.result });
+          localStorage.setItem('capy_intro_config', JSON.stringify(res.result));
+          return;
+        }
       } catch (e) {
+        console.warn('Backend chưa hỗ trợ API getIntroConfig, fallback sang LocalStorage');
+      }
+
+      // Fallback to LocalStorage
+      const saved = localStorage.getItem('capy_intro_config');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          form.setFieldsValue({ ...DEFAULT_CONFIG, ...parsed });
+        } catch (e) {
+          form.setFieldsValue(DEFAULT_CONFIG);
+        }
+      } else {
         form.setFieldsValue(DEFAULT_CONFIG);
       }
-    } else {
-      form.setFieldsValue(DEFAULT_CONFIG);
-    }
+    };
+    loadConfig();
   }, [form]);
 
-  const onFinish = (values) => {
+  const onFinish = async (values) => {
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await adminApi.updateIntroConfig(values);
       localStorage.setItem('capy_intro_config', JSON.stringify(values));
-      message.success('Đã lưu cấu hình trang Intro thành công!');
+      message.success('Đã đồng bộ cấu hình trang Intro lên máy chủ thành công!');
+    } catch (e) {
+      console.warn('Backend chưa hỗ trợ API updateIntroConfig, fallback sang LocalStorage');
+      localStorage.setItem('capy_intro_config', JSON.stringify(values));
+      message.warning('Đã lưu cục bộ! (Chưa đồng bộ được do Backend thiếu API)');
+    } finally {
       setLoading(false);
-    }, 600);
+    }
   };
 
   const handleReset = () => {

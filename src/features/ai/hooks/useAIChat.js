@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { aiApi } from '../api/ai.api.js';
 
 /**
- * Hook quản lý state & logic cho AI Chatbot
+ * Hook quản lý state & logic cho AI Chatbot dựa trên Conversations
  */
 export const useAIChat = () => {
   const [messages, setMessages] = useState([]);
@@ -22,40 +22,50 @@ export const useAIChat = () => {
   });
 
   /**
-   * Lấy danh sách lịch sử chat (từng câu hỏi - đáp)
+   * Lấy danh sách các cuộc hội thoại
    */
   const fetchConversations = useCallback(async (page = 0, size = 30) => {
     try {
-      const data = await aiApi.getChatHistory(page, size);
+      const data = await aiApi.getAiKnowledgeConversations(page, size);
       if (data?.code === 0 || data?.code === 1000) {
-        setConversations(data.result?.items || []);
+        setConversations(data.result?.content || data.result?.items || []);
       }
     } catch (err) {
-      console.error('Lỗi lấy danh sách lịch sử chat:', err);
+      console.error('Lỗi lấy danh sách hội thoại:', err);
     }
   }, []);
 
   /**
-   * Tải chi tiết một lịch sử chat
+   * Tải chi tiết một cuộc hội thoại (lấy danh sách messages)
    */
-  const loadConversation = useCallback(async (historyId) => {
+  const loadConversation = useCallback(async (conversationId) => {
     setIsLoading(true);
-    setActiveConversationId(historyId);
+    setActiveConversationId(conversationId);
     
-    // Thay vì gọi API, tìm trong danh sách history hiện có
-    setMessages((prev) => {
-      const item = conversations.find(c => c.historyId === historyId || c.id === historyId);
-      if (item) {
-        return [
-          { id: `user-${historyId}`, role: 'user', content: item.question, timestamp: item.createdAt },
-          { id: `ai-${historyId}`, role: 'assistant', content: item.answer, sources: item.sources, answerSource: item.answerSource, timestamp: item.createdAt }
-        ];
+    try {
+      const data = await aiApi.getAiKnowledgeConversationMessages(conversationId);
+      if (data?.code === 0 || data?.code === 1000) {
+        // Backend trả về mảng messages: [{ messageId, role, content, answerSource, sources, createdAt }]
+        const msgs = data.result?.messages || [];
+        setMessages(msgs.map(m => ({
+          id: m.messageId || m.id || Date.now() + Math.random(),
+          role: m.role?.toLowerCase() === 'user' ? 'user' : 'assistant',
+          content: m.content,
+          sources: m.sources,
+          answerSource: m.answerSource,
+          timestamp: m.createdAt
+        })));
+      } else {
+        setMessages([]);
       }
-      return [];
-    });
-    
-    setIsLoading(false);
-  }, [conversations]);
+    } catch (err) {
+      console.error('Lỗi tải tin nhắn:', err);
+      setMessages([]);
+      setError('Không thể tải tin nhắn của hội thoại này.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   /**
    * Tạo cuộc hội thoại mới
@@ -99,6 +109,11 @@ export const useAIChat = () => {
         message: text.trim(),
       };
       
+      if (activeConversationId) {
+        payload.conversationId = activeConversationId;
+      }
+      
+      // Không gửi cùng lúc cả documentId và folderId
       if (chatContext.scope === 'document' && chatContext.documentId) {
         payload.documentId = chatContext.documentId;
       } else if (chatContext.scope === 'folder' && chatContext.folderId) {
@@ -108,7 +123,9 @@ export const useAIChat = () => {
       const data = await aiApi.chatWithKnowledge(payload);
 
       if (data?.code === 0 || data?.code === 1000) {
-        const aiContent = data.result?.answer || data.result?.content || data.result?.message || data.result || 'Xin lỗi, tôi không thể tạo câu trả lời.';
+        const result = data.result || {};
+        const aiContent = result.answer || result.content || result.message || 'Xin lỗi, tôi không thể tạo câu trả lời.';
+        const newConversationId = result.conversationId;
         
         // Cập nhật lại UI message list
         setMessages(prev => prev.map(m =>
@@ -117,21 +134,18 @@ export const useAIChat = () => {
                 ...m, 
                 content: typeof aiContent === 'string' ? aiContent : JSON.stringify(aiContent), 
                 isLoading: false, 
-                sources: data.result?.sources,
-                answerSource: data.result?.answerSource 
+                sources: result.sources,
+                answerSource: result.answerSource 
               }
             : m
         ));
         
-        // Thêm history mới vào đầu danh sách sidebar
-        const newHistoryItem = {
-          historyId: data.result?.historyId,
-          question: text.trim(),
-          answer: typeof aiContent === 'string' ? aiContent : JSON.stringify(aiContent),
-          createdAt: new Date().toISOString()
-        };
-        setConversations(prev => [newHistoryItem, ...prev]);
-        setActiveConversationId(data.result?.historyId);
+        if (newConversationId && !activeConversationId) {
+          setActiveConversationId(newConversationId);
+        }
+        
+        // Tải lại sidebar để cập nhật tiêu đề và updatedAt
+        fetchConversations(0, 30);
         
       } else {
         throw new Error(data?.message || 'AI response failed');
@@ -151,14 +165,13 @@ export const useAIChat = () => {
     } finally {
       setIsSending(false);
     }
-  }, [isSending, chatContext]);
+  }, [isSending, chatContext, activeConversationId, fetchConversations]);
 
   /**
    * Xóa cuộc hội thoại (Tính năng chưa được hỗ trợ bởi BE)
    */
   const deleteConversation = useCallback(async (conversationId) => {
-    // API chưa hỗ trợ xóa lịch sử
-    return { success: false, message: 'Tính năng xóa lịch sử chưa được hỗ trợ' };
+    return { success: false, message: 'Tính năng xóa hội thoại chưa được hỗ trợ' };
   }, []);
 
   /**
@@ -174,6 +187,7 @@ export const useAIChat = () => {
 
     setMessages(prev => [...prev, userMessage]);
     setIsSending(true);
+    setActiveConversationId(null); // Tạo một session mới logic wise
 
     const aiPlaceholderId = `ai-${Date.now()}`;
     setMessages(prev => [...prev, {

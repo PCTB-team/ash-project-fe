@@ -57,9 +57,9 @@ export default function ConversationSidebar({
           </div>
         ) : (
           sorted.map((conv) => {
-            const id = conv.historyId || conv.id;
+            const id = conv.conversationId || conv.id;
             const isActive = id === activeConversationId;
-            const title = conv.question || 'Câu hỏi AI';
+            const title = conv.title || 'Câu hỏi AI';
             return (
               <div
                 key={id}

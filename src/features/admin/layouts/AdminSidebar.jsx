@@ -9,6 +9,7 @@ import logoImg from '../../../assets/logo.png';
 const menuItems = [
   { key: '', icon: 'bi-grid-1x2', label: 'Tổng quan' },
   { key: 'users', icon: 'bi-people', label: 'Người dùng' },
+  { key: 'documents', icon: 'bi-file-earmark', label: 'Tài liệu' },
   { key: 'groups', icon: 'bi-collection', label: 'Nhóm học tập' },
   { key: 'payments', icon: 'bi-credit-card', label: 'Thanh toán' },
   { key: 'ai', icon: 'bi-stars', label: 'Thống kê AI' },

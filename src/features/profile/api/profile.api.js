@@ -16,5 +16,13 @@ export const profileApi = {
   getStorageUsage: async () => {
     const response = await axiosClient.get('https://ash-project-be.onrender.com/api/v1/user/storage');
     return response.data;
+  },
+  
+  changePassword: async (oldPassword, newPassword) => {
+    const response = await axiosClient.put('https://ash-project-be.onrender.com/api/v1/user/change-password', {
+      oldPassword,
+      newPassword
+    });
+    return response.data;
   }
 };
