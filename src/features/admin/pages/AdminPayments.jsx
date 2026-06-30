@@ -44,20 +44,49 @@ export default function AdminPayments() {
   const fetchPayments = useCallback(async (page = 0) => {
     setLoading(true);
     try {
-      const res = await adminApi.getPayments({ page, size: pagination.pageSize, status: statusFilter }).catch(() => ({ result: { content: [], stats: {}, totalElements: 0 } }));
-      setPayments(res.result.content); setPayStats(res.result.stats);
-      setPagination(p => ({ ...p, current: page + 1, total: res.result.totalElements }));
+      const res = await adminApi.getPayments({ page, size: pagination.pageSize, status: statusFilter }).catch(() => ({ result: { content: [], totalElements: 0 } }));
+      const content = res.result?.content || [];
+      setPayments(content);
+      
+      // Compute stats from payment list
+      const stats = {
+        totalRevenue: content.filter(p => p.status === 'SUCCESS').reduce((acc, p) => acc + (p.amount || 0), 0),
+        successCount: content.filter(p => p.status === 'SUCCESS').length,
+        failedCount: content.filter(p => p.status === 'FAILED').length,
+        pendingCount: content.filter(p => p.status === 'PENDING').length
+      };
+      setPayStats(stats);
+      setPagination(p => ({ ...p, current: page + 1, total: res.result?.totalElements || 0 }));
+    } catch (e) {
+      console.error('Failed to fetch payments:', e);
     } finally { setLoading(false); }
   }, [statusFilter, pagination.pageSize]);
 
   useEffect(() => {
     fetchPayments(0);
-    adminApi.getPlans().then(r => setPlans(r.result || []));
-    adminApi.getDashboardStats().then(r => {
-      if (r.result?.monthlyRevenueTrend) {
-        setRevenueChart(r.result.monthlyRevenueTrend.map(item => ({ month: item.label, revenue: item.value })));
-      }
-    });
+    
+    // Fetch real plans from API
+    adminApi.getPlans()
+      .then(r => setPlans(r.result || []))
+      .catch(() => setPlans([]));
+    
+    // Fetch revenue chart from dedicated revenue API
+    adminApi.getMonthlyRevenue()
+      .then(r => {
+        if (r.result?.series) {
+          setRevenueChart(r.result.series.map(item => ({ month: item.label, revenue: item.revenue })));
+        }
+      })
+      .catch(() => {
+        // Fallback to dashboard stats if revenue API fails
+        adminApi.getDashboardStats()
+          .then(r => {
+            if (r.result?.monthlyRevenueTrend) {
+              setRevenueChart(r.result.monthlyRevenueTrend.map(item => ({ month: item.label, revenue: item.value })));
+            }
+          })
+          .catch(() => {});
+      });
   }, [fetchPayments]);
 
   const columns = [
@@ -79,7 +108,8 @@ export default function AdminPayments() {
         SUCCESS: { color: '#10b981', bg: '#10b98112', text: 'Thành công', icon: 'bi-check-circle-fill' }, 
         FAILED: { color: '#f43f5e', bg: '#f43f5e12', text: 'Thất bại', icon: 'bi-x-circle-fill' }, 
         PENDING: { color: '#f59e0b', bg: '#f59e0b12', text: 'Chờ xử lý', icon: 'bi-clock-fill' }, 
-        CANCELLED: { color: '#94a3b8', bg: '#94a3b812', text: 'Đã hủy', icon: 'bi-dash-circle' } 
+        CANCELLED: { color: '#94a3b8', bg: '#94a3b812', text: 'Đã hủy', icon: 'bi-dash-circle' },
+        TIMEOUT: { color: '#78716c', bg: '#78716c12', text: 'Hết hạn', icon: 'bi-hourglass-bottom' }
       };
       const c = cfg[s] || cfg.PENDING;
       return (
@@ -89,7 +119,6 @@ export default function AdminPayments() {
         </div>
       );
     }, width: 130 },
-    { title: 'Phương thức', dataIndex: 'paymentMethod', render: (m) => <span className="text-[12px] text-black/40 font-medium">{m}</span>, width: 100 },
     { title: 'Ngày', dataIndex: 'createdAt', render: (t) => <span className="text-[12px] text-black/40 font-medium">{new Date(t).toLocaleDateString('vi-VN')}</span>, width: 100, sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt) },
   ];
 
@@ -158,8 +187,8 @@ export default function AdminPayments() {
                       {i + 1}
                     </div>
                     <div>
-                      <p className="text-[13px] font-bold m-0">{plan.name}</p>
-                      <p className="text-[11px] text-black/30 m-0 font-medium">{(plan.storage / (1024*1024*1024)).toFixed(0)} GB</p>
+                    <p className="text-[13px] font-bold m-0">{plan.planName}</p>
+                      <p className="text-[11px] text-black/30 m-0 font-medium">{(plan.quotaSize / (1024*1024*1024)).toFixed(0)} GB • {plan.durationMonths} tháng</p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -185,7 +214,7 @@ export default function AdminPayments() {
               <span className="text-[13px] font-bold text-[#1d1d1f]">Lịch sử giao dịch</span>
             </div>
             <Select placeholder="Trạng thái" allowClear className="!w-[150px]"
-              options={[{ value: 'SUCCESS', label: 'Thành công' }, { value: 'FAILED', label: 'Thất bại' }, { value: 'PENDING', label: 'Chờ xử lý' }, { value: 'CANCELLED', label: 'Đã hủy' }]}
+              options={[{ value: 'SUCCESS', label: 'Thành công' }, { value: 'FAILED', label: 'Thất bại' }, { value: 'PENDING', label: 'Chờ xử lý' }, { value: 'CANCELLED', label: 'Đã hủy' }, { value: 'TIMEOUT', label: 'Hết hạn' }]}
               onChange={v => setStatusFilter(v || '')} />
           </div>
           <Table dataSource={payments} columns={columns} rowKey="transactionId" loading={loading} size="middle"

@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import logoAI from '../../../assets/logo_AI.png';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeSanitize from 'rehype-sanitize';
 
 export default function ChatMessage({ message }) {
   const isUser = message.role === 'user';
@@ -23,7 +24,7 @@ export default function ChatMessage({ message }) {
         {isUser ? (
           <i className="bi bi-person-fill text-white text-[13px]" />
         ) : (
-          <img src={logoAI} alt="AI" className="w-full h-full object-cover" />
+          <img src={logoAI} alt="" className="w-full h-full object-cover" />
         )}
       </div>
 
@@ -64,7 +65,10 @@ export default function ChatMessage({ message }) {
               {isUser ? (
                 message.content
               ) : (
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeSanitize]}
+                >
                   {message.content}
                 </ReactMarkdown>
               )}

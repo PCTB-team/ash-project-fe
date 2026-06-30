@@ -1,43 +1,44 @@
 /**
  * admin.api.js — API layer cho Admin Panel
+ * Synced with ADMIN_MODULE_FULL_API.md contract.
  */
 import { axiosClient } from '../../../utils/apiClient.js';
 
 export const adminApi = {
-  // ── Dashboard ──
+  // ── 1. Dashboard ──
   getDashboardStats: async () => {
     const res = await axiosClient.get('/api/v1/admin/dashboard/stats');
     return res.data;
   },
 
+  // ── 2. Audit Logs ──
   getRecentActivities: async ({ page = 0, size = 10, logType = 'ADMIN_ACTION' } = {}) => {
-    const res = await axiosClient.get(`/api/v1/admin/logs`, {
+    const res = await axiosClient.get('/api/v1/admin/logs', {
       params: { page, size, logType }
     });
     return res.data;
   },
 
-  // ── Users ──
-  getUsers: async ({ page = 0, size = 10, keyword = '', role = '', status = '' } = {}) => {
+  // ── 3. User Management ──
+  getUsers: async ({ page = 0, size = 20, keyword = '', role = '', status = '' } = {}) => {
     const params = { page, size };
     if (keyword) params.keyword = keyword;
     if (role) params.role = role;
     if (status) params.status = status;
-    
     const res = await axiosClient.get('/api/v1/admin/users', { params });
     return res.data;
   },
-  
+
   getUserById: async (userId) => {
     const res = await axiosClient.get(`/api/v1/admin/users/${userId}`);
     return res.data;
   },
-  
+
   updateUserRole: async (userId, role) => {
     const res = await axiosClient.put(`/api/v1/admin/users/${userId}/role?roleName=${role}`);
     return res.data;
   },
-  
+
   updateUserStatus: async (userId, status) => {
     let res;
     if (status === 'BANNED') {
@@ -47,20 +48,47 @@ export const adminApi = {
     }
     return res.data;
   },
-  
+
   deleteUser: async (userId) => {
     const res = await axiosClient.delete(`/api/v1/admin/users/${userId}`);
     return res.data;
   },
 
-  // ── Groups ──
-  getGroups: async ({ page = 0, size = 10, keyword = '' } = {}) => {
+  setUserStoragePlan: async (userId, planId, reason) => {
+    const res = await axiosClient.put(`/api/v1/admin/users/${userId}/storage-plan`, {
+      planId,
+      reason
+    });
+    return res.data;
+  },
+
+  // ── 4. Document Management ──
+  getDocuments: async ({ page = 0, size = 20, keyword = '', fileType = '' } = {}) => {
+    const params = { page, size };
+    if (keyword) params.keyword = keyword;
+    if (fileType && fileType !== 'ALL') params.fileType = fileType;
+    const res = await axiosClient.get('/api/v1/admin/documents', { params });
+    return res.data;
+  },
+
+  getDocumentStats: async () => {
+    const res = await axiosClient.get('/api/v1/admin/documents/statistics');
+    return res.data;
+  },
+
+  deleteDocument: async (docId) => {
+    const res = await axiosClient.delete(`/api/v1/admin/documents/${docId}`);
+    return res.data;
+  },
+
+  // ── 5. Study Group Management ──
+  getGroups: async ({ page = 0, size = 20, keyword = '' } = {}) => {
     const params = { page, size };
     if (keyword) params.keyword = keyword;
     const res = await axiosClient.get('/api/v1/admin/groups', { params });
     return res.data;
   },
-  
+
   getGroupById: async (groupId) => {
     const res = await axiosClient.get(`/api/v1/admin/groups/${groupId}`);
     return res.data;
@@ -70,54 +98,65 @@ export const adminApi = {
     const res = await axiosClient.get('/api/v1/admin/groups/statistics');
     return res.data;
   },
-  
+
+  updateGroupStatus: async (groupId, status) => {
+    const res = await axiosClient.put(`/api/v1/admin/groups/${groupId}/status`, { status });
+    return res.data;
+  },
+
   deleteGroup: async (groupId) => {
     const res = await axiosClient.delete(`/api/v1/admin/groups/${groupId}`);
     return res.data;
   },
-  
-  // TODO: Missing API to update group status (Lock/Unlock Group). 
-  // BE needs to provide this endpoint later.
-  updateGroupStatus: async (groupId, status) => {
-    console.warn("API updateGroupStatus is currently missing from Backend.");
-    return { code: 1000, message: 'Not implemented by BE yet' };
-  },
 
-  // ── Payments ──
-  getPayments: async ({ page = 0, size = 10, status = '' } = {}) => {
+  // ── 6. Payments, Plans, and Revenue ──
+  getPayments: async ({ page = 0, size = 20, status = '' } = {}) => {
     const params = { page, size };
-    if (status) params.status = status;
+    if (status && status !== 'ALL') params.status = status;
     const res = await axiosClient.get('/api/v1/admin/payments', { params });
     return res.data;
   },
-  
-  // TODO: Missing API to get subscription plans.
-  getPlans: async () => {
-    console.warn("API getPlans is currently missing from Backend.");
-    return { code: 1000, result: [] }; // Return empty or mock array to avoid breaking UI
-  },
-  
-  // TODO: Missing API to update a plan.
-  updatePlan: async (planId, data) => {
-    console.warn("API updatePlan is currently missing from Backend.");
-    return { code: 1000, message: 'Not implemented by BE yet' };
+
+  getRevenueStats: async ({ granularity = 'MONTH', from = '', to = '' } = {}) => {
+    const params = { granularity };
+    if (from) params.from = from;
+    if (to) params.to = to;
+    const res = await axiosClient.get('/api/v1/admin/payments/revenue', { params });
+    return res.data;
   },
 
-  // ── AI ──
+  getMonthlyRevenue: async ({ from = '', to = '' } = {}) => {
+    const params = {};
+    if (from) params.from = from;
+    if (to) params.to = to;
+    const res = await axiosClient.get('/api/v1/admin/payments/revenue/monthly', { params });
+    return res.data;
+  },
+
+  getPlans: async () => {
+    const res = await axiosClient.get('/api/v1/admin/plans');
+    return res.data;
+  },
+
+  updatePlan: async (planId, data) => {
+    const res = await axiosClient.put(`/api/v1/admin/plans/${planId}`, data);
+    return res.data;
+  },
+
+  // ── 7. AI Statistics ──
   getAIStats: async () => {
     const res = await axiosClient.get('/api/v1/admin/ai/statistics');
     return res.data;
   },
 
-  // ── Settings ──
+  // ── 8. System Settings ──
   getSettings: async () => {
     const res = await axiosClient.get('/api/v1/admin/settings');
     return res.data;
   },
-  
-  // TODO: Missing API to update system settings.
+
   updateSettings: async (settings) => {
-    console.warn("API updateSettings is currently missing from Backend.");
-    return { code: 1000, message: 'Not implemented by BE yet' };
+    const res = await axiosClient.put('/api/v1/admin/settings', settings);
+    return res.data;
   },
 };

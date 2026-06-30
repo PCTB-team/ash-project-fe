@@ -18,11 +18,13 @@
     "bootstrap-icons": "^1.13.1",
     "formik": "^2.4.9",
     "framer-motion": "^12.40.0",
+    "jwt-decode": "^4.0.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.17.0",
     "recharts": "^3.9.0",
+    "rehype-sanitize": "^6.0.0",
     "remark-gfm": "^4.0.1",
     "yup": "^1.7.1"
   },

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Button, message, Tooltip } from 'antd';
+import { Button, message, Tooltip, Form, Modal, Input } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
 import logoAvatarDefault from '../../../assets/logo_avatar_default.jpg';
 import { useOutletContext } from 'react-router-dom';
 import { useProfile } from '../hooks/useProfile.js';
+import { profileApi } from '../api/profile.api.js';
 
 export default function ProfileScreen() {
   const {
@@ -12,6 +13,7 @@ export default function ProfileScreen() {
     documentsCount,
     storagePercentage,
     totalStorageMB,
+    maxStorageMB,
     avatarUrl,
     setAvatarUrl: onAvatarChange,
     accentColor,
@@ -24,6 +26,10 @@ export default function ProfileScreen() {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [avatarFile, setAvatarFile] = useState(null);
   const [imgError, setImgError] = useState(false);
+
+  const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordForm] = Form.useForm();
 
   // Xử lý các loại định dạng đường dẫn ảnh trả về từ Backend
   const getDisplayAvatar = (url) => {
@@ -47,7 +53,7 @@ export default function ProfileScreen() {
       message.error("Họ và Tên không được để trống!");
       return;
     }
-    
+
     const formData = new FormData();
     formData.append('fullname', profileData.fullname || '');
     formData.append('school', profileData.school || '');
@@ -85,7 +91,7 @@ export default function ProfileScreen() {
       reader.readAsDataURL(file);
 
       message.loading({ content: 'Đang đồng bộ ảnh đại diện...', key: 'avatar-upload' });
-      
+
       const formData = new FormData();
       formData.append('fullname', profileData.fullname || '');
       formData.append('school', profileData.school || '');
@@ -100,6 +106,29 @@ export default function ProfileScreen() {
       } else {
         message.error({ content: result.message || 'Lỗi lưu ảnh', key: 'avatar-upload' });
       }
+    }
+  };
+
+  const handleChangePassword = async (values) => {
+    if (values.newPassword !== values.confirmPassword) {
+      message.error("Mật khẩu xác nhận không khớp!");
+      return;
+    }
+    setPasswordLoading(true);
+    try {
+      const res = await profileApi.changePassword(values.oldPassword, values.newPassword);
+      if (res.code === 0 || res.code === 1000 || res.status === 200) {
+        message.success("Đổi mật khẩu thành công!");
+        setIsPasswordModalVisible(false);
+        passwordForm.resetFields();
+      } else {
+        message.error(res.message || "Đổi mật khẩu thất bại!");
+      }
+    } catch (e) {
+      console.error(e);
+      message.error(e.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại sau!");
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
@@ -138,7 +167,7 @@ export default function ProfileScreen() {
                 <Tooltip title="Chuỗi ngày học tập liên tiếp">
                   <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 shadow-[0_0_15px_rgba(239,68,68,0.3)] cursor-pointer hover:scale-105 transition-transform">
                     <i className="bi bi-fire text-yellow-300 text-[18px] animate-pulse drop-shadow-sm" />
-                    <span className="text-white font-bold text-[16px] italic drop-shadow-sm">14</span>
+                    <span className="text-white font-bold text-[16px] italic drop-shadow-sm">{profileData.streak || 0}</span>
                   </div>
                 </Tooltip>
               </h1>
@@ -150,12 +179,14 @@ export default function ProfileScreen() {
           </div>
 
           {/* Quick Actions / Badges */}
-          <div className="flex gap-3">
-            <div className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 flex items-center gap-2">
-              <i className="bi bi-stars text-amber-500 text-[16px]" />
-              <span className="text-[13px] font-bold text-amber-700">Ultra Member</span>
+          {profileData.isPremium && (
+            <div className="flex gap-3">
+              <div className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 flex items-center gap-2">
+                <i className="bi bi-stars text-amber-500 text-[16px]" />
+                <span className="text-[13px] font-bold text-amber-700">Ultra Member</span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* ── Main Layout Grid ── */}
@@ -163,7 +194,7 @@ export default function ProfileScreen() {
 
           {/* ── Left Column: Overview & Security (1/2) ── */}
           <div className="lg:col-span-1 flex flex-col gap-6 lg:h-full lg:justify-between">
-            
+
             {/* About Card */}
             <div className="bg-white rounded-2xl border border-black/[0.06] shadow-sm p-5">
               <h3 className="text-[14px] font-semibold text-gray-900 mb-4">Giới thiệu</h3>
@@ -179,7 +210,7 @@ export default function ProfileScreen() {
                   <i className="bi bi-person-badge text-gray-400 text-[16px] mt-0.5" />
                   <div>
                     <span className="block text-gray-500 mb-0.5">Tên đăng nhập</span>
-                    <span className="font-medium text-gray-900">@{profileData.username || 'username'}</span>
+                    <span className="font-medium text-gray-900">{profileData.username || 'username'}</span>
                   </div>
                 </div>
               </div>
@@ -201,7 +232,7 @@ export default function ProfileScreen() {
                     <i className="bi bi-key text-gray-400 text-[16px]" />
                     <span className="font-medium text-gray-700">Mật khẩu</span>
                   </div>
-                  <button className="text-[13px] font-medium text-blue-600 hover:text-blue-700">Thay đổi</button>
+                  <button onClick={() => setIsPasswordModalVisible(true)} className="text-[13px] font-medium text-blue-600 hover:text-blue-700">Thay đổi</button>
                 </div>
                 <div className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-2.5 text-[13.5px]">
@@ -291,7 +322,7 @@ export default function ProfileScreen() {
                     <h3 className="text-[14px] font-semibold text-gray-900">Bộ nhớ đám mây</h3>
                     <i className="bi bi-cloud text-gray-400 text-[16px]" />
                   </div>
-                  <p className="text-[12px] text-gray-500 mb-6">Đã sử dụng {totalStorageMB < 1 ? `${(totalStorageMB * 1024).toFixed(1)} KB` : `${totalStorageMB.toFixed(1)} MB`} trong tổng số 500 MB</p>
+                  <p className="text-[12px] text-gray-500 mb-6">Đã sử dụng {totalStorageMB < 1 ? `${(totalStorageMB * 1024).toFixed(1)} KB` : `${totalStorageMB.toFixed(1)} MB`} trong tổng số {maxStorageMB} MB</p>
                 </div>
 
                 <div>
@@ -328,6 +359,57 @@ export default function ProfileScreen() {
           </div>
         </motion.div>
       </div>
+      {/* Change Password Modal */}
+      <Modal
+        title={null}
+        open={isPasswordModalVisible}
+        onCancel={() => { setIsPasswordModalVisible(false); passwordForm.resetFields(); }}
+        footer={null}
+        width={400}
+        destroyOnClose
+        centered
+        className="[&_.ant-modal-content]:!rounded-2xl [&_.ant-modal-content]:!p-6"
+      >
+        <div className="text-center mb-6">
+          <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-3">
+            <i className="bi bi-shield-lock-fill text-[20px]" />
+          </div>
+          <h3 className="text-[18px] font-bold text-gray-900 m-0">Đổi mật khẩu</h3>
+          <p className="text-[13px] text-gray-500 m-0 mt-1">Đảm bảo tài khoản của bạn luôn an toàn</p>
+        </div>
+
+        <Form form={passwordForm} layout="vertical" onFinish={handleChangePassword}>
+          <Form.Item name="oldPassword" rules={[{ required: true, message: 'Vui lòng nhập mật khẩu cũ!' }]}>
+            <Input.Password
+              placeholder="Mật khẩu hiện tại"
+              size="large"
+              className="!rounded-xl hover:!border-blue-300 focus:!border-blue-500"
+              prefix={<i className="bi bi-lock text-gray-400 mr-1" />}
+            />
+          </Form.Item>
+          <Form.Item name="newPassword" rules={[{ required: true, message: 'Vui lòng nhập mật khẩu mới!' }, { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự!' }]}>
+            <Input.Password
+              placeholder="Mật khẩu mới"
+              size="large"
+              className="!rounded-xl hover:!border-blue-300 focus:!border-blue-500"
+              prefix={<i className="bi bi-key-fill text-gray-400 mr-1" />}
+            />
+          </Form.Item>
+          <Form.Item name="confirmPassword" rules={[{ required: true, message: 'Vui lòng xác nhận mật khẩu!' }]}>
+            <Input.Password
+              placeholder="Xác nhận mật khẩu mới"
+              size="large"
+              className="!rounded-xl hover:!border-blue-300 focus:!border-blue-500"
+              prefix={<i className="bi bi-check-circle-fill text-gray-400 mr-1" />}
+            />
+          </Form.Item>
+          <div className="flex gap-3 mt-6">
+            <Button className="flex-1 !h-10 !rounded-xl font-medium" onClick={() => setIsPasswordModalVisible(false)}>Hủy</Button>
+            <Button type="primary" htmlType="submit" loading={passwordLoading} className="flex-1 !h-10 !rounded-xl font-medium !bg-blue-600 hover:!bg-blue-700 !border-none">Cập nhật</Button>
+          </div>
+        </Form>
+      </Modal>
+
     </div>
   );
 }

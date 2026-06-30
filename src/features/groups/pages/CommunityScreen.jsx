@@ -21,8 +21,8 @@ export default function CommunityScreen() {
   const pageSize = 6;
 
   // Refetch when page or searchTerm changes
-  useEffect(() => { 
-    fetchMyGroups(currentPage - 1, pageSize, searchTerm); 
+  useEffect(() => {
+    fetchMyGroups(currentPage - 1, pageSize, searchTerm);
   }, [fetchMyGroups, currentPage, searchTerm]);
 
   // Reset pagination to page 1 when global search changes

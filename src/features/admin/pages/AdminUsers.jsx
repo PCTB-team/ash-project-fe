@@ -2,7 +2,7 @@
  * AdminUsers — Premium User Management with glassmorphism stats and enhanced table.
  */
 import { useEffect, useState, useCallback } from 'react';
-import { Card, Table, Tag, Avatar, Input, Select, Button, Modal, Progress, Dropdown, message, Spin } from 'antd';
+import { Card, Table, Tag, Avatar, Input, Select, Button, Modal, Progress, Dropdown, message, Spin, Form } from 'antd';
 import { motion } from 'framer-motion';
 import { adminApi } from '../api/admin.api.js';
 
@@ -44,6 +44,12 @@ export default function AdminUsers() {
   const [statusFilter, setStatusFilter] = useState('');
   const [detailUser, setDetailUser] = useState(null);
   const [detailVisible, setDetailVisible] = useState(false);
+  const [storagePlanVisible, setStoragePlanVisible] = useState(false);
+  const [storagePlanUser, setStoragePlanUser] = useState(null);
+  const [storagePlanLoading, setStoragePlanLoading] = useState(false);
+  const [plans, setPlans] = useState([]);
+  const [globalStats, setGlobalStats] = useState({ total: 0, active: 0, locked: 0, admin: 0 });
+  const [storagePlanForm] = Form.useForm();
 
   const fetchUsers = useCallback(async (page = 0) => {
     setLoading(true);
@@ -56,10 +62,52 @@ export default function AdminUsers() {
 
   useEffect(() => { fetchUsers(0); }, [fetchUsers]);
 
+  useEffect(() => {
+    adminApi.getPlans()
+      .then(r => setPlans(r.result || []))
+      .catch(() => setPlans([]));
+      
+    // Fetch global stats
+    Promise.all([
+      adminApi.getDashboardStats().catch(() => ({ result: {} })),
+      adminApi.getUsers({ role: 'ADMIN', size: 1 }).catch(() => ({ result: { totalElements: 0 } }))
+    ]).then(([dashRes, adminRes]) => {
+      const d = dashRes.result || {};
+      setGlobalStats({
+        total: d.totalUsers || 0,
+        active: d.activeUsers || 0,
+        locked: d.pendingReports || 0,
+        admin: adminRes.result?.totalElements || 0
+      });
+    });
+  }, []);
+
+  // Map accountNonLocked -> display status
+  const getUserStatus = (u) => u.accountNonLocked === false ? 'BANNED' : 'ACTIVE';
+
   const handleStatusChange = async (userId, newStatus) => {
     await adminApi.updateUserStatus(userId, newStatus);
     message.success(`Đã ${newStatus === 'BANNED' ? 'khóa' : 'mở khóa'} tài khoản`);
-    fetchUsers(pagination.current - 1);
+    const locked = newStatus === 'BANNED';
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, accountNonLocked: !locked } : u));
+    if (detailUser && detailUser.id === userId) {
+      setDetailUser(prev => ({ ...prev, accountNonLocked: !locked }));
+    }
+  };
+
+  const handleSetStoragePlan = async (values) => {
+    setStoragePlanLoading(true);
+    try {
+      await adminApi.setUserStoragePlan(storagePlanUser.id, values.planId, values.reason || '');
+      message.success(`Đã cấp gói lưu trữ cho ${storagePlanUser.fullname || storagePlanUser.username}`);
+      setStoragePlanVisible(false);
+      storagePlanForm.resetFields();
+      fetchUsers(pagination.current - 1);
+    } catch (e) {
+      message.error(e.response?.data?.message || 'Không thể cấp gói lưu trữ');
+    } finally {
+      setStoragePlanLoading(false);
+    }
   };
 
   const handleRoleChange = async (userId, newRole) => {
@@ -85,7 +133,7 @@ export default function AdminUsers() {
             background: r.roles?.some(role => role.name === 'ADMIN') ? 'linear-gradient(135deg, #ff5c00, #ffaa00)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)', 
             fontSize: 14, fontWeight: 700, border: '2px solid rgba(255,255,255,0.8)' 
           }}>{r.fullname?.charAt(0)}</Avatar>
-          {r.status === 'ACTIVE' && <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-white" />}
+          {getUserStatus(r) === 'ACTIVE' && <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-white" />}
         </div>
         <div>
           <p className="text-[13px] font-semibold text-[#1d1d1f] m-0 leading-tight">{r.fullname}</p>
@@ -104,9 +152,10 @@ export default function AdminUsers() {
         </div>
       );
     }, width: 110 },
-    { title: 'Trạng thái', dataIndex: 'status', render: (s) => {
-      const cfg = { ACTIVE: { color: '#10b981', bg: '#10b98112', text: 'Hoạt động', icon: 'bi-check-circle-fill' }, BANNED: { color: '#f43f5e', bg: '#f43f5e12', text: 'Bị khóa', icon: 'bi-x-circle-fill' }, INACTIVE: { color: '#94a3b8', bg: '#94a3b812', text: 'Không hoạt động', icon: 'bi-dash-circle' } };
-      const c = cfg[s] || cfg.INACTIVE;
+    { title: 'Trạng thái', key: 'status', render: (_, r) => {
+      const s = getUserStatus(r);
+      const cfg = { ACTIVE: { color: '#10b981', bg: '#10b98112', text: 'Hoạt động', icon: 'bi-check-circle-fill' }, BANNED: { color: '#f43f5e', bg: '#f43f5e12', text: 'Bị khóa', icon: 'bi-x-circle-fill' } };
+      const c = cfg[s] || cfg.ACTIVE;
       return (
         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold" style={{ color: c.color, background: c.bg }}>
           <i className={`bi ${c.icon} text-[9px]`} />
@@ -116,13 +165,13 @@ export default function AdminUsers() {
     }, width: 140 },
     { title: 'Storage', key: 'storage', render: (_, r) => {
       const used = r.storageUsed || 0;
-      const max = r.storageMax || 1;
-      const pct = Math.round((used / max) * 100);
+      const max = r.storageMax || 536870912; // fallback 500MB if backend returns 0
+      const pct = Math.min(100, Math.max(0, Math.round((used / max) * 100)));
       return (
         <div className="min-w-[120px]">
-          <Progress percent={pct} size="small" 
+          <Progress percent={pct} size="small" showInfo={false}
             strokeColor={pct > 80 ? { from: '#f43f5e', to: '#e11d48' } : { from: '#ff5c00', to: '#ffaa00' }} 
-            railColor="rgba(0,0,0,0.04)" className="!mb-0" />
+            trailColor="rgba(0,0,0,0.04)" className="!mb-0" />
           <p className="text-[10px] text-black/35 mt-0.5 font-medium">{formatBytes(used)} / {formatBytes(max)}</p>
         </div>
       );
@@ -131,9 +180,20 @@ export default function AdminUsers() {
     { title: 'Ngày tạo', dataIndex: 'createdAt', render: (t) => <span className="text-[12px] text-black/40 font-medium">{t ? new Date(t).toLocaleDateString('vi-VN') : 'N/A'}</span>, width: 110 },
     { title: '', key: 'actions', render: (_, r) => (
       <Dropdown menu={{ items: [
-        { key: 'view', label: 'Xem chi tiết', icon: <i className="bi bi-eye text-[12px]" />, onClick: () => { setDetailUser(r); setDetailVisible(true); } },
+        { key: 'view', label: 'Xem chi tiết', icon: <i className="bi bi-eye text-[12px]" />, onClick: async () => { 
+          // Fetch real detail from API to get storage and createdAt precisely
+          try {
+            const detailRes = await adminApi.getUserById(r.id);
+            if (detailRes?.result) setDetailUser(detailRes.result);
+            else setDetailUser(r); // fallback
+          } catch(e) {
+            setDetailUser(r);
+          }
+          setDetailVisible(true); 
+        } },
         { key: 'role', label: r.roles?.some(role => role.name === 'ADMIN') ? 'Đổi thành User' : 'Đổi thành Admin', icon: <i className="bi bi-shield text-[12px]" />, onClick: () => handleRoleChange(r.id, r.roles?.some(role => role.name === 'ADMIN') ? 'USER' : 'ADMIN') },
-        { key: 'status', label: r.status === 'BANNED' ? 'Mở khóa' : 'Khóa tài khoản', icon: <i className={`bi ${r.status === 'BANNED' ? 'bi-unlock' : 'bi-lock'} text-[12px]`} />, onClick: () => handleStatusChange(r.id, r.status === 'BANNED' ? 'ACTIVE' : 'BANNED') },
+        { key: 'status', label: getUserStatus(r) === 'BANNED' ? 'Mở khóa' : 'Khóa tài khoản', icon: <i className={`bi ${getUserStatus(r) === 'BANNED' ? 'bi-unlock' : 'bi-lock'} text-[12px]`} />, onClick: () => handleStatusChange(r.id, getUserStatus(r) === 'BANNED' ? 'ACTIVE' : 'BANNED') },
+        { key: 'storage', label: 'Cấp gói lưu trữ', icon: <i className="bi bi-hdd text-[12px]" />, onClick: () => { setStoragePlanUser(r); setStoragePlanVisible(true); } },
         { type: 'divider' },
         { key: 'delete', label: 'Xóa tài khoản', icon: <i className="bi bi-trash text-[12px]" />, danger: true, onClick: () => handleDelete(r.id, r.fullname) },
       ]}} trigger={['click']}>
@@ -146,10 +206,10 @@ export default function AdminUsers() {
     <div className="space-y-5">
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <GlassMiniCard icon="bi-people-fill" label="Tổng người dùng" value={pagination.total} color="#6366f1" delay={0} />
-        <GlassMiniCard icon="bi-person-check-fill" label="Đang hoạt động" value={users.filter(u => u.status === 'ACTIVE').length} color="#10b981" delay={0.05} />
-        <GlassMiniCard icon="bi-person-x-fill" label="Bị khóa" value={users.filter(u => u.status === 'BANNED').length} color="#f43f5e" delay={0.1} />
-        <GlassMiniCard icon="bi-shield-fill" label="Admin" value={users.filter(u => u.roles?.some(role => role.name === 'ADMIN')).length} color="#ff5c00" delay={0.15} />
+        <GlassMiniCard icon="bi-people-fill" label="Tổng người dùng" value={globalStats.total || pagination.total} color="#6366f1" delay={0} />
+        <GlassMiniCard icon="bi-person-check-fill" label="Đang hoạt động" value={globalStats.active || 0} color="#10b981" delay={0.05} />
+        <GlassMiniCard icon="bi-person-x-fill" label="Bị khóa" value={globalStats.locked || 0} color="#f43f5e" delay={0.1} />
+        <GlassMiniCard icon="bi-shield-fill" label="Admin" value={globalStats.admin || 0} color="#ff5c00" delay={0.15} />
       </div>
 
       {/* Filters */}
@@ -159,7 +219,7 @@ export default function AdminUsers() {
           <Input.Search placeholder="Tìm theo tên hoặc email..." allowClear className="!w-[280px] [&_input]:!rounded-xl [&_.ant-input-group-addon]:!rounded-xl"
             onSearch={v => { setKeyword(v); }} onChange={e => !e.target.value && setKeyword('')} />
           <Select placeholder="Vai trò" allowClear className="!w-[130px]" options={[{ value: 'ADMIN', label: 'Admin' }, { value: 'USER', label: 'User' }]} onChange={v => setRoleFilter(v || '')} />
-          <Select placeholder="Trạng thái" allowClear className="!w-[160px]" options={[{ value: 'ACTIVE', label: 'Hoạt động' }, { value: 'BANNED', label: 'Bị khóa' }, { value: 'INACTIVE', label: 'Không hoạt động' }]} onChange={v => setStatusFilter(v || '')} />
+          <Select placeholder="Trạng thái" allowClear className="!w-[160px]" options={[{ value: 'ACTIVE', label: 'Hoạt động' }, { value: 'BANNED', label: 'Bị khóa' }]} onChange={v => setStatusFilter(v || '')} />
           <div className="ml-auto flex items-center gap-2 text-[12px] text-black/35 font-semibold">
             <div className="w-2 h-2 rounded-full bg-[#6366f1]" />
             {pagination.total} người dùng
@@ -182,41 +242,98 @@ export default function AdminUsers() {
 
       {/* Detail Modal — Glassmorphism */}
       <Modal open={detailVisible} onCancel={() => setDetailVisible(false)} footer={null} title={null} width={480} 
-        className="[&_.ant-modal-content]:!rounded-2xl [&_.ant-modal-content]:!overflow-hidden">
-        {detailUser && (
+        destroyOnClose centered
+        className="[&_.ant-modal-content]:!rounded-2xl [&_.ant-modal-content]:!p-0 [&_.ant-modal-content]:!overflow-hidden">
+        {detailUser && (() => {
+          const used = detailUser.storageUsed || 0;
+          const max = detailUser.storageMax || 536870912; // fallback 500MB
+          const percent = Math.min(100, Math.max(0, Math.round((used / max) * 100)));
+          const isWarning = percent > 85;
+          
+          return (
           <div className="relative">
-            {/* Header gradient */}
-            <div className="absolute top-0 left-0 right-0 h-24 -mx-6 -mt-5"
-              style={{ background: 'linear-gradient(135deg, #141428, #1a1a35, #251a35)' }}>
-              <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-20"
-                  style={{ background: 'radial-gradient(circle, #ff5c00, transparent 70%)' }} />
-              </div>
-            </div>
-            
-            <div className="relative z-10 text-center pt-8">
-              <Avatar size={72} style={{ 
-                background: detailUser.roles?.some(role => role.name === 'ADMIN') ? 'linear-gradient(135deg, #ff5c00, #ffaa00)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)', 
-                fontSize: 28, fontWeight: 700, border: '4px solid white',
-                boxShadow: '0 4px 16px rgba(0,0,0,0.15)' 
-              }}>{detailUser.fullname?.charAt(0)}</Avatar>
-              <h3 className="text-[18px] font-bold mt-3 mb-0">{detailUser.fullname}</h3>
-              <p className="text-[13px] text-black/40 mb-4">{detailUser.email}</p>
-              <div className="grid grid-cols-2 gap-3 text-left bg-black/[0.02] rounded-2xl p-5 border border-black/[0.04]">
-                {[['Username', detailUser.username], ['Vai trò', detailUser.roles?.map(r => r.name).join(', ')], ['Trạng thái', detailUser.status], ['Tài liệu', detailUser.documentsCount || 0],
-                  ['Nhóm', detailUser.groupsCount || 0], ['Đăng nhập cuối', detailUser.lastLogin ? new Date(detailUser.lastLogin).toLocaleString('vi-VN') : 'N/A'],
-                ].map(([label, val]) => (
-                  <div key={label}><p className="text-[10px] text-black/35 font-semibold mb-0.5 uppercase tracking-wider">{label}</p><p className="text-[13px] font-bold m-0">{val}</p></div>
-                ))}
-              </div>
-              <div className="mt-4 px-2">
-                <p className="text-[10px] text-black/35 font-semibold mb-1 text-left uppercase tracking-wider">Dung lượng sử dụng</p>
-                <Progress percent={Math.round(((detailUser.storageUsed || 0) / (detailUser.storageMax || 1)) * 100)} strokeColor={{ from: '#ff5c00', to: '#ffaa00' }} />
-                <p className="text-[11px] text-black/35 text-right font-medium">{formatBytes(detailUser.storageUsed)} / {formatBytes(detailUser.storageMax)}</p>
+            <div className="h-32 bg-gradient-to-r from-[#6366f1] to-[#8b5cf6]" />
+            <div className="px-6 pb-6 relative">
+              <Avatar size={80} className="absolute -top-10 border-4 border-white shadow-md bg-white text-[#6366f1] font-bold text-[32px] flex items-center justify-center">
+                {detailUser.fullname?.charAt(0)}
+              </Avatar>
+              <div className="pt-12">
+                <h3 className="text-[18px] font-bold mt-3 mb-0">{detailUser.fullname}</h3>
+                <p className="text-[13px] text-black/40 mb-4">{detailUser.email}</p>
+                
+                {/* Storage Progress */}
+                <div className="mb-5 bg-black/[0.02] p-4 rounded-xl border border-black/[0.04]">
+                  <div className="flex justify-between items-end mb-2">
+                    <span className="text-[12px] font-bold text-[#1d1d1f] flex items-center gap-1.5">
+                      <i className="bi bi-cloud-check text-[#6366f1]" /> Bộ nhớ đám mây
+                    </span>
+                    <span className="text-[11px] font-medium text-black/40">
+                      <span className={isWarning ? 'text-red-500 font-bold' : 'text-[#6366f1] font-bold'}>{formatBytes(used)}</span> / {formatBytes(max)}
+                    </span>
+                  </div>
+                  <Progress percent={percent} strokeColor={isWarning ? '#f43f5e' : 'linear-gradient(to right, #6366f1, #8b5cf6)'} trailColor="rgba(0,0,0,0.04)" size="small" showInfo={false} />
+                  <p className="text-[10px] text-black/35 font-medium m-0 mt-1.5 text-right">Đã dùng {percent}%</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-left bg-black/[0.02] rounded-xl p-5 border border-black/[0.04]">
+                  {[['Username', detailUser.username], ['Vai trò', detailUser.roles?.map(r => r.name).join(', ')], 
+                    ['Trạng thái', getUserStatus(detailUser) === 'BANNED' ? 'Bị khóa' : 'Hoạt động'], 
+                    ['Tài liệu', detailUser.documentsCount || 0],
+                    ['Xác minh', detailUser.verified ? 'Đã xác minh' : 'Chưa xác minh'],
+                    ['Ngày tạo', detailUser.createdAt ? new Date(detailUser.createdAt).toLocaleDateString('vi-VN') : 'N/A']
+                  ].map(([label, val]) => (
+                    <div key={label}><p className="text-[10px] text-black/35 font-semibold mb-0.5 uppercase tracking-wider">{label}</p><p className="text-[13px] font-bold m-0">{val}</p></div>
+                  ))}
+                </div>
+                <div className="mt-5 flex justify-end">
+                  <Button type="primary" onClick={() => setDetailVisible(false)} className="!rounded-xl !bg-[#6366f1] hover:!bg-[#4f46e5] !border-none px-6">Đóng</Button>
+                </div>
               </div>
             </div>
           </div>
-        )}
+        )})()}
+      </Modal>
+
+      {/* Storage Plan Modal */}
+      <Modal
+        title={null}
+        open={storagePlanVisible}
+        onCancel={() => { setStoragePlanVisible(false); storagePlanForm.resetFields(); }}
+        footer={null}
+        width={440}
+        destroyOnClose
+        centered
+        className="[&_.ant-modal-content]:!rounded-2xl [&_.ant-modal-content]:!p-6"
+      >
+        <div className="text-center mb-5">
+          <div className="w-12 h-12 rounded-full bg-[#6366f1]/10 text-[#6366f1] flex items-center justify-center mx-auto mb-3">
+            <i className="bi bi-hdd-fill text-[20px]" />
+          </div>
+          <h3 className="text-[18px] font-bold text-gray-900 m-0">Cấp gói lưu trữ</h3>
+          <p className="text-[13px] text-gray-500 m-0 mt-1">Cấp thủ công cho <strong>{storagePlanUser?.fullname || storagePlanUser?.username}</strong></p>
+        </div>
+
+        <Form form={storagePlanForm} layout="vertical" onFinish={handleSetStoragePlan}>
+          <Form.Item name="planId" label={<span className="text-[12px] font-semibold">Chọn gói</span>} rules={[{ required: true, message: 'Vui lòng chọn gói!' }]}>
+            <Select placeholder="Chọn gói lưu trữ" size="large" className="!rounded-xl">
+              {plans.map(p => (
+                <Select.Option key={p.id} value={p.id}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold">{p.planName}</span>
+                    <span className="text-black/40 text-[12px]">{formatBytes(p.quotaSize)} • {p.price?.toLocaleString('vi-VN')}₫/{p.durationMonths}th</span>
+                  </div>
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item name="reason" label={<span className="text-[12px] font-semibold">Lý do (tùy chọn)</span>}>
+            <Input.TextArea rows={2} placeholder="VD: PayOS webhook bị lỡ. Admin đã xác nhận chuyển khoản." className="!rounded-xl" />
+          </Form.Item>
+          <div className="flex gap-3 mt-4">
+            <Button className="flex-1 !h-10 !rounded-xl font-medium" onClick={() => setStoragePlanVisible(false)}>Hủy</Button>
+            <Button type="primary" htmlType="submit" loading={storagePlanLoading} className="flex-1 !h-10 !rounded-xl font-medium !bg-[#6366f1] hover:!bg-[#4f46e5] !border-none">Xác nhận cấp</Button>
+          </div>
+        </Form>
       </Modal>
     </div>
   );

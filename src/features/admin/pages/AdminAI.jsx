@@ -40,7 +40,7 @@ export default function AdminAI() {
     const load = async () => {
       try {
         const res = await adminApi.getAIStats();
-        const apiStats = res.result || {};
+        const apiStats = res?.result || {};
         
         const knowledgePercent = apiStats.knowledgeChatRatio || 0;
         const mappedStats = {
@@ -63,6 +63,16 @@ export default function AdminAI() {
         
         setStats(mappedStats); 
         setUsageChart(mappedChart);
+      } catch (e) {
+        console.error('Failed to load AI stats:', e);
+        setStats({
+          totalMessages: 0,
+          totalConversations: 0,
+          knowledgeChatPercent: 0,
+          generalChatPercent: 0,
+          documentsSummarized: 0,
+          avgMessagesPerUser: 0,
+        });
       } finally { setLoading(false); }
     };
     load();

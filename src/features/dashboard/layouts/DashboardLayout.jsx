@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { message } from 'antd';
+import { message, Spin } from 'antd';
 import { LOGOUT_API_URL } from '../../auth/hooks/useAuth';
 import { axiosClient } from '../../../utils/apiClient.js';
 import MainLayout from './MainLayout.jsx';
@@ -13,6 +13,7 @@ export default function DashboardLayout() {
   const location = useLocation();
 
   // ── State ──
+  const [isInitializing, setIsInitializing] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [accentColor, setAccentColor] = useState('#ff5c00');
   const [documentsCount, setDocumentsCount] = useState(0);
@@ -44,13 +45,15 @@ export default function DashboardLayout() {
     }
   };
 
-  const refreshAll = () => {
+  const refreshAll = async () => {
+    setIsInitializing(true);
     setRefreshKey(prev => prev + 1);
-    fetchProfile();
-    fetchStorageUsage();
-    if (currentView === 'trash') {
-      fetchTrashDocuments();
-    }
+    await Promise.allSettled([
+      fetchProfile(),
+      fetchStorageUsage(),
+      (currentView === 'trash' || trashDocuments.length === 0) ? fetchTrashDocuments() : Promise.resolve()
+    ]);
+    setIsInitializing(false);
   };
 
   useEffect(() => {
@@ -88,6 +91,17 @@ export default function DashboardLayout() {
     }
   };
 
+  if (isInitializing) {
+    return (
+      <div className="flex items-center justify-center w-full h-screen bg-[#fafafb]">
+        <div className="flex flex-col items-center gap-4">
+          <Spin size="large" indicator={<i className="bi bi-fan text-[32px] text-[#ff5c00] animate-[spin_2s_linear_infinite]" />} />
+          <span className="text-[14px] font-semibold text-black/40 animate-pulse">Đang tải không gian làm việc...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <MainLayout
       currentView={currentView}
@@ -118,6 +132,7 @@ export default function DashboardLayout() {
         accentColor,
         setAccentColor,
         totalStorageMB,
+        maxStorageMB,
         storagePercentage
       }} />
     </MainLayout>

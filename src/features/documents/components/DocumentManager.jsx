@@ -38,6 +38,7 @@ export default function DocumentManager({
     paginatedDocs,
     totalPages,
     totalElements,
+    isLoading,
     fetchFolders,
     createFolder,
     fetchDocuments,
@@ -52,8 +53,14 @@ export default function DocumentManager({
   const currentFolder = folderPath.length > 0 ? folderPath[folderPath.length - 1] : null;
   const currentFolderId = currentFolder?.id || null;
 
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
   useEffect(() => {
-    fetchDocuments(activeTab, currentPage, PAGE_SIZE, debouncedSearchTerm, currentFolderId, sortExt, onUpdateDocumentsCount);
+    const loadData = async () => {
+      await fetchDocuments(activeTab, currentPage, PAGE_SIZE, debouncedSearchTerm, currentFolderId, sortExt, onUpdateDocumentsCount);
+      setIsInitialLoad(false);
+    };
+    loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, activeTab, sortExt, debouncedSearchTerm, currentFolderId, refreshTrigger, fetchDocuments]);
 
@@ -123,6 +130,15 @@ export default function DocumentManager({
     folder: { on: 'bg-orange-500 text-white shadow-md ', off: 'bg-orange-50/50 text-orange-500 hover:bg-orange-50' },
     other: { on: 'bg-gray-500 text-white shadow-md ', off: 'bg-gray-100/50 text-gray-500 hover:bg-gray-100' },
   };
+
+  if (isInitialLoad) {
+    return (
+      <div className="flex flex-col items-center justify-center w-full h-full py-20 text-center animate-fade-in px-4" style={{ minHeight: '420px' }}>
+        <i className="bi bi-fan text-3xl text-[#ff5c00] animate-[spin_2s_linear_infinite] mb-3" />
+        <span className="text-[13px] font-medium text-black/40 animate-pulse">Đang tải cấu trúc thư viện...</span>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -266,7 +282,12 @@ export default function DocumentManager({
 
       {/* ═══ DOCUMENT LIST ═══ */}
       <div ref={listRef} className="flex-1 overflow-y-auto relative z-10">
-        {processedDocs.length === 0 ? (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in px-4">
+            <i className="bi bi-fan text-3xl text-[#ff5c00] animate-[spin_2s_linear_infinite] mb-3" />
+            <span className="text-[13px] font-medium text-black/40 animate-pulse">Đang tải danh sách tài liệu...</span>
+          </div>
+        ) : processedDocs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in px-4">
             <div className="w-16 h-16 rounded-2xl bg-black/[0.02] flex items-center justify-center mb-4">
               <i className={`bi ${currentFolderId ? 'bi-folder2-open' : 'bi-inbox'} text-[28px] text-black/12`} />
