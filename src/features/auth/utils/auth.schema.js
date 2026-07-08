@@ -32,3 +32,19 @@ export const registerSchema = Yup.object().shape({
     .oneOf([Yup.ref('password'), null], 'Mật khẩu nhập lại không khớp!')
     .required('Vui lòng xác nhận mật khẩu!')
 });
+
+export const forgotPasswordEmailSchema = Yup.object().shape({
+  email: Yup.string()
+    .email('Định dạng email không hợp lệ (VD: user@gmail.com)!')
+    .required('Vui lòng nhập email hợp lệ!')
+});
+
+export const resetPasswordSchema = Yup.object().shape({
+  newPassword: Yup.string()
+    .min(6, 'Mật khẩu phải có ít nhất 6 ký tự!')
+    .required('Vui lòng nhập mật khẩu mới!'),
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref('newPassword'), null], 'Mật khẩu nhập lại không khớp!')
+    .required('Vui lòng xác nhận mật khẩu!')
+});
+

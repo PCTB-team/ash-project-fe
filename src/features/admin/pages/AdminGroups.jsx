@@ -153,38 +153,79 @@ export default function AdminGroups() {
         </Card>
       </motion.div>
 
-      {/* Detail Modal */}
-      <Modal open={detailVisible} onCancel={() => setDetailVisible(false)} footer={null} title={null} width={480} 
-        className="[&_.ant-modal-content]:!rounded-2xl [&_.ant-modal-content]:!overflow-hidden">
-        {detailGroup && (
-          <div className="relative">
-            <div className="absolute top-0 left-0 right-0 h-20 -mx-6 -mt-5"
-              style={{ background: 'linear-gradient(135deg, #141428, #1a1a35, #2d1a45)' }}>
-              <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-20"
-                  style={{ background: 'radial-gradient(circle, #6366f1, transparent 70%)' }} />
-              </div>
+      {/* Detail Modal — Premium Redesign */}
+      <Modal open={detailVisible} onCancel={() => setDetailVisible(false)} footer={null} title={null} width={500}
+        destroyOnClose centered
+        className="[&_.ant-modal-content]:!rounded-2xl [&_.ant-modal-content]:!p-0 [&_.ant-modal-content]:!overflow-hidden">
+        {detailGroup && (() => {
+          const color = GROUP_COLORS[groups.indexOf(detailGroup) % GROUP_COLORS.length] || '#6366f1';
+          const isActive = detailGroup.status === 'ACTIVE';
+          return (
+          <div>
+            {/* Banner */}
+            <div className="relative h-24 overflow-hidden" style={{ background: `linear-gradient(135deg, ${color}, ${color}cc, #1a1a35)` }}>
+              <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-white/10" />
+              <div className="absolute bottom-3 left-8 w-12 h-12 rounded-lg bg-white/5 border border-white/10" style={{ transform: 'rotate(12deg)' }} />
             </div>
-            <div className="relative z-10 pt-6">
-              <div className="text-center mb-4">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#6366f1]/20 to-[#8b5cf6]/10 flex items-center justify-center mx-auto mb-3 border-4 border-white shadow-lg"
-                  style={{ boxShadow: '0 4px 16px rgba(99,102,241,0.2)' }}>
-                  <i className="bi bi-people-fill text-[24px] text-[#6366f1]" />
+            <div className="px-6 pb-6 relative">
+              {/* Group Icon */}
+              <div className="absolute -top-8 left-6">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg border-4 border-white" style={{ background: `linear-gradient(135deg, ${color}, ${color}bb)` }}>
+                  <i className="bi bi-people-fill text-[24px] text-white" />
                 </div>
-                <h3 className="text-[18px] font-bold m-0">{detailGroup.name}</h3>
-                <p className="text-[12px] text-black/35 mt-1">{detailGroup.description}</p>
               </div>
-              <div className="grid grid-cols-2 gap-3 bg-black/[0.02] rounded-2xl p-5 border border-black/[0.04]">
-                {[['Trưởng nhóm', detailGroup.leaderName || detailGroup.leader], ['Email trưởng nhóm', detailGroup.leaderEmail || 'N/A'], ['Thành viên', detailGroup.memberCount], ['Tài liệu', detailGroup.fileCount],
-                  ['Trạng thái', detailGroup.status],
-                  ['Ngày tạo', new Date(detailGroup.createdAt).toLocaleDateString('vi-VN')],
-                ].map(([label, val]) => (
-                  <div key={label}><p className="text-[10px] text-black/35 font-semibold mb-0.5 uppercase tracking-wider">{label}</p><p className="text-[13px] font-bold m-0">{val}</p></div>
-                ))}
+              <div className="pt-12">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <h3 className="text-[20px] font-extrabold text-[#1d1d1f] m-0">{detailGroup.name}</h3>
+                  <div className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'}`}>
+                    {isActive ? 'ACTIVE' : 'BANNED'}
+                  </div>
+                </div>
+                <p className="text-[13px] text-black/40 mb-5 font-medium">{detailGroup.description || 'Không có mô tả'}</p>
+
+                {/* Leader Highlight */}
+                <div className="flex items-center gap-3 p-3.5 rounded-xl mb-4 border border-black/[0.04]" style={{ background: 'rgba(0,0,0,0.015)' }}>
+                  <Avatar size={40} style={{ background: 'linear-gradient(135deg, #ff5c00, #ffaa00)', fontSize: 14, fontWeight: 700 }}>
+                    {(detailGroup.leaderName || detailGroup.leader)?.charAt(0)}
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="text-[13px] font-bold text-[#1d1d1f] m-0">{detailGroup.leaderName || detailGroup.leader}</p>
+                    <p className="text-[11px] text-black/35 m-0">{detailGroup.leaderEmail || 'N/A'}</p>
+                  </div>
+                  <div className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#ff5c00]/10 text-[#ff5c00]">Trưởng nhóm</div>
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-3 gap-2.5 mb-5">
+                  {[
+                    { icon: 'bi-people-fill', label: 'Thành viên', value: detailGroup.memberCount, color: '#6366f1', bg: '#6366f112' },
+                    { icon: 'bi-file-earmark-fill', label: 'Tài liệu', value: detailGroup.fileCount, color: '#ff5c00', bg: '#ff5c0012' },
+                    { icon: 'bi-calendar3', label: 'Ngày tạo', value: new Date(detailGroup.createdAt).toLocaleDateString('vi-VN'), color: '#10b981', bg: '#10b98112' },
+                  ].map(item => (
+                    <div key={item.label} className="p-3 rounded-xl border border-black/[0.04] text-center" style={{ background: 'rgba(0,0,0,0.012)' }}>
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-1.5" style={{ background: item.bg }}>
+                        <i className={`bi ${item.icon} text-[14px]`} style={{ color: item.color }} />
+                      </div>
+                      <p className="text-[9px] text-black/35 font-semibold uppercase tracking-wider m-0 mb-0.5">{item.label}</p>
+                      <p className="text-[15px] font-extrabold text-[#1d1d1f] m-0">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2.5">
+                  <Button onClick={() => handleToggleStatus(detailGroup.id, detailGroup.status)}
+                    className={`flex-1 !h-10 !rounded-xl !text-[12px] !font-bold !border-none ${isActive ? '!bg-rose-50 !text-rose-500 hover:!bg-rose-100' : '!bg-emerald-50 !text-emerald-600 hover:!bg-emerald-100'}`}>
+                    <i className={`bi ${isActive ? 'bi-lock' : 'bi-unlock'} mr-1.5`} /> {isActive ? 'Khóa nhóm' : 'Mở khóa'}
+                  </Button>
+                  <Button type="primary" onClick={() => setDetailVisible(false)} className="flex-1 !h-10 !rounded-xl !text-[12px] !font-bold !border-none" style={{ background: color }}>
+                    Đóng
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
-        )}
+        )})()}
       </Modal>
     </div>
   );

@@ -59,12 +59,13 @@ export default function AdminDocuments() {
   const [keyword, setKeyword] = useState('');
   const [fileTypeFilter, setFileTypeFilter] = useState('');
 
-  const fetchDocuments = useCallback(async (page = 0) => {
+  const fetchDocuments = useCallback(async (page = 0, size = pagination.pageSize) => {
     setLoading(true);
     try {
-      const res = await adminApi.getDocuments({ page, size: pagination.pageSize, keyword, fileType: fileTypeFilter });
+      const trimmedKeyword = keyword ? keyword.trim() : '';
+      const res = await adminApi.getDocuments({ page, size, keyword: trimmedKeyword, fileType: fileTypeFilter });
       setDocuments(res.result?.content || []);
-      setPagination(p => ({ ...p, current: page + 1, total: res.result?.totalElements || 0 }));
+      setPagination(p => ({ ...p, current: page + 1, total: res.result?.totalElements || 0, pageSize: size }));
     } catch (e) {
       console.error('Failed to fetch documents:', e);
       setDocuments([]);
@@ -173,7 +174,7 @@ export default function AdminDocuments() {
           </div>
           <Table dataSource={documents} columns={columns} rowKey="id" loading={loading} size="middle"
             pagination={{ ...pagination, showSizeChanger: true, pageSizeOptions: ['10', '20', '50'],
-              onChange: (p, ps) => { setPagination(prev => ({ ...prev, pageSize: ps })); fetchDocuments(p - 1); },
+              onChange: (p, ps) => { fetchDocuments(p - 1, ps); },
             }}
             className="[&_.ant-table-thead_th]:!bg-[#fafafa] [&_.ant-table-thead_th]:!text-[11px] [&_.ant-table-thead_th]:!font-bold [&_.ant-table-thead_th]:!text-black/35 [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-row]:hover:!bg-[#fafafe]"
           />

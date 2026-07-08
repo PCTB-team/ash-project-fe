@@ -57,7 +57,7 @@ export default function JoinGroupModal({ open, onCancel, onJoinSuccess }) {
       styles={{ body: { padding: 0 } }}
       closeIcon={<i className="bi bi-x-circle-fill text-[20px] text-white/50 hover:text-white transition-colors" />}
       className="!p-0 overflow-hidden">
-      
+
       {/* Header */}
       <div className="bg-gradient-to-br from-[#ff8a00] to-[#ff5c00] px-6 py-5 flex items-center gap-4 relative overflow-hidden rounded-t-2xl">
         <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/15 rounded-full blur-3xl pointer-events-none" />

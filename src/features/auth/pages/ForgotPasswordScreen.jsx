@@ -1,27 +1,36 @@
 import { useState } from 'react';
-import { Form, message } from 'antd';
+import { message } from 'antd';
+import { useFormik } from 'formik';
+import { forgotPasswordEmailSchema, resetPasswordSchema } from '../utils/auth.schema';
 import { AnimatePresence, motion } from 'framer-motion';
 import AuthLayout from '../components/AuthLayout';
 import AuthCard from '../components/AuthCard';
 import ForgotPasswordEmail from '../components/ForgotPasswordEmail';
 import OtpVerification from '../components/OtpVerification';
 import ResetPasswordForm from '../components/ResetPasswordForm';
-
-
-// ============================================================================
-// 🔗 API PLACEHOLDER (FORGOT PASSWORD)
-// Khi backend deploy, hãy điền link API thực tế vào biến dưới đây để gửi/xác thực OTP.
-// ============================================================================
-const FORGOT_PASSWORD_API_URL = "https://ash-project-be.onrender.com/api/v1/auth/forgot-password/send-otp";
-
-const FORGOT_PASSWORD_VERIFY_OTP_API_URL = "https://ash-project-be.onrender.com/api/v1/auth/forgot-password/verify-otp";
-const FORGOT_PASSWORD_RESET_API_URL = "https://ash-project-be.onrender.com/api/v1/auth/forgot-password/reset";
-
+import { axiosClient } from '../../../utils/apiClient';
 import { useNavigate } from 'react-router-dom';
+ 
+// ============================================================================
+// 🔗 FORGOT PASSWORD API ENDPOINTS (relative paths, đi qua axiosClient)
+// ============================================================================
+const FORGOT_PASSWORD_SEND_OTP = '/api/v1/auth/forgot-password/send-otp';
+const FORGOT_PASSWORD_VERIFY_OTP = '/api/v1/auth/forgot-password/verify-otp';
+const FORGOT_PASSWORD_RESET = '/api/v1/auth/forgot-password/reset';
 
 export default function ForgotPasswordScreen() {
   const navigate = useNavigate();
-  const [form] = Form.useForm();
+  const emailFormik = useFormik({
+    initialValues: { email: '' },
+    validationSchema: forgotPasswordEmailSchema,
+    onSubmit: (values) => handleSendOtp(values)
+  });
+
+  const resetFormik = useFormik({
+    initialValues: { newPassword: '', confirmPassword: '' },
+    validationSchema: resetPasswordSchema,
+    onSubmit: (values) => handleResetPassword(values)
+  });
   const [step, setStep] = useState('email'); // 'email' | 'otp' | 'reset' | 'success'
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -37,23 +46,12 @@ export default function ForgotPasswordScreen() {
     setErrorMsg('');
     setIsLoading(true);
     try {
-      const response = await fetch(FORGOT_PASSWORD_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: values.email || email }) // Hỗ trợ cả form submit và resend
+      const response = await axiosClient.post(FORGOT_PASSWORD_SEND_OTP, {
+        email: values.email || email
       });
 
-      let data = {};
-      const text = await response.text();
-      if (text) {
-        try {
-          data = JSON.parse(text);
-        } catch {
-          console.warn("Response is not JSON:", text);
-        }
-      }
-
-      if (response.ok || data.code === 1000) {
+      const data = response.data;
+      if (data.code === 1000 || response.status === 200) {
         setEmail(values.email || email);
         message.success('Mã xác minh đã được gửi đến email của bạn!');
         setStep('otp');
@@ -62,7 +60,8 @@ export default function ForgotPasswordScreen() {
         throw new Error(data.message || 'Có lỗi xảy ra khi gửi OTP');
       }
     } catch (err) {
-      handleError(err.message);
+      const errMsg = err.response?.data?.message || err.message || 'Có lỗi xảy ra khi gửi OTP';
+      handleError(errMsg);
       return false;
     } finally {
       setIsLoading(false);
@@ -73,23 +72,10 @@ export default function ForgotPasswordScreen() {
     setErrorMsg('');
     setIsLoading(true);
     try {
-      const response = await fetch(FORGOT_PASSWORD_VERIFY_OTP_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp })
-      });
+      const response = await axiosClient.post(FORGOT_PASSWORD_VERIFY_OTP, { email, otp });
+      const data = response.data;
 
-      let data = {};
-      const text = await response.text();
-      if (text) {
-        try {
-          data = JSON.parse(text);
-        } catch {
-          console.warn("Response is not JSON:", text);
-        }
-      }
-
-      if (response.ok || data.code === 1000) {
+      if (data.code === 1000 || response.status === 200) {
         // Lấy token từ Backend hoặc dùng tạm mã OTP nếu API không trả về
         const token = data.result?.resetToken || data.resetToken || otp;
         setResetToken(token);
@@ -99,7 +85,8 @@ export default function ForgotPasswordScreen() {
         throw new Error(data.message || 'Mã xác minh không hợp lệ');
       }
     } catch (err) {
-      handleError(err.message);
+      const errMsg = err.response?.data?.message || err.message || 'Mã xác minh không hợp lệ';
+      handleError(errMsg);
     } finally {
       setIsLoading(false);
     }
@@ -114,33 +101,21 @@ export default function ForgotPasswordScreen() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(FORGOT_PASSWORD_RESET_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          resetToken: resetToken,
-          newPassword: values.newPassword,
-          confirmPassword: values.confirmPassword
-        })
+      const response = await axiosClient.post(FORGOT_PASSWORD_RESET, {
+        resetToken: resetToken,
+        newPassword: values.newPassword,
+        confirmPassword: values.confirmPassword
       });
+      const data = response.data;
 
-      let data = {};
-      const text = await response.text();
-      if (text) {
-        try {
-          data = JSON.parse(text);
-        } catch {
-          console.warn("Response is not JSON:", text);
-        }
-      }
-
-      if (response.ok || data.code === 1000) {
+      if (data.code === 1000 || response.status === 200) {
         setStep('success');
       } else {
         throw new Error(data.message || 'Có lỗi xảy ra khi cập nhật mật khẩu');
       }
     } catch (err) {
-      handleError(err.message);
+      const errMsg = err.response?.data?.message || err.message || 'Có lỗi xảy ra khi cập nhật mật khẩu';
+      handleError(errMsg);
     } finally {
       setIsLoading(false);
     }
@@ -165,9 +140,8 @@ export default function ForgotPasswordScreen() {
           {step === 'email' && (
             <motion.div key="email" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}>
               <ForgotPasswordEmail
-                form={form}
+                formik={emailFormik}
                 isLoading={isLoading}
-                onSubmit={handleSendOtp}
                 onBack={() => navigate('/login')}
               />
             </motion.div>
@@ -188,9 +162,8 @@ export default function ForgotPasswordScreen() {
           {step === 'reset' && (
             <motion.div key="reset" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}>
               <ResetPasswordForm
-                form={form}
+                formik={resetFormik}
                 isLoading={isLoading}
-                onSubmit={handleResetPassword}
               />
             </motion.div>
           )}

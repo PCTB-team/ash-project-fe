@@ -37,7 +37,7 @@ export default function GroupCard({ group, currentUser, onViewDetail, onRequestJ
             <h4 className="text-[15px] font-semibold text-[var(--color-on-surface)] truncate group-hover:text-[var(--color-primary)] transition-colors">
               {group.name}
             </h4>
-            
+
             {/* Badges */}
             <div className="flex items-center gap-1.5 shrink-0">
               <Tooltip title="Nhóm riêng tư">
@@ -59,7 +59,7 @@ export default function GroupCard({ group, currentUser, onViewDetail, onRequestJ
               )}
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3 text-[12px] text-black/50 font-medium">
             <span className="truncate max-w-[200px] sm:max-w-xs">{group.description || 'Không có mô tả'}</span>
             <span className="w-1 h-1 rounded-full bg-black/10 shrink-0" />
@@ -77,8 +77,8 @@ export default function GroupCard({ group, currentUser, onViewDetail, onRequestJ
       <div className="flex items-center gap-2 shrink-0 sm:ml-4 ml-16">
         {(isOwner || isMember) && (
           <Tooltip title="Copy Link mời">
-            <Button 
-              type="text" 
+            <Button
+              type="text"
               onClick={copyInviteLink}
               className="w-9 h-9 rounded-xl flex items-center justify-center text-black/40 hover:text-[var(--color-primary)] hover:bg-[var(--color-primary)]/5"
             >
@@ -86,7 +86,7 @@ export default function GroupCard({ group, currentUser, onViewDetail, onRequestJ
             </Button>
           </Tooltip>
         )}
-        
+
         {(() => {
           if (isOwner || isMember) {
             return (
