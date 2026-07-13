@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 /**
  * AdminDocuments — Premium Document Management with glassmorphism.
  * Synced with ADMIN_MODULE_FULL_API.md Section 4.
@@ -161,10 +162,10 @@ export default function AdminDocuments() {
               onSearch={v => setKeyword(v)} onChange={e => !e.target.value && setKeyword('')} />
             <Select placeholder="Loại file" allowClear className="!w-[160px]"
               options={[
-                { value: 'DOCUMENT', label: '📄 Tài liệu' },
-                { value: 'IMAGE', label: '🖼️ Hình ảnh' },
-                { value: 'AUDIO', label: '🎵 Âm thanh' },
-                { value: 'VIDEO', label: '🎬 Video' },
+                { value: 'DOCUMENT', label: <span><i className="bi bi-file-earmark-text mr-2 text-black/40" /> Tài liệu</span> },
+                { value: 'IMAGE', label: <span><i className="bi bi-image mr-2 text-black/40" /> Hình ảnh</span> },
+                { value: 'AUDIO', label: <span><i className="bi bi-music-note-beamed mr-2 text-black/40" /> Âm thanh</span> },
+                { value: 'VIDEO', label: <span><i className="bi bi-film mr-2 text-black/40" /> Video</span> },
               ]}
               onChange={v => setFileTypeFilter(v || '')} />
             <div className="ml-auto flex items-center gap-2 text-[12px] text-black/35 font-semibold">

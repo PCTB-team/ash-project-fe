@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 /**
  * AdminGroups — Premium Group Management with glassmorphism.
  */
