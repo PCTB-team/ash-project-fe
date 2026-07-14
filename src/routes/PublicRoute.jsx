@@ -1,10 +1,16 @@
 import { Navigate, Outlet } from 'react-router-dom';
+import { useAuthContext } from '../contexts/AuthContext';
+import { checkIsAdmin } from './AdminRoute';
 
 export default function PublicRoute() {
-  const token = localStorage.getItem('accessToken');
+  const { isAuthenticated, isAdmin, accessToken } = useAuthContext();
 
-  // Nếu đã đăng nhập thì không cho vào các trang public (Login, Register), đẩy thẳng vào Dashboard
-  if (token) {
+  // Nếu đã đăng nhập thì không cho vào các trang public (Login, Register)
+  if (isAuthenticated) {
+    // Nếu là admin, đẩy vào trang admin, ngược lại đẩy vào dashboard
+    if (isAdmin || checkIsAdmin(accessToken)) {
+      return <Navigate to="/admin" replace />;
+    }
     return <Navigate to="/dashboard" replace />;
   }
 

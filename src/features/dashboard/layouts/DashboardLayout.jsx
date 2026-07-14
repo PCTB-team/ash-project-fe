@@ -7,6 +7,9 @@ import MainLayout from './MainLayout.jsx';
 import { profileApi } from '../../profile/api/profile.api.js';
 import { useProfile } from '../../profile/hooks/useProfile.js';
 import { useTrash } from '../../trash/hooks/useTrash.js';
+import { useAuthContext } from '../../../contexts/AuthContext.jsx';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchUserProfile, fetchStorageUsage } from '../../../redux/slices/userSlice.js';
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
@@ -18,10 +21,12 @@ export default function DashboardLayout() {
   const [accentColor, setAccentColor] = useState('#ff5c00');
   const [documentsCount, setDocumentsCount] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [usedStorageBytes, setUsedStorageBytes] = useState(0);
-  const [maxStorageBytes, setMaxStorageBytes] = useState(500 * 1024 * 1024);
   
-  const { profileData, fullName, avatarUrl, fetchProfile, setAvatarUrl } = useProfile();
+  const { logout } = useAuthContext();
+  const dispatch = useDispatch();
+  
+  const { profileData, fullName, avatarUrl, usedStorageBytes, maxStorageBytes } = useSelector((state) => state.user);
+
   const { trashDocuments, fetchTrashDocuments } = useTrash();
 
   // Determine currentView based on pathname to highlight Sidebar correctly
@@ -32,25 +37,16 @@ export default function DashboardLayout() {
   else if (path.includes('/dashboard/group')) currentView = 'community';
   else if (path.includes('/dashboard/ai')) currentView = 'ai';
 
-  const fetchStorageUsage = async () => {
-    try {
-      const data = await profileApi.getStorageUsage();
-      if (data && data.result) {
-        console.log("STORAGE API RESPONSE:", data.result);
-        setUsedStorageBytes(data.result.usedStorage || 0);
-        setMaxStorageBytes(data.result.maxStorage || data.result.quotaSize || data.result.maxStorageSize || data.result.totalCapacity || 500 * 1024 * 1024);
-      }
-    } catch (e) {
-      console.error('Failed to fetch storage usage', e);
-    }
+  const fetchStorageUsageData = async () => {
+    // Moved to Redux AsyncThunk
   };
 
   const refreshAll = async () => {
     setIsInitializing(true);
     setRefreshKey(prev => prev + 1);
     await Promise.allSettled([
-      fetchProfile(),
-      fetchStorageUsage(),
+      dispatch(fetchUserProfile()).unwrap().catch(() => {}),
+      dispatch(fetchStorageUsage()).unwrap().catch(() => {}),
       (currentView === 'trash' || trashDocuments.length === 0) ? fetchTrashDocuments() : Promise.resolve()
     ]);
     setIsInitializing(false);
@@ -85,8 +81,7 @@ export default function DashboardLayout() {
       console.error("Logout Error:", error);
       message.warning('Tự động thoát!');
     } finally {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      logout();
       navigate('/', { replace: true });
     }
   };
@@ -128,7 +123,6 @@ export default function DashboardLayout() {
         profileData,
         fullName,
         avatarUrl,
-        setAvatarUrl,
         accentColor,
         setAccentColor,
         totalStorageMB,

@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip } from 'antd';
 import logoImg from '../../../assets/logo.png';
+import { useAuthContext } from '../../../contexts/AuthContext';
 
 const menuItems = [
   { key: '', icon: 'bi-grid-1x2', label: 'Tổng quan' },
@@ -23,6 +24,7 @@ const bottomItems = [
 export default function AdminSidebar({ isCollapsed = false, onToggleCollapse, isMobileMenuOpen, onCloseMobileMenu }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuthContext();
   const currentKey = location.pathname.replace('/admin/', '').replace('/admin', '') || '';
 
   const handleNav = (key) => {
@@ -169,7 +171,7 @@ export default function AdminSidebar({ isCollapsed = false, onToggleCollapse, is
               <motion.button
                 whileHover={{ backgroundColor: 'rgba(255, 59, 48, 0.08)' }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => { localStorage.removeItem('accessToken'); localStorage.removeItem('refreshToken'); navigate('/', { replace: true }); }}
+                onClick={() => { logout(); navigate('/', { replace: true }); }}
                 className={`flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-4'} gap-3 py-2.5 text-red-500 hover:text-red-400 rounded-xl transition-all w-full text-left cursor-pointer text-[12px] font-medium mt-2`}
               >
                 <i className="bi bi-box-arrow-left text-[14px] shrink-0" />

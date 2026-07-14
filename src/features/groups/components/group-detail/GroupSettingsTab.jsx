@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button, Modal, message, Input, Form } from 'antd';
 
-export default function GroupSettingsTab({ group, onRegenerateInvite, onUpdatePassword, onLeaveGroup, currentUser, isOwner }) {
+export default function GroupSettingsTab({ group, onRegenerateInvite, onUpdatePassword, onLeaveGroup, onDeleteGroup, currentUser, isOwner }) {
   const [regenerating, setRegenerating] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deletingGroup, setDeletingGroup] = useState(false);
   const [form] = Form.useForm();
 
   const copyInviteLink = () => {
@@ -51,6 +54,19 @@ export default function GroupSettingsTab({ group, onRegenerateInvite, onUpdatePa
       centered: true,
       onOk: () => onLeaveGroup(),
     });
+  };
+
+  const handleDeleteGroupConfirm = async () => {
+    if (deletingGroup) return;
+    setDeletingGroup(true);
+    try {
+      await onDeleteGroup();
+      setDeleteModalVisible(false);
+    } catch (error) {
+      // Error handled by hook
+    } finally {
+      setDeletingGroup(false);
+    }
   };
 
   return (
@@ -162,9 +178,9 @@ export default function GroupSettingsTab({ group, onRegenerateInvite, onUpdatePa
           <i className="bi bi-exclamation-triangle-fill" /> Vùng nguy hiểm
         </h4>
         <p className="text-[12px] text-red-500/70 font-medium mb-4">Các hành động trong khu vực này không thể hoàn tác.</p>
-        {isOwner ? (
-          <Button danger disabled className="!rounded-xl !font-medium !text-[12px] !h-10">
-            <i className="bi bi-trash3 mr-1.5" /> Xóa nhóm (Sắp ra mắt)
+        {isOwner && group.role === 'LEADER' ? (
+          <Button danger onClick={() => setDeleteModalVisible(true)} className="!rounded-xl !font-medium !text-[12px] !h-10 border-red-500 text-red-500 hover:!bg-red-50 hover:!border-red-500 hover:!text-red-600 transition-colors">
+            <i className="bi bi-trash3 mr-1.5" /> Xóa nhóm vĩnh viễn
           </Button>
         ) : (
           <Button danger onClick={handleLeaveConfirm} className="!rounded-xl !font-medium !text-[12px] !h-10 border-red-500 text-red-500 hover:!bg-red-50 hover:!border-red-500 hover:!text-red-600 transition-colors">
@@ -172,6 +188,67 @@ export default function GroupSettingsTab({ group, onRegenerateInvite, onUpdatePa
           </Button>
         )}
       </div>
+
+      <Modal
+        title={
+          <div className="flex items-center gap-2 text-red-600">
+            <i className="bi bi-exclamation-triangle-fill" />
+            <span>Xóa nhóm vĩnh viễn</span>
+          </div>
+        }
+        open={deleteModalVisible}
+        onCancel={() => {
+          setDeleteModalVisible(false);
+          setDeleteConfirmText('');
+        }}
+        footer={[
+          <Button key="back" onClick={() => {
+            setDeleteModalVisible(false);
+            setDeleteConfirmText('');
+          }} className="!rounded-xl">
+            Hủy
+          </Button>,
+          <Button
+            key="submit"
+            danger
+            type="primary"
+            loading={deletingGroup}
+            disabled={deleteConfirmText !== group.name}
+            onClick={handleDeleteGroupConfirm}
+            className="!rounded-xl"
+          >
+            Tôi hiểu hậu quả, xóa nhóm này
+          </Button>,
+        ]}
+        centered
+      >
+        <div className="py-4 space-y-4">
+          <p className="text-[14px] text-black/70">
+            Bạn đang chuẩn bị xóa nhóm <strong>{group.name}</strong>.
+          </p>
+          <div className="bg-red-50 p-4 rounded-xl border border-red-100 text-red-600 text-[13px]">
+            <p className="mb-2"><strong className="font-semibold">Hành động này không thể hoàn tác.</strong> Những nội dung sau sẽ bị xóa vĩnh viễn:</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Tất cả tin nhắn trong nhóm</li>
+              <li>Tất cả tài liệu của nhóm</li>
+              <li>Mọi thành viên sẽ bị xóa khỏi nhóm</li>
+            </ul>
+          </div>
+          <div className="space-y-2">
+            <p className="text-[13px] text-black/60">
+              Vui lòng nhập <strong className="select-none">{group.name}</strong> để xác nhận.
+            </p>
+            <Input
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder={group.name}
+              className="!h-11 !rounded-xl"
+              autoComplete="off"
+              autoCorrect="off"
+            />
+          </div>
+        </div>
+      </Modal>
     </motion.div>
   );
 }

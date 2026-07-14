@@ -5,6 +5,7 @@
  */
 import { Navigate, Outlet } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
+import { useAuthContext } from '../contexts/AuthContext';
 
 export function checkIsAdmin(token) {
   if (!token) return false;
@@ -28,13 +29,13 @@ export function checkIsAdmin(token) {
 }
 
 export default function AdminRoute() {
-  const token = localStorage.getItem('accessToken');
+  const { isAuthenticated, accessToken, isAdmin } = useAuthContext();
 
-  if (!token) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  if (!checkIsAdmin(token)) {
+  if (!isAdmin && !checkIsAdmin(accessToken)) {
     return <Navigate to="/dashboard" replace />;
   }
 
