@@ -26,10 +26,18 @@ console.error = (...args) => {
   originalError(...args);
 };
 
+import { Provider } from 'react-redux'
+import { store } from './redux/store.js'
+import { AuthProvider } from './contexts/AuthContext.jsx'
+
 createRoot(document.getElementById('root')).render(
   <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <Provider store={store}>
+      <AuthProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </AuthProvider>
+    </Provider>
   </GoogleOAuthProvider>,
 )

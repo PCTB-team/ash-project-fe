@@ -14,6 +14,8 @@ import GroupChatTab from '../components/group-detail/GroupChatTab';
 import UploadDocumentModal from '../components/group-detail/UploadDocumentModal';
 
 import { useParams, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
+import { message as antMessage } from 'antd';
+import { connectGroupEventSocket } from '../services/groupEventSocket.service';
 
 export default function GroupDetailScreen() {
   const { groupId, tab } = useParams();
@@ -28,7 +30,7 @@ export default function GroupDetailScreen() {
     fetchGroupById, fetchFiles, fetchTrashFiles, fetchMembers,
     toggleUploadPermission, kickMember,
     uploadFile, deleteFile, restoreFile, deleteFilePermanently, saveToDashboard, regenerateInvite,
-    leaveGroup, updateGroupPassword, toggleChatPermission
+    leaveGroup, updateGroupPassword, toggleChatPermission, deleteGroupPermanently
   } = useGroups();
 
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -51,6 +53,35 @@ export default function GroupDetailScreen() {
       fetchTrashFiles(groupId);
     }
   }, [groupId, activeTab, fetchTrashFiles]);
+
+  useEffect(() => {
+    let active = true;
+    let disconnect;
+
+    if (groupId) {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        disconnect = connectGroupEventSocket({
+          groupId,
+          accessToken: token,
+          onStatusChange: (status) => {
+            // Status logging can be added if needed
+          },
+          onEvent: (event) => {
+            if (active && event.type === 'GROUP_DELETED') {
+              antMessage.info(`Nhóm "${event.groupName}" đã bị xóa bởi trưởng nhóm.`);
+              navigate('/dashboard/group', { replace: true });
+            }
+          }
+        });
+      }
+    }
+
+    return () => {
+      active = false;
+      if (disconnect) disconnect();
+    };
+  }, [groupId, navigate]);
 
   const group = initialGroupData || currentGroup;
 
@@ -117,6 +148,12 @@ export default function GroupDetailScreen() {
     navigate('/dashboard/group');
   };
 
+  const handleDeleteGroup = async () => {
+    await deleteGroupPermanently(group.id);
+    antMessage.success(`Đã xóa nhóm ${group.name} thành công`);
+    navigate('/dashboard/group', { replace: true });
+  };
+
   const renderTab = () => {
     switch (activeTab) {
       case 'overview':
@@ -130,7 +167,7 @@ export default function GroupDetailScreen() {
       case 'trash':
         return <GroupTrashTab group={group} trashFiles={trashFiles} fetchTrashFiles={fetchTrashFiles} onRestore={handleRestoreFile} onDeletePermanently={handleDeleteFilePermanently} isOwner={isOwner} />;
       case 'settings':
-        return <GroupSettingsTab group={group} onRegenerateInvite={regenerateInvite} onUpdatePassword={updateGroupPassword} onLeaveGroup={handleLeaveGroup} currentUser={currentUser} isOwner={isOwner} />;
+        return <GroupSettingsTab group={group} onRegenerateInvite={regenerateInvite} onUpdatePassword={updateGroupPassword} onLeaveGroup={handleLeaveGroup} onDeleteGroup={handleDeleteGroup} currentUser={currentUser} isOwner={isOwner} />;
       default:
         return <GroupOverviewTab group={group} isOwner={isOwner} maxMembers={maxMembers} />;
     }

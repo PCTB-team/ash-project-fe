@@ -1,12 +1,13 @@
 import { useState, useCallback } from 'react';
 import { message } from 'antd';
 import { profileApi } from '../api/profile.api.js';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateUserProfileSuccess } from '../../../redux/slices/userSlice.js';
 
 export const useProfile = () => {
-  const [profileData, setProfileData] = useState(null);
+  const dispatch = useDispatch();
+  const { profileData, fullName, avatarUrl } = useSelector((state) => state.user);
   const [isLoading, setIsLoading] = useState(false);
-  const [fullName, setFullName] = useState('User');
-  const [avatarUrl, setAvatarUrl] = useState('');
 
   const fetchProfile = useCallback(async () => {
     setIsLoading(true);
@@ -19,9 +20,9 @@ export const useProfile = () => {
           ...resultData,
           avatarUrl: resultData.avatarUrl || resultData.avatar || ''
         };
-        setProfileData(mappedData);
-        if (mappedData.fullname) setFullName(mappedData.fullname);
-        if (mappedData.avatarUrl) setAvatarUrl(mappedData.avatarUrl);
+        // fetchProfile logic is largely handled by Redux now, but if called manually here,
+        // we can dispatch to store
+        dispatch(updateUserProfileSuccess(mappedData));
         return mappedData;
       }
     } catch (error) {
@@ -41,9 +42,7 @@ export const useProfile = () => {
           ...data.result,
           avatarUrl: data.result.avatarUrl || data.result.avatar || ''
         };
-        setProfileData(mappedData);
-        if (mappedData.fullname) setFullName(mappedData.fullname);
-        if (mappedData.avatarUrl) setAvatarUrl(mappedData.avatarUrl);
+        dispatch(updateUserProfileSuccess(mappedData));
         return { success: true, data: mappedData };
       } else if (!data.code) {
         return { success: true, data: profileData }; // Fallback
@@ -58,13 +57,11 @@ export const useProfile = () => {
   };
 
   return {
-    profileData,
-    fullName,
-    avatarUrl,
-    isLoading,
-    fetchProfile,
-    updateProfile,
-    setAvatarUrl,
-    setFullName
-  };
-};
+        profileData,
+        fullName,
+        avatarUrl,
+        isLoading,
+        fetchProfile,
+        updateProfile
+      };
+    };

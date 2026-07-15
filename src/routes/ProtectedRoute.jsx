@@ -1,10 +1,11 @@
 import { Navigate, Outlet } from 'react-router-dom';
+import { useAuthContext } from '../contexts/AuthContext';
 
 export default function ProtectedRoute() {
-  const token = localStorage.getItem('accessToken');
+  const { isAuthenticated } = useAuthContext();
 
   // Nếu không có token, chuyển hướng về trang đăng nhập
-  if (!token) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 

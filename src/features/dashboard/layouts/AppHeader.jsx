@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { formatRelativeTime } from '../utils/dateUtils.js';
 import logoAvatarDefault from '../../../assets/logo_avatar_default.jpg';
 import { getNotifications, markNotificationsAsRead } from '../../notifications/api/notifications.api.js';
+import { useSelector } from 'react-redux';
 
 /**
  * Shared Header Toolbar — Ultra-Premium Minimalist Stripe/Linear style.
@@ -20,11 +21,11 @@ import { useNavigate } from 'react-router-dom';
 export default function AppHeader({
   searchTerm,
   onSearchChange,
-  avatarUrl,
   accentColor = '#ff5c00',
   onToggleMobileMenu,
   children,
 }) {
+  const { avatarUrl } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const [isFocused, setIsFocused] = useState(false);
   const [notificationsList, setNotificationsList] = useState([]);

@@ -3,6 +3,7 @@ import { message } from 'antd';
 import { ADMIN_CREDENTIALS } from '../utils/constants';
 import { axiosClient } from '../../../utils/apiClient.js';
 import { checkIsAdmin } from '../../../routes/AdminRoute.jsx';
+import { useAuthContext } from '../../../contexts/AuthContext.jsx';
 
 export const LOGIN_API_URL = "/api/v1/auth/login";
 export const REGISTER_API_URL = "/api/v1/auth/register";
@@ -13,6 +14,7 @@ export const LOGOUT_API_URL = "/api/v1/auth/logout";
 export const GOOGLE_LOGIN_API_URL = "/api/v1/auth/google-login";
 
 export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
+  const { login, loginAsAdmin } = useAuthContext();
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -37,7 +39,7 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
 
     if (values.usernameOrEmail === ADMIN_CREDENTIALS.username && values.password === ADMIN_CREDENTIALS.password) {
       message.success('Xác thực quản trị viên thành công!');
-      localStorage.setItem('accessToken', 'admin_mock_token');
+      loginAsAdmin();
       onAdminLoginSuccess();
       setIsLoading(false);
       return;
@@ -62,8 +64,7 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
         const token = data.result?.token || data.token || data.accessToken || data.result?.accessToken;
         const refreshToken = data.result?.refreshToken || data.refreshToken;
 
-        if (token) localStorage.setItem('accessToken', token);
-        if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+        login(token, refreshToken);
 
         message.success('Đăng nhập thành công!');
         if (checkIsAdmin(token)) {
@@ -208,8 +209,7 @@ export default function useAuth({ onLoginSuccess, onAdminLoginSuccess }) {
         const token = data.result?.token || data.token || data.accessToken || data.result?.accessToken;
         const refreshToken = data.result?.refreshToken || data.refreshToken;
 
-        if (token) localStorage.setItem('accessToken', token);
-        if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+        login(token, refreshToken);
 
         message.success('Đăng nhập bằng Google thành công!');
         if (checkIsAdmin(token)) {

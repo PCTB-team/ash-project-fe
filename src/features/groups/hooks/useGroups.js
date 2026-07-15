@@ -218,12 +218,30 @@ export const useGroups = () => {
     catch (err) { message.error('Lỗi khi cập nhật mật khẩu.'); throw err; }
   };
 
+  const deleteGroupPermanently = async (groupId) => {
+    try {
+      const data = await groupApi.deleteGroupPermanently(groupId);
+      // Success toast will be handled in the component
+      return data;
+    } catch (err) {
+      const code = err.response?.data?.code;
+      if (code === 1238) {
+        message.error('Chỉ trưởng nhóm mới có quyền xóa nhóm này.');
+      } else if (code === 1213) {
+        message.info('Nhóm này không còn tồn tại.');
+      } else {
+        message.error('Lỗi khi xóa nhóm.');
+      }
+      throw err;
+    }
+  };
+
   return {
     groups, currentGroup, groupPreview, members, memberCount, files, trashFiles, statistics, isLoading, error,
     totalGroups, currentPage, totalPages,
     fetchMyGroups, fetchGroupById, createGroup, previewGroup, joinViaInvite,
     fetchMembers, toggleUploadPermission, toggleChatPermission, kickMember,
     fetchFiles, uploadFile, deleteFile, fetchTrashFiles, restoreFile, deleteFilePermanently, saveToDashboard,
-    regenerateInvite, leaveGroup, updateGroupPassword,
+    regenerateInvite, leaveGroup, updateGroupPassword, deleteGroupPermanently,
   };
 };

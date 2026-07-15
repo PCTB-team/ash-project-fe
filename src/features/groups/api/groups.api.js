@@ -159,3 +159,9 @@ export const saveGroupFileToDashboard = async (groupId, fileId, payload = {}) =>
   );
   return response.data.result;
 };
+
+// ─── 24. Delete Group Permanently ─── DELETE /groups/{groupId}
+export const deleteGroupPermanently = async (groupId) => {
+  const response = await axiosClient.delete(`${BASE_URL}/${groupId}`);
+  return response.data;
+};
