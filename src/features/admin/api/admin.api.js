@@ -173,11 +173,6 @@ export const adminApi = {
     return res.data;
   },
 
-  // ── 7. AI Statistics ──
-  getAIStats: async () => {
-    const res = await axiosClient.get('/api/v1/admin/ai/statistics');
-    return res.data;
-  },
 
   // ── 8. System Settings ──
   getSettings: async () => {
@@ -187,17 +182,6 @@ export const adminApi = {
 
   updateSettings: async (settings) => {
     const res = await axiosClient.put('/api/v1/admin/settings', settings);
-    return res.data;
-  },
-
-  // ── 9. Homepage Config ──
-  getIntroConfig: async () => {
-    const res = await axiosClient.get('/api/v1/admin/homepage-config');
-    return res.data;
-  },
-
-  updateIntroConfig: async (config) => {
-    const res = await axiosClient.put('/api/v1/admin/homepage-config', config);
     return res.data;
   },
 };
