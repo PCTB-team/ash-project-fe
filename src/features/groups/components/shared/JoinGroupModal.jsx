@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Button, Modal, Form, Input } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useGroups } from '../../hooks/useGroups';
 
 export default function JoinGroupModal({ open, onCancel, onJoinSuccess }) {
+  const navigate = useNavigate();
   const { previewGroup, joinViaInvite, groupPreview, isLoading } = useGroups();
   const [step, setStep] = useState(1);
   const [inviteToken, setInviteToken] = useState('');
@@ -62,14 +64,14 @@ export default function JoinGroupModal({ open, onCancel, onJoinSuccess }) {
       <div className="bg-gradient-to-br from-[#ff8a00] to-[#ff5c00] px-6 py-5 flex items-center gap-4 relative overflow-hidden rounded-t-2xl">
         <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/15 rounded-full blur-3xl pointer-events-none" />
         <div className="w-12 h-12 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center text-white backdrop-blur-md shadow-sm z-10">
-          <i className={`bi ${step === 3 ? 'bi-hourglass-split' : 'bi-box-arrow-in-right'} text-[24px]`} />
+          <i className={`bi ${step === 3 ? 'bi-check-circle-fill' : 'bi-box-arrow-in-right'} text-[24px]`} />
         </div>
         <div className="text-left text-white z-10">
           <h3 className="text-[18px] font-semibold">
-            {step === 1 ? 'Tham gia Nhóm' : step === 2 ? 'Nhập mật khẩu' : 'Đang chờ duyệt'}
+            {step === 1 ? 'Tham gia Nhóm' : step === 2 ? 'Nhập mật khẩu' : 'Gia nhập thành công'}
           </h3>
           <p className="text-[10px] font-medium text-white/80 uppercase mt-0.5">
-            {step === 3 ? 'Yêu cầu đã gửi' : `Bước ${step} / 2`}
+            {step === 3 ? 'Chào mừng bạn!' : `Bước ${step} / 2`}
           </p>
         </div>
       </div>
@@ -130,7 +132,7 @@ export default function JoinGroupModal({ open, onCancel, onJoinSuccess }) {
                     </Button>
                     <Button type="primary" htmlType="submit" loading={joining}
                       className="!rounded-full !font-medium !text-[13px] !h-10 !px-8 !bg-gradient-to-b !from-[#ff7a00] !to-[#ff5c00] !border-none !text-white !shadow-lg">
-                      Gửi yêu cầu <i className="bi bi-arrow-right ml-1" />
+                      Tham gia nhóm <i className="bi bi-arrow-right ml-1" />
                     </Button>
                   </div>
                 </Form>
@@ -141,16 +143,16 @@ export default function JoinGroupModal({ open, onCancel, onJoinSuccess }) {
           {step === 3 && (
             <motion.div key="step3" variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.25 }}>
               <div className="text-center py-8 space-y-4">
-                <div className="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto border border-amber-500/20">
-                  <i className="bi bi-hourglass-split text-[28px] text-amber-500" />
+                <div className="w-16 h-16 bg-[#34c759]/10 rounded-full flex items-center justify-center mx-auto border border-[#34c759]/20">
+                  <i className="bi bi-check-lg text-[28px] text-[#34c759]" />
                 </div>
-                <h4 className="text-[16px] font-semibold text-[var(--color-on-surface)]">Đang chờ Leader duyệt</h4>
+                <h4 className="text-[16px] font-semibold text-[var(--color-on-surface)]">Chào mừng thành viên mới!</h4>
                 <p className="text-[13px] text-black/50 font-medium max-w-xs mx-auto">
-                  Yêu cầu tham gia đã được gửi. Bạn sẽ trở thành thành viên khi Leader duyệt.
+                  Bạn đã gia nhập nhóm <strong>{groupPreview?.name || groupPreview?.groupName}</strong> thành công.
                 </p>
-                <Button type="primary" onClick={handleClose}
+                <Button type="primary" onClick={() => { handleClose(); navigate(`/dashboard/group/${groupPreview?.groupId || groupPreview?.id}`); }}
                   className="!rounded-full !font-medium !text-[13px] !h-10 !px-8 !bg-gradient-to-b !from-[#ff7a00] !to-[#ff5c00] !border-none !text-white !shadow-lg mt-2">
-                  Đã hiểu
+                  Vào nhóm ngay <i className="bi bi-arrow-right ml-1" />
                 </Button>
               </div>
             </motion.div>

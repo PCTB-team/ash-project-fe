@@ -67,7 +67,7 @@ export default function JoinGroupScreen() {
       <div className="absolute top-1/4 -left-64 w-[500px] h-[500px] bg-[#ff8a00]/20 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-1/4 -right-64 w-[600px] h-[600px] bg-[#ff5c00]/10 rounded-full blur-[120px] pointer-events-none" />
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-[460px] bg-white/70 backdrop-blur-xl rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.08)] border border-white overflow-hidden relative z-10"
@@ -76,14 +76,14 @@ export default function JoinGroupScreen() {
         <div className="bg-gradient-to-br from-[#ff8a00] to-[#ff5c00] px-8 py-8 flex flex-col items-center justify-center relative overflow-hidden text-center">
           <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/15 rounded-full blur-3xl pointer-events-none" />
           <div className="w-16 h-16 rounded-2xl bg-white/20 border border-white/30 flex items-center justify-center text-white backdrop-blur-md shadow-sm z-10 mb-4">
-            <i className={`bi ${step === 2 ? 'bi-hourglass-split' : 'bi-diagram-3'} text-[32px]`} />
+            <i className={`bi ${step === 2 ? 'bi-check-circle-fill' : 'bi-diagram-3'} text-[32px]`} />
           </div>
           <div className="z-10">
             <h2 className="text-[22px] font-bold text-white mb-1">
-              {step === 1 ? 'Tham gia Nhóm' : 'Đang chờ duyệt'}
+              {step === 1 ? 'Tham gia Nhóm' : 'Gia nhập thành công'}
             </h2>
             <p className="text-[13px] font-medium text-white/80">
-              {step === 1 ? 'Vui lòng nhập mật khẩu để tiếp tục' : 'Yêu cầu tham gia đã được gửi đi'}
+              {step === 1 ? 'Vui lòng nhập mật khẩu để tiếp tục' : 'Chào mừng bạn đến với nhóm!'}
             </p>
           </div>
         </div>
@@ -99,7 +99,7 @@ export default function JoinGroupScreen() {
             <AnimatePresence mode="wait">
               {step === 1 && groupPreview && (
                 <motion.div key="step1" variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }}>
-                  
+
                   {/* Group Info Card */}
                   <div className="p-5 rounded-[20px] bg-[#f8f9fa] border border-black/[0.04] mb-6 shadow-inner">
                     <div className="flex items-center gap-3 mb-3">
@@ -120,29 +120,29 @@ export default function JoinGroupScreen() {
                   </div>
 
                   <Form layout="vertical" onFinish={handleJoin} requiredMark={false} className="space-y-4">
-                    <Form.Item 
+                    <Form.Item
                       label={<span className="text-[12px] font-bold text-black/60 uppercase tracking-wider">Mật khẩu nhóm</span>}
-                      name="password" 
-                      rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }]} 
+                      name="password"
+                      rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }]}
                       className="mb-0"
                     >
-                      <Input.Password 
+                      <Input.Password
                         placeholder="Nhập mật khẩu do Leader cung cấp"
-                        className="h-14 rounded-[16px] bg-white border border-black/10 hover:border-[#ff5c00]/40 focus:border-[#ff5c00] text-[14px] font-semibold focus:shadow-[0_0_0_3px_rgba(255,92,0,0.1)] transition-all" 
+                        className="h-14 rounded-[16px] bg-white border border-black/10 hover:border-[#ff5c00]/40 focus:border-[#ff5c00] text-[14px] font-semibold focus:shadow-[0_0_0_3px_rgba(255,92,0,0.1)] transition-all"
                       />
                     </Form.Item>
-                    
+
                     <div className="pt-2">
-                      <Button 
-                        type="primary" 
-                        htmlType="submit" 
+                      <Button
+                        type="primary"
+                        htmlType="submit"
                         loading={joining}
                         className="w-full !h-14 !rounded-[16px] !font-bold !text-[15px] !bg-gradient-to-b !from-[#ff7a00] !to-[#ff5c00] !border-none !text-white hover:!opacity-90 !shadow-[0_4px_14px_rgba(255,92,0,0.3)] transition-all"
                       >
-                        Gửi yêu cầu tham gia <i className="bi bi-arrow-right ml-2" />
+                        Tham gia nhóm <i className="bi bi-arrow-right ml-2" />
                       </Button>
-                      <Button 
-                        type="text" 
+                      <Button
+                        type="text"
                         onClick={() => navigate('/dashboard')}
                         className="w-full !h-12 !rounded-[16px] !font-medium !text-[13px] !text-black/50 mt-3 hover:!bg-black/5"
                       >
@@ -160,17 +160,17 @@ export default function JoinGroupScreen() {
                       <i className="bi bi-check-lg text-[36px] text-[#34c759]" />
                     </div>
                     <div>
-                      <h4 className="text-[18px] font-bold text-[#1d1d1f] mb-2">Gửi yêu cầu thành công!</h4>
+                      <h4 className="text-[18px] font-bold text-[#1d1d1f] mb-2">Chào mừng thành viên mới!</h4>
                       <p className="text-[14px] text-black/50 font-medium leading-relaxed max-w-[280px] mx-auto">
-                        Bạn đã xin gia nhập nhóm <strong>{groupPreview?.groupName || groupPreview?.name}</strong>. Hãy chờ Leader duyệt để trở thành thành viên chính thức.
+                        Bạn đã gia nhập nhóm <strong>{groupPreview?.groupName || groupPreview?.name}</strong> thành công.
                       </p>
                     </div>
-                    <Button 
-                      type="primary" 
-                      onClick={() => navigate('/dashboard/group')}
-                      className="w-full !h-14 !rounded-[16px] !font-bold !text-[15px] !bg-[#1d1d1f] !border-none !text-white hover:!bg-black !shadow-[0_4px_14px_rgba(0,0,0,0.15)] transition-all mt-4"
+                    <Button
+                      type="primary"
+                      onClick={() => navigate(`/dashboard/group/${groupPreview?.groupId || groupPreview?.id}`)}
+                      className="w-full !h-14 !rounded-[16px] !font-bold !text-[15px] !bg-gradient-to-b !from-[#ff7a00] !to-[#ff5c00] !border-none !text-white hover:!opacity-90 !shadow-[0_4px_14px_rgba(255,92,0,0.3)] transition-all mt-4"
                     >
-                      Vào Cộng đồng AI Study
+                      Vào nhóm ngay <i className="bi bi-arrow-right ml-2" />
                     </Button>
                   </div>
                 </motion.div>

@@ -66,7 +66,8 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, curre
     setErrorMsg('');
     formik.resetForm();
     setRegisterStep('form');
-    navigate(isRegister ? '/login' : '/register');
+    const searchParams = window.location.search;
+    navigate((isRegister ? '/login' : '/register') + searchParams);
   };
 
   const handleRegisterSubmit = async (values) => {
@@ -112,7 +113,7 @@ export default function LoginScreen({ onLoginSuccess, onAdminLoginSuccess, curre
                 onClick={() => {
                   setRegisterStep('form');
                   formik.resetForm();
-                  navigate('/login');
+                  navigate('/login' + window.location.search);
                 }}
                 className="w-full h-[42px] text-white bg-gradient-to-b from-[#ff7a00] to-[#ff5c00] font-medium rounded-full text-[13.5px] border-none shadow-[0_1px_3px_rgba(255,92,0,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] flex items-center justify-center gap-2 cursor-pointer transition-all duration-200"
               >
