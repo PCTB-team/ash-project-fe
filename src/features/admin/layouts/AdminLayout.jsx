@@ -13,7 +13,6 @@ const PAGE_TITLES = {
   'documents': 'Quản lý tài liệu',
   'groups': 'Quản lý nhóm học tập',
   'payments': 'Quản lý thanh toán',
-  'settings': 'Cài đặt hệ thống',
 };
 
 const PAGE_ICONS = {
@@ -22,7 +21,6 @@ const PAGE_ICONS = {
   'documents': 'bi-file-earmark-fill',
   'groups': 'bi-collection-fill',
   'payments': 'bi-credit-card-fill',
-  'settings': 'bi-gear-fill',
 };
 
 const PAGE_DESCRIPTIONS = {
@@ -31,7 +29,6 @@ const PAGE_DESCRIPTIONS = {
   'documents': 'Giám sát tài liệu được tải lên hệ thống',
   'groups': 'Quản lý các nhóm học tập và hoạt động nhóm',
   'payments': 'Theo dõi doanh thu và giao dịch thanh toán',
-  'settings': 'Cấu hình và tùy chỉnh hệ thống',
 };
 
 
@@ -118,12 +115,6 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex items-center gap-3">
-
-            {/* Notification Bell */}
-            <button className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-white/60 backdrop-blur-sm border border-black/[0.04] text-black/40 hover:text-[#ff5c00] hover:border-[#ff5c00]/20 transition-all cursor-pointer group">
-              <i className="bi bi-bell text-[16px] group-hover:animate-[wiggle_0.5s_ease-in-out]" />
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#f43f5e] rounded-full flex items-center justify-center text-white text-[8px] font-bold border-2 border-white">3</span>
-            </button>
 
             {/* Admin Badge */}
             <div className="flex items-center gap-2 bg-gradient-to-r from-[#ff5c00]/10 to-[#ffaa00]/10 px-3 py-1.5 rounded-xl border border-[#ff5c00]/10">

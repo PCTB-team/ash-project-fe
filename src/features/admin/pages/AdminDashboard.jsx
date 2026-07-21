@@ -19,7 +19,7 @@ const GlassStatCard = ({ icon, label, value, suffix, color, trend, trendValue, d
       {/* Subtle radial glow on hover */}
       <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full opacity-0 group-hover:opacity-[0.06] transition-opacity duration-500 blur-2xl pointer-events-none"
         style={{ background: color }} />
-      
+
       {/* Top row: icon + trend */}
       <div className="flex items-start justify-between mb-4">
         <div className="w-10 h-10 rounded-[12px] flex items-center justify-center relative transition-transform duration-300 group-hover:scale-105"
@@ -27,9 +27,8 @@ const GlassStatCard = ({ icon, label, value, suffix, color, trend, trendValue, d
           <i className={`bi ${icon} text-[18px]`} style={{ color }} />
         </div>
         {trend && (
-          <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold ${
-            trend === 'up' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'
-          }`}>
+          <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold ${trend === 'up' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'
+            }`}>
             <i className={`bi ${trend === 'up' ? 'bi-graph-up-arrow' : 'bi-graph-down-arrow'} text-[9px]`} />
             {trendValue}
           </div>
@@ -42,7 +41,7 @@ const GlassStatCard = ({ icon, label, value, suffix, color, trend, trendValue, d
         {suffix && <span className="text-[14px] font-bold text-black/30 ml-1">{suffix}</span>}
       </p>
       <p className="text-[12px] font-semibold text-black/40 uppercase tracking-wider">{label}</p>
-      
+
       {/* Bottom accent line */}
       <div className="absolute bottom-0 left-0 right-0 h-[3px] opacity-0 group-hover:opacity-100 transition-opacity duration-500"
         style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }} />
@@ -51,9 +50,9 @@ const GlassStatCard = ({ icon, label, value, suffix, color, trend, trendValue, d
 );
 
 const WelcomeBanner = ({ stats }) => (
-  <motion.div 
-    initial={{ opacity: 0, y: 20 }} 
-    animate={{ opacity: 1, y: 0 }} 
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.6 }}
     className="relative rounded-[24px] overflow-hidden mb-6 bg-white border border-[#ff5c00]/10"
     style={{
@@ -69,13 +68,13 @@ const WelcomeBanner = ({ stats }) => (
       <div className="absolute top-[20%] left-[50%] w-[200px] h-[200px] rounded-full blur-[60px] opacity-[0.05]"
         style={{ background: '#6366f1' }} />
       {/* Soft grid overlay */}
-      <div className="absolute inset-0 opacity-[0.4]" 
+      <div className="absolute inset-0 opacity-[0.4]"
         style={{ backgroundImage: 'linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
     </div>
 
     <div className="relative z-10 p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
       <div>
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
           className="flex items-center gap-2 mb-3"
         >
@@ -87,13 +86,13 @@ const WelcomeBanner = ({ stats }) => (
             {new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </span>
         </motion.div>
-        <motion.h2 
+        <motion.h2
           initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}
           className="text-[26px] md:text-[32px] font-extrabold text-[#1d1d1f] leading-tight mb-2 tracking-tight"
         >
           Chào mừng trở lại, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff5c00] to-[#ff8a00]">Admin</span> 👋
         </motion.h2>
-        <motion.p 
+        <motion.p
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
           className="text-[13.5px] text-black/50 max-w-md leading-relaxed font-medium"
         >
@@ -102,18 +101,18 @@ const WelcomeBanner = ({ stats }) => (
       </div>
 
       {/* Quick stats in banner */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5 }}
         className="flex gap-3 md:gap-4 bg-white/60 backdrop-blur-md p-3 rounded-[20px] border border-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.03)]"
       >
         {[
-          { label: 'User mới', value: stats?.newUsersThisMonth || 5, icon: 'bi-person-plus-fill', color: '#6366f1' },
-          { label: 'Docs mới', value: stats?.newDocsThisMonth || 42, icon: 'bi-file-earmark-plus-fill', color: '#10b981' },
-          { label: 'Online', value: stats?.activeUsers || 18, icon: 'bi-broadcast', color: '#ff5c00' },
+          { label: 'Người dùng mới', value: stats?.newUsersThisMonth || 5, icon: 'bi-person-plus-fill', color: '#6366f1' },
+          { label: 'Tài liệu mới', value: stats?.newDocsThisMonth || 42, icon: 'bi-file-earmark-plus-fill', color: '#10b981' },
+          { label: 'Người dùng', value: stats?.activeUsers || 18, icon: 'bi-broadcast', color: '#ff5c00' },
         ].map((s, i) => (
           <div key={i} className="text-center px-4 py-2 relative group">
             {i !== 0 && <div className="absolute left-0 top-1/4 bottom-1/4 w-[1px] bg-black/[0.05]" />}
-            <div className="w-9 h-9 rounded-[10px] mx-auto mb-2 flex items-center justify-center bg-white shadow-sm transition-transform group-hover:scale-105" 
+            <div className="w-9 h-9 rounded-[10px] mx-auto mb-2 flex items-center justify-center bg-white shadow-sm transition-transform group-hover:scale-105"
               style={{ color: s.color, border: `1px solid ${s.color}20` }}>
               <i className={`bi ${s.icon} text-[13px]`} />
             </div>
@@ -126,15 +125,15 @@ const WelcomeBanner = ({ stats }) => (
   </motion.div>
 );
 
-const CustomTooltipStyle = { 
-  borderRadius: 12, 
-  fontSize: 12, 
-  border: '1px solid rgba(0,0,0,0.05)', 
-  boxShadow: '0 8px 30px rgba(0,0,0,0.08)', 
-  background: 'rgba(255,255,255,0.95)', 
-  backdropFilter: 'blur(10px)', 
-  color: '#1d1d1f', 
-  fontWeight: 600 
+const CustomTooltipStyle = {
+  borderRadius: 12,
+  fontSize: 12,
+  border: '1px solid rgba(0,0,0,0.05)',
+  boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
+  background: 'rgba(255,255,255,0.95)',
+  backdropFilter: 'blur(10px)',
+  color: '#1d1d1f',
+  fontWeight: 600
 };
 
 const ActivityTimeline = ({ activities }) => {
@@ -157,10 +156,10 @@ const ActivityTimeline = ({ activities }) => {
       {activities?.slice(0, 8).map((act, i) => {
         const cfg = typeConfig[act.action] || typeConfig.ADMIN_ACTION;
         return (
-          <motion.div 
+          <motion.div
             key={i}
-            initial={{ opacity: 0, x: -10 }} 
-            animate={{ opacity: 1, x: 0 }} 
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 + i * 0.05 }}
             className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-black/[0.02] transition-colors group cursor-default"
           >
@@ -172,7 +171,7 @@ const ActivityTimeline = ({ activities }) => {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
                 <span className="text-[12.5px] font-bold text-[#1d1d1f] truncate">{act.actor}</span>
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md" 
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md"
                   style={{ color: cfg.color, background: cfg.bg }}>{cfg.label}</span>
               </div>
               <p className="text-[11px] text-black/50 m-0 truncate font-medium">{act.detail}</p>
@@ -203,19 +202,19 @@ export default function AdminDashboard() {
         const res = await adminApi.getDashboardStats();
         const s = res?.result || { totalUsers: 0, totalDocuments: 0, totalGroups: 0, totalRevenue: 0 };
         setStats(s);
-        
+
         // Map users chart
         setUsersChart((s.monthlyUserGrowth || []).map(item => ({ month: item.label, users: item.value })));
-        
+
         // Map uploads chart
         setUploadsChart((s.weeklyUploadTrend || []).map(item => ({ week: item.label, uploads: item.uploads })));
-        
+
         // Map file types chart
         if (s.fileTypeDistribution) {
           const fileTypes = Object.entries(s.fileTypeDistribution).map(([name, value], i) => ({
             name, value, color: COLORS[i % COLORS.length]
           })).filter(item => item.value > 0);
-          
+
           const totalFiles = fileTypes.reduce((acc, curr) => acc + curr.value, 0);
           const fileTypesWithPercent = fileTypes.map(ft => ({
             ...ft,
@@ -223,10 +222,10 @@ export default function AdminDashboard() {
           }));
           setFileTypeChart(fileTypesWithPercent);
         }
-        
+
         // Map revenue chart
         setRevenueChart((s.monthlyRevenueTrend || []).map(item => ({ month: item.label, revenue: item.value })));
-        
+
         // Set activities
         setActivities(s.recentActivities || []);
       } catch (e) {
@@ -254,19 +253,18 @@ export default function AdminDashboard() {
       <WelcomeBanner stats={stats} />
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
         <GlassStatCard icon="bi-people-fill" label="Tổng người dùng" value={stats?.totalUsers || 0} color="#6366f1" trend="up" trendValue="+12%" delay={0} />
-        <GlassStatCard icon="bi-broadcast" label="Đang online" value={stats?.activeUsersRightNow || 0} color="#10b981" delay={0.04} />
+        <GlassStatCard icon="bi-broadcast" label="Đang hoạt động" value={stats?.activeUsersRightNow || 0} color="#10b981" delay={0.04} />
         <GlassStatCard icon="bi-file-earmark-fill" label="Tổng tài liệu" value={stats?.totalDocuments || 0} color="#ff5c00" trend="up" trendValue="+8%" delay={0.08} />
         <GlassStatCard icon="bi-collection-fill" label="Tổng nhóm" value={stats?.totalGroups || 0} color="#8b5cf6" delay={0.12} />
         <GlassStatCard icon="bi-cash-stack" label="Tổng doanh thu" value={stats?.totalRevenue || 0} suffix="₫" color="#0ea5e9" delay={0.16} />
-        <GlassStatCard icon="bi-exclamation-triangle-fill" label="Báo cáo chờ" value={stats?.pendingReports || 0} color="#f43f5e" delay={0.20} />
       </div>
 
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-          <Card className="!rounded-[20px] !border-0 !overflow-hidden" 
+          <Card className="!rounded-[20px] !border-0 !overflow-hidden"
             styles={{ body: { padding: '24px 24px 16px' } }}
             style={{ boxShadow: '0 4px 20px -2px rgba(0,0,0,0.03), 0 0 3px rgba(0,0,0,0.02)', background: 'white' }}>
             <div className="flex items-center justify-between mb-6">
@@ -282,8 +280,8 @@ export default function AdminDashboard() {
               <AreaChart data={usersChart}>
                 <defs>
                   <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25}/>
-                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="4 4" stroke="#f0f0f0" vertical={false} />
@@ -297,7 +295,7 @@ export default function AdminDashboard() {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-          <Card className="!rounded-[20px] !border-0 !overflow-hidden" 
+          <Card className="!rounded-[20px] !border-0 !overflow-hidden"
             styles={{ body: { padding: '24px 24px 16px' } }}
             style={{ boxShadow: '0 4px 20px -2px rgba(0,0,0,0.03), 0 0 3px rgba(0,0,0,0.02)', background: 'white' }}>
             <div className="flex items-center justify-between mb-6">
@@ -313,13 +311,13 @@ export default function AdminDashboard() {
               <BarChart data={revenueChart}>
                 <defs>
                   <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#ff5c00" stopOpacity={1}/>
-                    <stop offset="100%" stopColor="#ffaa00" stopOpacity={0.8}/>
+                    <stop offset="0%" stopColor="#ff5c00" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#ffaa00" stopOpacity={0.8} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="4 4" stroke="#f0f0f0" vertical={false} />
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#a1a1aa', fontWeight: 600 }} axisLine={false} tickLine={false} dy={10} />
-                <YAxis tick={{ fontSize: 11, fill: '#a1a1aa', fontWeight: 600 }} axisLine={false} tickLine={false} dx={-10} tickFormatter={v => `${(v/1000000).toFixed(1)}M`} />
+                <YAxis tick={{ fontSize: 11, fill: '#a1a1aa', fontWeight: 600 }} axisLine={false} tickLine={false} dx={-10} tickFormatter={v => `${(v / 1000000).toFixed(1)}M`} />
                 <Tooltip contentStyle={CustomTooltipStyle} formatter={v => [`${v.toLocaleString('vi-VN')}₫`, 'Doanh thu']} />
                 <Bar dataKey="revenue" fill="url(#barGrad)" radius={[6, 6, 4, 4]} barSize={32} />
               </BarChart>
@@ -332,7 +330,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Upload chart */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
-          <Card className="!rounded-[20px] !border-0 !overflow-hidden h-full" 
+          <Card className="!rounded-[20px] !border-0 !overflow-hidden h-full"
             styles={{ body: { padding: '24px 24px 16px', height: '100%' } }}
             style={{ boxShadow: '0 4px 20px -2px rgba(0,0,0,0.03), 0 0 3px rgba(0,0,0,0.02)', background: 'white' }}>
             <div className="flex items-center gap-2.5 mb-6">
@@ -345,8 +343,8 @@ export default function AdminDashboard() {
               <BarChart data={uploadsChart}>
                 <defs>
                   <linearGradient id="uploadGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#8b5cf6" stopOpacity={1}/>
-                    <stop offset="100%" stopColor="#a78bfa" stopOpacity={0.7}/>
+                    <stop offset="0%" stopColor="#8b5cf6" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#a78bfa" stopOpacity={0.7} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="4 4" stroke="#f0f0f0" vertical={false} />
@@ -361,7 +359,7 @@ export default function AdminDashboard() {
 
         {/* File type distribution */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-          <Card className="!rounded-[20px] !border-0 !overflow-hidden h-full" 
+          <Card className="!rounded-[20px] !border-0 !overflow-hidden h-full"
             styles={{ body: { padding: '24px', height: '100%' } }}
             style={{ boxShadow: '0 4px 20px -2px rgba(0,0,0,0.03), 0 0 3px rgba(0,0,0,0.02)', background: 'white' }}>
             <div className="flex items-center gap-2.5 mb-4">
@@ -396,7 +394,7 @@ export default function AdminDashboard() {
 
         {/* Activity Feed */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
-          <Card className="!rounded-[20px] !border-0 !overflow-hidden h-full flex flex-col" 
+          <Card className="!rounded-[20px] !border-0 !overflow-hidden h-full flex flex-col"
             styles={{ body: { padding: '24px 16px 16px', flex: 1, display: 'flex', flexDirection: 'column' } }}
             style={{ boxShadow: '0 4px 20px -2px rgba(0,0,0,0.03), 0 0 3px rgba(0,0,0,0.02)', background: 'white' }}>
             <div className="flex items-center justify-between px-2 mb-4 shrink-0">

@@ -15,9 +15,7 @@ const menuItems = [
   { key: 'payments', icon: 'bi-credit-card', label: 'Thanh toán' },
 ];
 
-const bottomItems = [
-  { key: 'settings', icon: 'bi-gear', label: 'Cài đặt' },
-];
+const bottomItems = [];
 
 export default function AdminSidebar({ isCollapsed = false, onToggleCollapse, isMobileMenuOpen, onCloseMobileMenu }) {
   const navigate = useNavigate();
