@@ -11,7 +11,9 @@ export default function PublicRoute() {
     if (isAdmin || checkIsAdmin(accessToken)) {
       return <Navigate to="/admin" replace />;
     }
-    return <Navigate to="/dashboard" replace />;
+    // Nếu có redirect param (vd: từ join group flow), navigate theo redirect
+    const redirect = new URLSearchParams(window.location.search).get('redirect');
+    return <Navigate to={redirect || '/dashboard'} replace />;
   }
 
   // Nếu chưa đăng nhập, cho phép render các component con (Login, Register, Intro)

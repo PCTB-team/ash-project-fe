@@ -90,7 +90,7 @@ export const useGroups = () => {
   };
 
   const joinViaInvite = async (inviteToken, password) => {
-    try { const data = await groupApi.joinGroupViaInvite(inviteToken, password); message.success('Đã gửi yêu cầu tham gia. Vui lòng chờ Leader duyệt.'); await fetchMyGroups(); return data; }
+    try { const data = await groupApi.joinGroupViaInvite(inviteToken, password); message.success('Gia nhập nhóm thành công!'); await fetchMyGroups(); return data; }
     catch (err) {
       if (err.message === 'WRONG_PASSWORD') message.error('Mật khẩu nhóm không chính xác.');
       else if (err.message === 'ALREADY_MEMBER') message.warning('Bạn đã là thành viên hoặc đang chờ duyệt.');
