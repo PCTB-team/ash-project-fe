@@ -2,7 +2,7 @@
  * AdminLayout — Layout chính cho Admin Panel.
  * Premium dark sidebar + Glassmorphism header + Gradient mesh content area.
  */
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminSidebar from './AdminSidebar.jsx';
@@ -13,9 +13,7 @@ const PAGE_TITLES = {
   'documents': 'Quản lý tài liệu',
   'groups': 'Quản lý nhóm học tập',
   'payments': 'Quản lý thanh toán',
-  'ai': 'Thống kê AI',
   'settings': 'Cài đặt hệ thống',
-  'intro-config': 'Cấu hình Trang chủ',
 };
 
 const PAGE_ICONS = {
@@ -24,9 +22,7 @@ const PAGE_ICONS = {
   'documents': 'bi-file-earmark-fill',
   'groups': 'bi-collection-fill',
   'payments': 'bi-credit-card-fill',
-  'ai': 'bi-stars',
   'settings': 'bi-gear-fill',
-  'intro-config': 'bi-layout-text-window',
 };
 
 const PAGE_DESCRIPTIONS = {
@@ -35,33 +31,9 @@ const PAGE_DESCRIPTIONS = {
   'documents': 'Giám sát tài liệu được tải lên hệ thống',
   'groups': 'Quản lý các nhóm học tập và hoạt động nhóm',
   'payments': 'Theo dõi doanh thu và giao dịch thanh toán',
-  'ai': 'Phân tích và thống kê sử dụng AI Chatbot',
   'settings': 'Cấu hình và tùy chỉnh hệ thống',
-  'intro-config': 'Tùy chỉnh nội dung và hình ảnh của trang Giới thiệu (Intro).',
 };
 
-function LiveClock() {
-  const [time, setTime] = useState(new Date());
-  useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-  return (
-    <div className="hidden sm:flex items-center gap-2 bg-white/60 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-black/[0.04]">
-      <i className="bi bi-clock text-[12px] text-black/40" />
-      <span className="text-[12px] font-medium text-black/50 tabular-nums">
-        {time.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-      </span>
-    </div>
-  );
-}
-
-function getGreeting() {
-  const h = new Date().getHours();
-  if (h < 12) return { text: 'Chào buổi sáng', icon: '☀️' };
-  if (h < 18) return { text: 'Chào buổi chiều', icon: '🌤️' };
-  return { text: 'Chào buổi tối', icon: '🌙' };
-}
 
 export default function AdminLayout() {
   const location = useLocation();
@@ -72,7 +44,6 @@ export default function AdminLayout() {
   const pageTitle = PAGE_TITLES[currentKey] || 'Admin';
   const pageIcon = PAGE_ICONS[currentKey] || 'bi-grid';
   const pageDesc = PAGE_DESCRIPTIONS[currentKey] || '';
-  const greeting = getGreeting();
 
   return (
     <div className="flex h-screen max-h-screen bg-[#f0f0f3] text-[#1d1d1f] font-sans overflow-hidden relative">
@@ -147,16 +118,6 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Greeting */}
-            <div className="hidden lg:flex items-center gap-1.5 text-[12px] text-black/40 font-medium">
-              <span>{greeting.icon}</span>
-              <span>{greeting.text}, Admin</span>
-            </div>
-
-            <div className="hidden sm:block w-px h-6 bg-black/[0.06]" />
-
-            {/* Live Clock */}
-            <LiveClock />
 
             {/* Notification Bell */}
             <button className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-white/60 backdrop-blur-sm border border-black/[0.04] text-black/40 hover:text-[#ff5c00] hover:border-[#ff5c00]/20 transition-all cursor-pointer group">

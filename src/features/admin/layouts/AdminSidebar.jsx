@@ -13,11 +13,9 @@ const menuItems = [
   { key: 'documents', icon: 'bi-file-earmark', label: 'Tài liệu' },
   { key: 'groups', icon: 'bi-collection', label: 'Nhóm học tập' },
   { key: 'payments', icon: 'bi-credit-card', label: 'Thanh toán' },
-  { key: 'ai', icon: 'bi-stars', label: 'Thống kê AI' },
 ];
 
 const bottomItems = [
-  { key: 'intro-config', icon: 'bi-layout-text-window', label: 'Cấu hình Trang chủ' },
   { key: 'settings', icon: 'bi-gear', label: 'Cài đặt' },
 ];
 

@@ -46,9 +46,9 @@ const AdminUsers = lazy(() => import('./features/admin/pages/AdminUsers.jsx'));
 const AdminDocuments = lazy(() => import('./features/admin/pages/AdminDocuments.jsx'));
 const AdminGroups = lazy(() => import('./features/admin/pages/AdminGroups.jsx'));
 const AdminPayments = lazy(() => import('./features/admin/pages/AdminPayments.jsx'));
-const AdminAI = lazy(() => import('./features/admin/pages/AdminAI.jsx'));
+
 const AdminSettings = lazy(() => import('./features/admin/pages/AdminSettings.jsx'));
-const AdminIntroConfig = lazy(() => import('./features/admin/pages/AdminIntroConfig.jsx'));
+
 
 function App() {
   const navigate = useNavigate();
@@ -100,9 +100,9 @@ function App() {
             <Route path="documents" element={<AdminDocuments />} />
             <Route path="groups" element={<AdminGroups />} />
             <Route path="payments" element={<AdminPayments />} />
-            <Route path="ai" element={<AdminAI />} />
+
             <Route path="settings" element={<AdminSettings />} />
-            <Route path="intro-config" element={<AdminIntroConfig />} />
+
           </Route>
         </Route>
 
