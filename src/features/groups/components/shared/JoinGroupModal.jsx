@@ -10,6 +10,7 @@ export default function JoinGroupModal({ open, onCancel, onJoinSuccess }) {
   const [step, setStep] = useState(1);
   const [inviteToken, setInviteToken] = useState('');
   const [joining, setJoining] = useState(false);
+  const [joinedGroupId, setJoinedGroupId] = useState(null);
 
   const handlePreview = async () => {
     if (!inviteToken.trim()) return;
@@ -32,7 +33,9 @@ export default function JoinGroupModal({ open, onCancel, onJoinSuccess }) {
   const handleJoin = async (values) => {
     setJoining(true);
     try {
-      await joinViaInvite(inviteToken, values.password);
+      const result = await joinViaInvite(inviteToken, values.password);
+      const gId = result?.result?.groupId || result?.groupId || result?.result?.id || result?.id;
+      setJoinedGroupId(gId);
       setStep(3);
       if (onJoinSuccess) onJoinSuccess();
     } catch {
@@ -150,7 +153,7 @@ export default function JoinGroupModal({ open, onCancel, onJoinSuccess }) {
                 <p className="text-[13px] text-black/50 font-medium max-w-xs mx-auto">
                   Bạn đã gia nhập nhóm <strong>{groupPreview?.name || groupPreview?.groupName}</strong> thành công.
                 </p>
-                <Button type="primary" onClick={() => { handleClose(); navigate(`/dashboard/group/${groupPreview?.groupId || groupPreview?.id}`); }}
+                <Button type="primary" onClick={() => { const gId = joinedGroupId || groupPreview?.groupId || groupPreview?.id; handleClose(); navigate(gId ? `/dashboard/group/${gId}` : '/dashboard/group'); }}
                   className="!rounded-full !font-medium !text-[13px] !h-10 !px-8 !bg-gradient-to-b !from-[#ff7a00] !to-[#ff5c00] !border-none !text-white !shadow-lg mt-2">
                   Vào nhóm ngay <i className="bi bi-arrow-right ml-1" />
                 </Button>

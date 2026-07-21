@@ -11,6 +11,7 @@ export default function JoinGroupScreen() {
   const [groupPreview, setGroupPreview] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [joining, setJoining] = useState(false);
+  const [joinedGroupId, setJoinedGroupId] = useState(null);
   const [step, setStep] = useState(1);
 
   useEffect(() => {
@@ -40,7 +41,9 @@ export default function JoinGroupScreen() {
 
     setJoining(true);
     try {
-      await joinGroupViaInvite(inviteToken, values.password);
+      const result = await joinGroupViaInvite(inviteToken, values.password);
+      const gId = result?.result?.groupId || result?.groupId || result?.result?.id || result?.id;
+      setJoinedGroupId(gId);
       setStep(2); // Success step
     } catch (err) {
       if (err.message === 'WRONG_PASSWORD') message.error('Mật khẩu nhóm không chính xác.');
@@ -167,7 +170,10 @@ export default function JoinGroupScreen() {
                     </div>
                     <Button
                       type="primary"
-                      onClick={() => navigate(`/dashboard/group/${groupPreview?.groupId || groupPreview?.id}`)}
+                      onClick={() => {
+                        const gId = joinedGroupId || groupPreview?.groupId || groupPreview?.id;
+                        navigate(gId ? `/dashboard/group/${gId}` : '/dashboard/group');
+                      }}
                       className="w-full !h-14 !rounded-[16px] !font-bold !text-[15px] !bg-gradient-to-b !from-[#ff7a00] !to-[#ff5c00] !border-none !text-white hover:!opacity-90 !shadow-[0_4px_14px_rgba(255,92,0,0.3)] transition-all mt-4"
                     >
                       Vào nhóm ngay <i className="bi bi-arrow-right ml-2" />
